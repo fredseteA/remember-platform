@@ -11,15 +11,8 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const { t } = useTranslation();
-  const { user } = useAuth();
-  const [reviews, setReviews] = useState([]);
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [loadingReviews, setLoadingReviews] = useState(true);
-
-  // Avaliações padrão caso não haja avaliações reais
-  const defaultReviews = [
+// Avaliações padrão caso não haja avaliações reais
+const defaultReviews = [
     {
       id: 'default-1',
       user_name: "Maria Souza",
@@ -45,6 +38,14 @@ const Home = () => {
       comment: "Além de ser um produto de qualidade tem um atendimento top de linha e empatia. Recomendo!"
     }
   ];
+
+const Home = () => {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const [reviews, setReviews] = useState([]);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  
 
   useEffect(() => {
     const loadReviews = async () => {
