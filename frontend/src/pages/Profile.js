@@ -197,295 +197,484 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="pt-32 pb-24 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div
+        style={{
+          background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 40%, #eef8fb 100%)',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div style={{
+          width: 44, height: 44, borderRadius: '50%',
+          border: '3px solid rgba(90,168,224,0.2)',
+          borderTopColor: '#5aa8e0',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="pt-24 md:pt-32 pb-24" data-testid="profile-page">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
-        <div className="mb-8">
-          <Link 
-            to="/dashboard" 
-            className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+    <div
+      className="overflow-x-hidden"
+      data-testid="profile-page"
+      style={{
+        background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 35%, #eef8fb 70%, #eef8fb 100%)',
+        fontFamily: '"Georgia", serif',
+        minHeight: '100vh',
+      }}
+    >
+      <style>{`
+        @keyframes floatPR1 {
+          0%,100% { transform: translateY(0) translateX(0); }
+          45%     { transform: translateY(-14px) translateX(8px); }
+        }
+        @keyframes floatPR2 {
+          0%,100% { transform: translateY(0) translateX(0); }
+          55%     { transform: translateY(-9px) translateX(-6px); }
+        }
+        @keyframes revealPR {
+          from { opacity: 0; transform: translateY(24px); filter: blur(5px); }
+          to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+        }
+        @keyframes slideCard {
+          from { opacity: 0; transform: translateY(18px) scale(0.99); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .pr-input {
+          width: 100%;
+          padding: 12px 14px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(26,39,68,0.12);
+          background: rgba(255,255,255,0.7);
+          backdrop-filter: blur(8px);
+          font-family: "Georgia", serif;
+          font-size: 1rem;
+          color: #1a2744;
+          outline: none;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease;
+          -webkit-appearance: none;
+          appearance: none;
+          box-sizing: border-box;
+        }
+        .pr-input:focus {
+          border-color: #5aa8e0;
+          box-shadow: 0 0 0 3px rgba(90,168,224,0.15);
+        }
+        .pr-input:disabled {
+          background: rgba(255,255,255,0.35);
+          color: rgba(58,80,112,0.5);
+          cursor: not-allowed;
+        }
+        .pr-input::placeholder { color: rgba(58,80,112,0.4); }
+        .pr-select {
+          width: 100%;
+          padding: 12px 14px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(26,39,68,0.12);
+          background: rgba(255,255,255,0.7);
+          backdrop-filter: blur(8px);
+          font-family: "Georgia", serif;
+          font-size: 1rem;
+          color: #1a2744;
+          outline: none;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease;
+          -webkit-appearance: none;
+          appearance: none;
+          box-sizing: border-box;
+          cursor: pointer;
+        }
+        .pr-select:focus {
+          border-color: #5aa8e0;
+          box-shadow: 0 0 0 3px rgba(90,168,224,0.15);
+        }
+        .pr-label {
+          display: block;
+          font-family: "Georgia", serif;
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #2a3d5e;
+          margin-bottom: 8px;
+        }
+        .pr-card {
+          background: rgba(255,255,255,0.62);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(255,255,255,0.85);
+          border-radius: 24px;
+          box-shadow: 0 10px 40px rgba(26,39,68,0.08);
+          overflow: hidden;
+          margin-bottom: 18px;
+        }
+        .pr-card-header {
+          padding: clamp(18px, 3vw, 24px) clamp(20px, 4vw, 30px) clamp(14px, 2vw, 18px);
+          border-bottom: 1px solid rgba(26,39,68,0.07);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .pr-card-body {
+          padding: clamp(20px, 4vw, 28px) clamp(20px, 4vw, 30px);
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
+        .pr-input-icon {
+          position: relative;
+        }
+        .pr-input-icon .pr-input { padding-left: 42px; }
+        .pr-input-icon svg {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgba(90,168,224,0.7);
+          pointer-events: none;
+        }
+        .pr-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .pr-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+        .pr-btn-save {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 14px 32px;
+          border-radius: 999px;
+          background: #1a2744;
+          color: white;
+          font-family: "Georgia", serif;
+          font-size: 0.88rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          border: none;
+          cursor: pointer;
+          transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+          box-shadow: 0 6px 20px rgba(26,39,68,0.18);
+          min-height: 48px;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .pr-btn-save:hover:not(:disabled) {
+          background: #2a3d5e;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 28px rgba(26,39,68,0.22);
+        }
+        .pr-btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+        .pr-btn-outline {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 10px 20px;
+          border-radius: 999px;
+          background: transparent;
+          color: #3a5070;
+          font-family: "Georgia", serif;
+          font-size: 0.8rem;
+          font-weight: 700;
+          border: 1.5px solid rgba(26,39,68,0.15);
+          cursor: pointer;
+          transition: all 0.25s ease;
+          min-height: 40px;
+          text-decoration: none;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .pr-btn-outline:hover {
+          border-color: rgba(90,168,224,0.5);
+          color: #1a2744;
+          background: rgba(90,168,224,0.06);
+        }
+        .pr-photo-overlay {
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          background: rgba(26,39,68,0.55);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.25s ease;
+        }
+        .pr-photo-wrap:hover .pr-photo-overlay { opacity: 1; }
+        @media (max-width: 600px) {
+          .pr-grid-2 { grid-template-columns: 1fr; }
+          .pr-grid-3 { grid-template-columns: 1fr 1fr; }
+          .pr-photo-row { flex-direction: column !important; align-items: center !important; text-align: center !important; }
+          .pr-btn-save { width: 100%; }
+        }
+        @media (max-width: 380px) {
+          .pr-grid-3 { grid-template-columns: 1fr; }
+        }
+      `}</style>
+
+      {/* Nuvem esquerda */}
+      <div
+        className="absolute top-[60px] left-[-50px] w-44 md:w-64 opacity-55 pointer-events-none select-none z-0"
+        style={{ animation: 'floatPR1 11s ease-in-out infinite' }}
+      >
+        <img src="/clouds/cloud1.png" alt="" draggable={false}
+          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </div>
+
+      {/* Nuvem direita */}
+      <div
+        className="absolute top-[80px] right-[-40px] w-36 md:w-56 opacity-40 pointer-events-none select-none z-0 hidden md:block"
+        style={{ animation: 'floatPR2 8s ease-in-out infinite' }}
+      >
+        <img src="/clouds/cloud2.png" alt="" draggable={false}
+          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </div>
+
+      <div
+        className="relative z-10"
+        style={{
+          maxWidth: 720,
+          margin: '0 auto',
+          padding: '0 20px',
+          paddingTop: 'clamp(96px, 16vw, 152px)',
+          paddingBottom: 'clamp(60px, 10vw, 120px)',
+        }}
+      >
+
+        {/* Header */}
+        <div style={{ animation: 'revealPR 0.75s cubic-bezier(.22,1,.36,1) both', marginBottom: 'clamp(28px, 5vw, 44px)' }}>
+          <Link to="/dashboard" className="pr-btn-outline" style={{ marginBottom: 20, display: 'inline-flex' }}>
+            <ArrowLeft size={14} />
             Voltar ao Dashboard
           </Link>
-          
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, marginTop: 8 }}>
+            <div style={{ height: 1, width: 28, background: 'rgba(42,61,94,0.3)', flexShrink: 0 }} />
+            <span style={{
+              textTransform: 'uppercase', letterSpacing: '0.22em',
+              fontSize: '0.62rem', fontWeight: 700, color: '#2a3d5e',
+            }}>
+              Painel do usuário
+            </span>
+          </div>
+
           <h1
-            className="text-3xl md:text-5xl font-light tracking-tight leading-tight mb-2"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
             data-testid="page-title"
+            style={{
+              fontFamily: '"Georgia", serif',
+              fontSize: 'clamp(1.8rem, 5vw, 3rem)',
+              fontWeight: 700, color: '#1a2744', lineHeight: 1.1, marginBottom: 8,
+            }}
           >
             Minha Conta
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground">
+          <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.9rem', color: '#3a5070', lineHeight: 1.6 }}>
             Gerencie suas informações pessoais
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Foto de Perfil */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl">
-                <Camera className="h-5 w-5 mr-2 text-primary" />
+
+          {/* ── Card: Foto de Perfil ── */}
+          <div className="pr-card" style={{ animation: 'slideCard 0.6s cubic-bezier(.22,1,.36,1) 0.1s both' }}>
+            <div className="pr-card-header">
+              <div style={{
+                width: 34, height: 34, borderRadius: '50%',
+                background: 'rgba(90,168,224,0.12)',
+                border: '1px solid rgba(90,168,224,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Camera size={16} style={{ color: '#5aa8e0' }} />
+              </div>
+              <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', fontWeight: 700, color: '#1a2744' }}>
                 Foto de Perfil
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row items-center gap-6">
+              </h2>
+            </div>
+
+            <div className="pr-card-body">
+              <div className="pr-photo-row" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                 {/* Avatar */}
-                <div 
-                  className="relative cursor-pointer group"
+                <div
+                  className="pr-photo-wrap"
+                  style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}
                   onClick={handlePhotoClick}
                 >
-                  <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-100 border-4 border-primary/20 shadow-lg">
+                  <div style={{
+                    width: 96, height: 96, borderRadius: '50%', overflow: 'hidden',
+                    border: '3px solid rgba(90,168,224,0.35)',
+                    boxShadow: '0 4px 20px rgba(26,39,68,0.12)',
+                    background: 'rgba(200,232,245,0.5)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
                     {formData.photo_url ? (
-                      <img 
-                        src={formData.photo_url} 
-                        alt="Foto de perfil"
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={formData.photo_url} alt="Foto de perfil"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                        <User className="h-12 w-12 text-gray-400" />
-                      </div>
+                      <User size={36} style={{ color: 'rgba(90,168,224,0.6)' }} />
                     )}
                   </div>
-                  
-                  {/* Overlay de edição */}
-                  <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    {uploadingPhoto ? (
-                      <Loader2 className="h-8 w-8 text-white animate-spin" />
-                    ) : (
-                      <Camera className="h-8 w-8 text-white" />
-                    )}
+                  <div className="pr-photo-overlay">
+                    {uploadingPhoto
+                      ? <Loader2 size={24} style={{ color: 'white', animation: 'spin 0.8s linear infinite' }} />
+                      : <Camera size={24} style={{ color: 'white' }} />
+                    }
                   </div>
                 </div>
 
-                <div className="text-center sm:text-left">
-                  <Button
+                <div>
+                  <button
                     type="button"
-                    variant="outline"
+                    className="pr-btn-outline"
                     onClick={handlePhotoClick}
                     disabled={uploadingPhoto}
-                    className="rounded-full"
+                    style={{ marginBottom: 8 }}
                   >
                     {uploadingPhoto ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Enviando...
-                      </>
+                      <><Loader2 size={13} style={{ animation: 'spin 0.8s linear infinite' }} /> Enviando...</>
                     ) : (
-                      <>
-                        <Camera className="h-4 w-4 mr-2" />
-                        {formData.photo_url ? 'Alterar foto' : 'Adicionar foto'}
-                      </>
+                      <><Camera size={13} /> {formData.photo_url ? 'Alterar foto' : 'Adicionar foto'}</>
                     )}
-                  </Button>
-                  <p className="text-xs text-muted-foreground mt-2">
+                  </button>
+                  <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.72rem', color: 'rgba(58,80,112,0.55)' }}>
                     JPG, PNG ou GIF. Máximo 5MB.
                   </p>
                 </div>
 
-                {/* Input de arquivo oculto */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="hidden"
-                />
+                <input ref={fileInputRef} type="file" accept="image/*"
+                  onChange={handlePhotoChange} className="hidden" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Informações Básicas */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl">
-                <User className="h-5 w-5 mr-2 text-primary" />
+          {/* ── Card: Informações Básicas ── */}
+          <div className="pr-card" style={{ animation: 'slideCard 0.6s cubic-bezier(.22,1,.36,1) 0.2s both' }}>
+            <div className="pr-card-header">
+              <div style={{
+                width: 34, height: 34, borderRadius: '50%',
+                background: 'rgba(90,168,224,0.12)',
+                border: '1px solid rgba(90,168,224,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <User size={16} style={{ color: '#5aa8e0' }} />
+              </div>
+              <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', fontWeight: 700, color: '#1a2744' }}>
                 Informações Básicas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Seu nome completo"
-                    data-testid="input-name"
-                  />
+              </h2>
+            </div>
+
+            <div className="pr-card-body">
+              <div className="pr-grid-2">
+                <div>
+                  <label className="pr-label" htmlFor="name">Nome Completo</label>
+                  <input id="name" name="name" className="pr-input"
+                    value={formData.name} onChange={handleChange}
+                    placeholder="Seu nome completo" data-testid="input-name" />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      value={user?.email || ''}
-                      disabled
-                      className="pl-10 bg-muted"
-                      data-testid="input-email"
-                    />
+                <div>
+                  <label className="pr-label" htmlFor="email">E-mail</label>
+                  <div className="pr-input-icon">
+                    <Mail size={15} />
+                    <input id="email" className="pr-input"
+                      value={user?.email || ''} disabled data-testid="input-email" />
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.7rem', color: 'rgba(58,80,112,0.5)', marginTop: 5 }}>
                     O e-mail não pode ser alterado
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone / WhatsApp</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handlePhoneChange}
-                      placeholder="(00) 00000-0000"
-                      className="pl-10"
-                      maxLength={15}
-                      data-testid="input-phone"
-                    />
+              <div className="pr-grid-2">
+                <div>
+                  <label className="pr-label" htmlFor="phone">Telefone / WhatsApp</label>
+                  <div className="pr-input-icon">
+                    <Phone size={15} />
+                    <input id="phone" name="phone" className="pr-input"
+                      value={formData.phone} onChange={handlePhoneChange}
+                      placeholder="(00) 00000-0000" maxLength={15} data-testid="input-phone" />
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="birth_date">Data de Nascimento</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="birth_date"
-                      name="birth_date"
-                      type="date"
-                      value={formData.birth_date}
-                      onChange={handleChange}
-                      className="pl-10"
-                      data-testid="input-birth-date"
-                    />
+                <div>
+                  <label className="pr-label" htmlFor="birth_date">Data de Nascimento</label>
+                  <div className="pr-input-icon">
+                    <Calendar size={15} />
+                    <input id="birth_date" name="birth_date" type="date" className="pr-input"
+                      value={formData.birth_date} onChange={handleChange} data-testid="input-birth-date" />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="cpf">CPF</Label>
-                <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="cpf"
-                    name="cpf"
-                    value={formData.cpf}
-                    onChange={handleCPFChange}
-                    placeholder="000.000.000-00"
-                    className="pl-10"
-                    maxLength={14}
-                    data-testid="input-cpf"
-                  />
+              <div>
+                <label className="pr-label" htmlFor="cpf">CPF</label>
+                <div className="pr-input-icon">
+                  <CreditCard size={15} />
+                  <input id="cpf" name="cpf" className="pr-input"
+                    value={formData.cpf} onChange={handleCPFChange}
+                    placeholder="000.000.000-00" maxLength={14} data-testid="input-cpf" />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Endereço */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl">
-                <MapPin className="h-5 w-5 mr-2 text-primary" />
+          {/* ── Card: Endereço ── */}
+          <div className="pr-card" style={{ animation: 'slideCard 0.6s cubic-bezier(.22,1,.36,1) 0.3s both' }}>
+            <div className="pr-card-header">
+              <div style={{
+                width: 34, height: 34, borderRadius: '50%',
+                background: 'rgba(90,168,224,0.12)',
+                border: '1px solid rgba(90,168,224,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <MapPin size={16} style={{ color: '#5aa8e0' }} />
+              </div>
+              <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', fontWeight: 700, color: '#1a2744' }}>
                 Endereço
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="address">Endereço Completo</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder="Rua, número, complemento"
-                  data-testid="input-address"
-                />
+              </h2>
+            </div>
+
+            <div className="pr-card-body">
+              <div>
+                <label className="pr-label" htmlFor="address">Endereço Completo</label>
+                <input id="address" name="address" className="pr-input"
+                  value={formData.address} onChange={handleChange}
+                  placeholder="Rua, número, complemento" data-testid="input-address" />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">Cidade</Label>
-                  <Input
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="Sua cidade"
-                    data-testid="input-city"
-                  />
+              <div className="pr-grid-3">
+                <div>
+                  <label className="pr-label" htmlFor="city">Cidade</label>
+                  <input id="city" name="city" className="pr-input"
+                    value={formData.city} onChange={handleChange}
+                    placeholder="Sua cidade" data-testid="input-city" />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="state">Estado</Label>
-                  <select
-                    id="state"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    data-testid="input-state"
-                  >
+                <div>
+                  <label className="pr-label" htmlFor="state">Estado</label>
+                  <select id="state" name="state" className="pr-select"
+                    value={formData.state} onChange={handleChange} data-testid="input-state">
                     <option value="">Selecione</option>
                     {brazilianStates.map(state => (
                       <option key={state} value={state}>{state}</option>
                     ))}
                   </select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="zip_code">CEP</Label>
-                  <Input
-                    id="zip_code"
-                    name="zip_code"
-                    value={formData.zip_code}
-                    onChange={handleZipCodeChange}
-                    placeholder="00000-000"
-                    maxLength={9}
-                    data-testid="input-zip-code"
-                  />
+                <div>
+                  <label className="pr-label" htmlFor="zip_code">CEP</label>
+                  <input id="zip_code" name="zip_code" className="pr-input"
+                    value={formData.zip_code} onChange={handleZipCodeChange}
+                    placeholder="00000-000" maxLength={9} data-testid="input-zip-code" />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Botão de Salvar */}
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={saving}
-              className="rounded-full px-8"
-              data-testid="button-save"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar Alterações
-                </>
-              )}
-            </Button>
+            </div>
           </div>
+
+          {/* Botão salvar */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button type="submit" className="pr-btn-save" disabled={saving} data-testid="button-save">
+              {saving ? (
+                <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Salvando...</>
+              ) : (
+                <><Save size={16} /> Salvar Alterações</>
+              )}
+            </button>
+          </div>
+
         </form>
       </div>
     </div>
