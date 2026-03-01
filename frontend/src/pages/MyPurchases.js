@@ -49,13 +49,19 @@ const MyPurchases = () => {
 
   if (loading) {
     return (
-      <div className="pt-32 pb-24" data-testid="my-purchases-loading">
-        <div className="max-w-5xl mx-auto px-6">
-          <Skeleton className="h-12 w-64 mb-8" />
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32" />
-            ))}
+      <div
+        data-testid="my-purchases-loading"
+        style={{
+          background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 40%, #eef8fb 100%)',
+          minHeight: '100vh',
+          paddingTop: 'clamp(100px, 16vw, 160px)',
+          paddingBottom: 80,
+        }}
+      >
+        <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px' }}>
+          <Skeleton className="h-12 w-64 mb-8 rounded-2xl" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}
           </div>
         </div>
       </div>
@@ -63,58 +69,244 @@ const MyPurchases = () => {
   }
 
   return (
-    <div className="pt-32 pb-24" data-testid="my-purchases-page">
-      <div className="max-w-5xl mx-auto px-6">
-        <h1
-          className="text-5xl font-light tracking-tight mb-12"
-          style={{ fontFamily: 'Cormorant Garamond, serif' }}
-          data-testid="page-title"
-        >
-          Minhas Compras
-        </h1>
+    <div
+      className="overflow-x-hidden"
+      data-testid="my-purchases-page"
+      style={{
+        background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 35%, #eef8fb 70%, #eef8fb 100%)',
+        fontFamily: '"Georgia", serif',
+        minHeight: '100vh',
+      }}
+    >
+      <style>{`
+        @keyframes floatMP1 {
+          0%,100% { transform: translateY(0) translateX(0); }
+          45%     { transform: translateY(-14px) translateX(8px); }
+        }
+        @keyframes floatMP2 {
+          0%,100% { transform: translateY(0) translateX(0); }
+          55%     { transform: translateY(-9px) translateX(-6px); }
+        }
+        @keyframes revealMP {
+          from { opacity: 0; transform: translateY(24px); filter: blur(5px); }
+          to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+        }
+        @keyframes revealRow {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .mp-row {
+          transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease;
+        }
+        .mp-row:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 16px 40px rgba(26,39,68,0.11) !important;
+        }
+      `}</style>
 
+      {/* Nuvem esquerda */}
+      <div
+        className="absolute top-[60px] left-[-50px] w-44 md:w-64 opacity-55 pointer-events-none select-none z-0"
+        style={{ animation: 'floatMP1 11s ease-in-out infinite' }}
+      >
+        <img src="/clouds/cloud1.png" alt="" draggable={false}
+          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </div>
+
+      {/* Nuvem direita */}
+      <div
+        className="absolute top-[80px] right-[-40px] w-36 md:w-56 opacity-40 pointer-events-none select-none z-0 hidden md:block"
+        style={{ animation: 'floatMP2 8s ease-in-out infinite' }}
+      >
+        <img src="/clouds/cloud2.png" alt="" draggable={false}
+          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </div>
+
+      <div
+        className="relative z-10"
+        style={{
+          maxWidth: 800,
+          margin: '0 auto',
+          padding: '0 20px',
+          paddingTop: 'clamp(100px, 16vw, 160px)',
+          paddingBottom: 'clamp(60px, 10vw, 120px)',
+        }}
+      >
+
+        {/* Header */}
+        <div style={{ animation: 'revealMP 0.75s cubic-bezier(.22,1,.36,1) both', marginBottom: 'clamp(32px, 6vw, 52px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{ height: 1, width: 28, background: 'rgba(42,61,94,0.3)', flexShrink: 0 }} />
+            <span style={{
+              textTransform: 'uppercase', letterSpacing: '0.22em',
+              fontSize: '0.62rem', fontWeight: 700, color: '#2a3d5e',
+            }}>
+              Painel do usuário
+            </span>
+          </div>
+          <h1
+            data-testid="page-title"
+            style={{
+              fontFamily: '"Georgia", serif',
+              fontSize: 'clamp(1.8rem, 5vw, 3rem)',
+              fontWeight: 700, color: '#1a2744', lineHeight: 1.1,
+            }}
+          >
+            Minhas Compras
+          </h1>
+        </div>
+
+        {/* Empty state */}
         {purchases.length === 0 ? (
-          <div className="text-center py-20" data-testid="no-purchases-message">
-            <ShoppingCart className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-lg text-muted-foreground">
+          <div
+            data-testid="no-purchases-message"
+            style={{
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              textAlign: 'center', paddingTop: 80, paddingBottom: 80,
+              animation: 'revealMP 0.7s cubic-bezier(.22,1,.36,1) 0.15s both',
+            }}
+          >
+            <div style={{
+              width: 76, height: 76, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.6)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.85)',
+              boxShadow: '0 4px 20px rgba(26,39,68,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: 24,
+            }}>
+              <ShoppingCart size={32} style={{ color: '#5aa8e0' }} />
+            </div>
+            <h2 style={{
+              fontFamily: '"Georgia", serif',
+              fontSize: 'clamp(1.2rem, 3vw, 1.6rem)',
+              fontWeight: 700, color: '#1a2744', marginBottom: 10,
+            }}>
+              Nenhuma compra ainda
+            </h2>
+            <p style={{
+              fontFamily: '"Georgia", serif',
+              fontSize: '0.9rem', color: '#3a5070',
+              lineHeight: 1.7, maxWidth: 300,
+            }}>
               Você ainda não realizou nenhuma compra
             </p>
           </div>
+
         ) : (
-          <div className="space-y-4" data-testid="purchases-list">
-            {purchases.map((purchase) => (
-              <Card key={purchase.id} className="border border-border/50" data-testid={`purchase-card-${purchase.id}`}>
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-medium">Plano {purchase.plan_type}</h3>
-                        {getStatusBadge(purchase.status)}
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Pedido #{purchase.id.substring(0, 8)}
-                      </p>
-                      {purchase.mercadopago_payment_id && (
-                        <p className="text-xs text-muted-foreground">
-                          ID Mercado Pago: {purchase.mercadopago_payment_id}
-                        </p>
-                      )}
+
+          /* Lista de compras */
+          <div
+            data-testid="purchases-list"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vw, 14px)' }}
+          >
+            {purchases.map((purchase, index) => (
+              <div
+                key={purchase.id}
+                className="mp-row"
+                data-testid={`purchase-card-${purchase.id}`}
+                style={{
+                  borderRadius: 20,
+                  background: 'rgba(255,255,255,0.6)',
+                  backdropFilter: 'blur(18px)',
+                  WebkitBackdropFilter: 'blur(18px)',
+                  border: '1px solid rgba(255,255,255,0.85)',
+                  boxShadow: '0 6px 24px rgba(26,39,68,0.07)',
+                  padding: 'clamp(18px, 3vw, 26px)',
+                  animation: `revealRow 0.55s cubic-bezier(.22,1,.36,1) ${index * 0.07}s both`,
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 16,
+                }}>
+
+                  {/* Esquerda — info */}
+                  <div style={{ flex: 1, minWidth: 200 }}>
+
+                    {/* Plano + status */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                      <h3 style={{
+                        fontFamily: '"Georgia", serif',
+                        fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+                        fontWeight: 700, color: '#1a2744',
+                      }}>
+                        Plano {purchase.plan_type}
+                      </h3>
+
+                      {/* Badge de status inline */}
+                      {(() => {
+                        const map = {
+                          approved:   { label: 'Aprovado',     bg: 'rgba(34,197,94,0.14)',  color: '#15803d', border: 'rgba(34,197,94,0.3)' },
+                          pending:    { label: 'Pendente',     bg: 'rgba(251,191,36,0.15)', color: '#92400e', border: 'rgba(251,191,36,0.35)' },
+                          rejected:   { label: 'Rejeitado',    bg: 'rgba(239,68,68,0.12)',  color: '#991b1b', border: 'rgba(239,68,68,0.3)' },
+                          in_process: { label: 'Processando',  bg: 'rgba(90,168,224,0.15)', color: '#1e4d7b', border: 'rgba(90,168,224,0.3)' },
+                        };
+                        const s = map[purchase.status] || { label: purchase.status, bg: 'rgba(90,168,224,0.12)', color: '#2a3d5e', border: 'rgba(90,168,224,0.25)' };
+                        return (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '3px 11px',
+                            borderRadius: 999,
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.12em',
+                            textTransform: 'uppercase',
+                            fontFamily: '"Georgia", serif',
+                            background: s.bg,
+                            color: s.color,
+                            border: `1px solid ${s.border}`,
+                          }}>
+                            {s.label}
+                          </span>
+                        );
+                      })()}
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-light" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                        R$ {purchase.amount.toFixed(2).replace('.', ',')}
+
+                    <p style={{
+                      fontFamily: '"Georgia", serif',
+                      fontSize: '0.78rem', color: 'rgba(58,80,112,0.65)',
+                      marginBottom: purchase.mercadopago_payment_id ? 4 : 0,
+                    }}>
+                      Pedido #{purchase.id.substring(0, 8)}
+                    </p>
+
+                    {purchase.mercadopago_payment_id && (
+                      <p style={{
+                        fontFamily: '"Georgia", serif',
+                        fontSize: '0.72rem', color: 'rgba(58,80,112,0.5)',
+                      }}>
+                        ID Mercado Pago: {purchase.mercadopago_payment_id}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(purchase.created_at).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
-                      </p>
-                    </div>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Direita — valor + data */}
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <p style={{
+                      fontFamily: '"Georgia", serif',
+                      fontSize: 'clamp(1.3rem, 3vw, 1.8rem)',
+                      fontWeight: 700, color: '#1a2744',
+                      lineHeight: 1.1, marginBottom: 5,
+                    }}>
+                      R$ {purchase.amount.toFixed(2).replace('.', ',')}
+                    </p>
+                    <p style={{
+                      fontFamily: '"Georgia", serif',
+                      fontSize: '0.72rem', color: 'rgba(58,80,112,0.55)',
+                    }}>
+                      {new Date(purchase.created_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit', month: 'long', year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+
+                </div>
+              </div>
             ))}
           </div>
         )}

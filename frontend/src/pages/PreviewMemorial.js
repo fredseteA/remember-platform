@@ -36,20 +36,28 @@ const PreviewMemorial = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20" data-testid="preview-loading">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="flex justify-center mb-6">
-            <Skeleton className="h-20 w-40" />
+      <div
+        data-testid="preview-loading"
+        style={{
+          background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 40%, #eef8fb 100%)',
+          minHeight: '100vh',
+          paddingTop: 'clamp(100px, 16vw, 160px)',
+          paddingBottom: 80,
+        }}
+      >
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+            <Skeleton className="h-16 w-36 rounded-2xl" />
           </div>
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+          <div style={{ borderRadius: 28, overflow: 'hidden', background: 'rgba(255,255,255,0.6)' }}>
             <Skeleton className="h-48 w-full" />
-            <div className="pt-20 pb-6 px-6 flex flex-col items-center">
-              <Skeleton className="h-32 w-32 rounded-full -mt-36 mb-4" />
-              <Skeleton className="h-6 w-48 mb-2" />
-              <Skeleton className="h-4 w-32" />
+            <div style={{ padding: '80px 24px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Skeleton className="h-28 w-28 rounded-full" style={{ marginTop: -56, marginBottom: 16 }} />
+              <Skeleton className="h-6 w-48 mb-2 rounded-xl" />
+              <Skeleton className="h-4 w-32 rounded-xl" />
             </div>
-            <div className="px-6 pb-8">
-              <Skeleton className="h-40 w-full rounded-2xl" />
+            <div style={{ padding: '0 24px 24px' }}>
+              <Skeleton className="h-36 w-full rounded-2xl" />
             </div>
           </div>
         </div>
@@ -59,60 +67,224 @@ const PreviewMemorial = () => {
 
   if (!memorial) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-32 text-center" data-testid="memorial-not-found">
-        <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-lg text-gray-500">Memorial não encontrado</p>
+      <div
+        data-testid="memorial-not-found"
+        style={{
+          background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 40%, #eef8fb 100%)',
+          minHeight: '100vh',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          fontFamily: '"Georgia", serif',
+        }}
+      >
+        <div style={{
+          width: 76, height: 76, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.6)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.85)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: 20,
+        }}>
+          <Heart size={32} style={{ color: '#5aa8e0' }} />
+        </div>
+        <p style={{ color: '#3a5070', fontSize: '1rem' }}>Memorial não encontrado</p>
       </div>
     );
   }
 
   return (
-    <div className="pt-20" data-testid="preview-memorial-page">
-      {/* Banner de sucesso */}
-      <div className="bg-green-50 border-b border-green-200">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
+    <div
+      className="overflow-x-hidden"
+      data-testid="preview-memorial-page"
+      style={{
+        background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 35%, #eef8fb 70%, #eef8fb 100%)',
+        fontFamily: '"Georgia", serif',
+        minHeight: '100vh',
+        paddingTop: 'clamp(72px, 12vw, 96px)',
+      }}
+    >
+      <style>{`
+        @keyframes floatPV1 {
+          0%,100% { transform: translateY(0) translateX(0); }
+          45%     { transform: translateY(-14px) translateX(8px); }
+        }
+        @keyframes floatPV2 {
+          0%,100% { transform: translateY(0) translateX(0); }
+          55%     { transform: translateY(-9px) translateX(-6px); }
+        }
+        @keyframes revealPV {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .pv-btn-primary {
+          flex: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 14px 24px;
+          border-radius: 999px;
+          background: #1a2744;
+          color: white;
+          font-family: "Georgia", serif;
+          font-size: 0.88rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          border: none;
+          cursor: pointer;
+          transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+          box-shadow: 0 6px 20px rgba(26,39,68,0.2);
+          min-height: 50px;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .pv-btn-primary:hover {
+          background: #2a3d5e;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 28px rgba(26,39,68,0.25);
+        }
+        .pv-btn-outline {
+          flex: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 14px 24px;
+          border-radius: 999px;
+          background: transparent;
+          color: #2a3d5e;
+          font-family: "Georgia", serif;
+          font-size: 0.88rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          border: 1.5px solid rgba(26,39,68,0.2);
+          cursor: pointer;
+          transition: all 0.25s ease;
+          min-height: 50px;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .pv-btn-outline:hover {
+          border-color: rgba(90,168,224,0.5);
+          background: rgba(90,168,224,0.06);
+          color: #1a2744;
+        }
+        @media (max-width: 480px) {
+          .pv-action-bar-inner { flex-direction: column !important; }
+          .pv-btn-primary, .pv-btn-outline { flex: unset; width: 100%; }
+        }
+      `}</style>
+
+      {/* Nuvem esquerda */}
+      <div
+        className="absolute top-[60px] left-[-50px] w-44 md:w-64 opacity-50 pointer-events-none select-none z-0"
+        style={{ animation: 'floatPV1 11s ease-in-out infinite' }}
+      >
+        <img src="/clouds/cloud1.png" alt="" draggable={false}
+          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </div>
+
+      {/* Nuvem direita */}
+      <div
+        className="absolute top-[80px] right-[-40px] w-36 md:w-56 opacity-35 pointer-events-none select-none z-0 hidden md:block"
+        style={{ animation: 'floatPV2 8s ease-in-out infinite' }}
+      >
+        <img src="/clouds/cloud2.png" alt="" draggable={false}
+          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </div>
+
+      {/* ── Banner de sucesso ── */}
+      <div
+        className="relative z-10"
+        style={{ animation: 'revealPV 0.6s cubic-bezier(.22,1,.36,1) both' }}
+      >
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 20px', marginBottom: 20 }}>
+          <div style={{
+            borderRadius: 18,
+            padding: '16px 20px',
+            background: 'rgba(255,255,255,0.65)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(90,168,224,0.25)',
+            boxShadow: '0 4px 20px rgba(26,39,68,0.07)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+          }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+              background: 'rgba(34,197,94,0.12)',
+              border: '1px solid rgba(34,197,94,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <CheckCircle size={18} style={{ color: '#15803d' }} />
+            </div>
             <div>
-              <h3 className="font-semibold text-green-900">Memorial criado com sucesso!</h3>
-              <p className="text-sm text-green-700">Veja abaixo como ficou sua homenagem.</p>
+              <h3 style={{
+                fontFamily: '"Georgia", serif',
+                fontSize: '0.95rem', fontWeight: 700,
+                color: '#1a2744', marginBottom: 2,
+              }}>
+                Memorial criado com sucesso!
+              </h3>
+              <p style={{
+                fontFamily: '"Georgia", serif',
+                fontSize: '0.8rem', color: '#3a5070',
+              }}>
+                Veja abaixo como ficou sua homenagem.
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Memorial Preview usando o mesmo layout */}
-      <MemorialLayout memorial={memorial} isPreview={true} />
-
-      {/* Botões de ação fixos na parte inferior */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              size="lg"
-              className="flex-1 rounded-full font-semibold bg-gray-900 hover:bg-gray-800"
-              onClick={() => navigate(`/select-plan/${id}`)}
-              data-testid="button-choose-plan"
-            >
-              ESCOLHER PLANO
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="flex-1 rounded-full font-semibold"
-              onClick={() => navigate('/create-memorial')}
-              data-testid="button-edit"
-            >
-              <Edit className="mr-2 h-5 w-5" />
-              Criar Outro
-            </Button>
-          </div>
-        </div>
+      {/* ── Preview do Memorial ── */}
+      <div className="relative z-10">
+        <MemorialLayout memorial={memorial} isPreview={true} />
       </div>
 
-      {/* Espaço para os botões fixos */}
-      <div className="h-24" />
+      {/* Espaço para a action bar fixa */}
+      <div style={{ height: 100 }} />
+
+      {/* ── Action bar fixa ── */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0, left: 0, right: 0,
+          zIndex: 50,
+          background: 'rgba(238,248,251,0.88)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderTop: '1px solid rgba(90,168,224,0.2)',
+          boxShadow: '0 -8px 30px rgba(26,39,68,0.08)',
+          padding: 'clamp(12px, 2vw, 16px) 20px',
+        }}
+      >
+        <div
+          className="pv-action-bar-inner"
+          style={{
+            maxWidth: 640,
+            margin: '0 auto',
+            display: 'flex',
+            gap: 10,
+          }}
+        >
+          <button
+            className="pv-btn-primary"
+            onClick={() => navigate(`/select-plan/${id}`)}
+            data-testid="button-choose-plan"
+          >
+            Escolher Plano
+            <ArrowRight size={16} />
+          </button>
+          <button
+            className="pv-btn-outline"
+            onClick={() => navigate('/create-memorial')}
+            data-testid="button-edit"
+          >
+            <Edit size={15} />
+            Criar Outro
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

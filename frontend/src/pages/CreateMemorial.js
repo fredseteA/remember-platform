@@ -159,284 +159,621 @@ const CreateMemorial = () => {
   };
 
   return (
-    <div className="pt-32 pb-24" data-testid="create-memorial-page">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <h1
-            className="text-5xl md:text-6xl font-light tracking-tight leading-tight mb-4"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
-            data-testid="page-title"
-          >
+    <div
+      className="overflow-x-hidden"
+      data-testid="create-memorial-page"
+      style={{
+        background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 30%, #eef8fb 70%, #eef8fb 100%)',
+        fontFamily: '"Georgia", serif',
+        minHeight: '100vh',
+      }}
+    >
+      <style>{`
+        @keyframes floatCM1 {
+          0%,100% { transform: translateY(0) translateX(0); }
+          45%     { transform: translateY(-14px) translateX(8px); }
+        }
+        @keyframes floatCM2 {
+          0%,100% { transform: translateY(0) translateX(0); }
+          55%     { transform: translateY(-10px) translateX(-7px); }
+        }
+        @keyframes revealCM {
+          from { opacity: 0; transform: translateY(28px); filter: blur(5px); }
+          to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+        }
+        @keyframes slideCard {
+          from { opacity: 0; transform: translateY(20px) scale(0.99); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .cm-input {
+          width: 100%;
+          padding: 13px 14px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(26,39,68,0.12);
+          background: rgba(255,255,255,0.7);
+          backdrop-filter: blur(8px);
+          font-family: "Georgia", serif;
+          font-size: 1rem;
+          color: #1a2744;
+          outline: none;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease;
+          -webkit-appearance: none;
+          appearance: none;
+          box-sizing: border-box;
+        }
+        .cm-input:focus {
+          border-color: #5aa8e0;
+          box-shadow: 0 0 0 3px rgba(90,168,224,0.15);
+        }
+        .cm-input::placeholder { color: rgba(58,80,112,0.4); }
+        .cm-textarea {
+          width: 100%;
+          padding: 13px 14px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(26,39,68,0.12);
+          background: rgba(255,255,255,0.7);
+          backdrop-filter: blur(8px);
+          font-family: "Georgia", serif;
+          font-size: 1rem;
+          color: #1a2744;
+          outline: none;
+          resize: none;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease;
+          -webkit-appearance: none;
+          appearance: none;
+          box-sizing: border-box;
+        }
+        .cm-textarea:focus {
+          border-color: #5aa8e0;
+          box-shadow: 0 0 0 3px rgba(90,168,224,0.15);
+        }
+        .cm-textarea::placeholder { color: rgba(58,80,112,0.4); }
+        .cm-upload-zone {
+          border-radius: 16px;
+          border: 1.5px dashed rgba(90,168,224,0.45);
+          background: rgba(255,255,255,0.45);
+          transition: background 0.25s ease, border-color 0.25s ease;
+          cursor: pointer;
+          display: block;
+        }
+        .cm-upload-zone:active {
+          background: rgba(255,255,255,0.65);
+          border-color: rgba(90,168,224,0.7);
+        }
+        .cm-btn-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 14px 28px;
+          border-radius: 999px;
+          background: #1a2744;
+          color: white;
+          font-family: "Georgia", serif;
+          font-size: 0.9rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          border: none;
+          cursor: pointer;
+          transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+          box-shadow: 0 6px 20px rgba(26,39,68,0.18);
+          min-height: 48px;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .cm-btn-primary:active:not(:disabled) {
+          background: #2a3d5e;
+          transform: scale(0.97);
+        }
+        .cm-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .cm-btn-ghost {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 14px 20px;
+          border-radius: 999px;
+          background: transparent;
+          color: #3a5070;
+          font-family: "Georgia", serif;
+          font-size: 0.9rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          border: 1.5px solid rgba(26,39,68,0.15);
+          cursor: pointer;
+          transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+          min-height: 48px;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .cm-btn-ghost:active {
+          background: rgba(255,255,255,0.5);
+          color: #1a2744;
+        }
+        .cm-label {
+          display: block;
+          font-family: "Georgia", serif;
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #2a3d5e;
+          margin-bottom: 8px;
+        }
+        .cm-check-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.45);
+          border: 1.5px solid rgba(90,168,224,0.2);
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .cm-step-dot {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: "Georgia", serif;
+          font-size: 0.82rem;
+          font-weight: 700;
+          transition: all 0.5s ease;
+          flex-shrink: 0;
+        }
+        /* Mobile grid: colunas lado a lado mas mais espaçadas */
+        .cm-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+        /* Nav buttons full width no mobile */
+        .cm-nav {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 28px;
+          padding-top: 22px;
+          border-top: 1px solid rgba(26,39,68,0.07);
+          gap: 12px;
+        }
+        @media (max-width: 480px) {
+          .cm-nav {
+            flex-direction: column-reverse;
+            gap: 10px;
+          }
+          .cm-btn-primary, .cm-btn-ghost {
+            width: 100%;
+            font-size: 0.88rem;
+          }
+          .cm-grid-2 {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+        }
+      `}</style>
+
+      {/* ── Nuvem esquerda ── */}
+      <div
+        className="absolute top-[60px] left-[-60px] w-44 md:w-72 opacity-50 pointer-events-none select-none z-0"
+        style={{ animation: 'floatCM1 11s ease-in-out infinite' }}
+      >
+        <img src="/clouds/cloud1.png" alt="" draggable={false}
+          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </div>
+
+      {/* ── Nuvem direita ── */}
+      <div
+        className="absolute top-[100px] right-[-50px] w-40 md:w-60 opacity-40 pointer-events-none select-none z-0 hidden md:block"
+        style={{ animation: 'floatCM2 13s ease-in-out infinite' }}
+      >
+        <img src="/clouds/cloud2.png" alt="" draggable={false}
+          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </div>
+
+      {/* ── HERO ── */}
+      <section
+        className="relative z-10 overflow-hidden"
+        style={{
+          paddingTop: 'clamp(100px, 20vw, 192px)',
+          paddingBottom: 'clamp(20px, 4vw, 48px)',
+          animation: 'revealCM 0.85s cubic-bezier(.22,1,.36,1) both',
+        }}
+      >
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 20px' }}>
+
+          {/* Eyebrow */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 1, width: 28, background: 'rgba(42,61,94,0.3)', flexShrink: 0 }} />
+            <span style={{
+              textTransform: 'uppercase',
+              letterSpacing: '0.22em',
+              fontSize: '0.62rem',
+              fontWeight: 700,
+              color: '#2a3d5e',
+            }}>
+              Uma homenagem eterna
+            </span>
+          </div>
+
+          {/* Título */}
+          <h1 style={{
+            fontFamily: '"Georgia", serif',
+            fontSize: 'clamp(1.7rem, 7vw, 3.8rem)',
+            fontWeight: 700,
+            color: '#1a2744',
+            lineHeight: 1.1,
+            marginBottom: 'clamp(20px, 4vw, 36px)',
+          }}>
             {t('memorial.createTitle')}
           </h1>
-          <div className="flex items-center justify-center space-x-4 mt-8">
+
+          {/* Step indicators */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
             {[1, 2, 3].map((num) => (
-              <div
-                key={num}
-                className={`h-2 w-16 rounded-full transition-all duration-700 ${
-                  num === step ? 'bg-primary' : 'bg-border'
-                }`}
-              />
+              <div key={num} style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                  <div
+                    className="cm-step-dot"
+                    style={{
+                      background: num === step ? '#1a2744' : num < step ? '#5aa8e0' : 'rgba(255,255,255,0.55)',
+                      color: num === step ? 'white' : num < step ? 'white' : '#3a5070',
+                      border: num > step ? '1.5px solid rgba(26,39,68,0.15)' : 'none',
+                      backdropFilter: 'blur(8px)',
+                    }}
+                  >
+                    {num < step ? '✓' : num}
+                  </div>
+                  <span style={{
+                    fontSize: '0.58rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: num === step ? '#1a2744' : num < step ? '#5aa8e0' : 'rgba(58,80,112,0.4)',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {num === 1 ? 'Dados' : num === 2 ? 'Conteúdo' : 'Responsável'}
+                  </span>
+                </div>
+                {num < 3 && (
+                  <div style={{
+                    height: 1.5,
+                    width: 'clamp(40px, 8vw, 80px)',
+                    marginBottom: 22,
+                    background: num < step ? '#5aa8e0' : 'rgba(26,39,68,0.1)',
+                    transition: 'background 0.5s ease',
+                    flexShrink: 0,
+                  }} />
+                )}
+              </div>
             ))}
           </div>
         </div>
+      </section>
 
-        <Card className="border border-border shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
-          <CardContent className="p-8">
-            {step === 1 && (
-              <div className="space-y-6" data-testid="step-1">
-                <h2 className="text-2xl font-light mb-6" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                  {t('memorial.step1')}
+      {/* ── FORM CARD ── */}
+      <section className="relative z-10" style={{ paddingBottom: 'clamp(60px, 10vw, 144px)' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px' }}>
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.62)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255,255,255,0.85)',
+              borderRadius: 'clamp(18px, 4vw, 28px)',
+              boxShadow: '0 20px 70px rgba(26,39,68,0.1)',
+              animation: 'slideCard 0.6s cubic-bezier(.22,1,.36,1) 0.15s both',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Card header */}
+            <div style={{
+              padding: 'clamp(20px, 4vw, 28px) clamp(20px, 5vw, 36px) clamp(16px, 3vw, 24px)',
+              borderBottom: '1px solid rgba(26,39,68,0.07)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+            }}>
+              <div style={{
+                width: 4,
+                height: 36,
+                borderRadius: 99,
+                background: 'linear-gradient(180deg, #5aa8e0 0%, #2a3d5e 100%)',
+                flexShrink: 0,
+              }} />
+              <div>
+                <span style={{
+                  display: 'block',
+                  fontSize: '0.6rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.22em',
+                  textTransform: 'uppercase',
+                  color: '#5aa8e0',
+                  marginBottom: 3,
+                }}>
+                  Etapa {step} de 3
+                </span>
+                <h2 style={{
+                  fontFamily: '"Georgia", serif',
+                  fontSize: 'clamp(1rem, 3vw, 1.25rem)',
+                  fontWeight: 700,
+                  color: '#1a2744',
+                  lineHeight: 1.2,
+                }}>
+                  {step === 1 && t('memorial.step1')}
+                  {step === 2 && t('memorial.step2')}
+                  {step === 3 && t('memorial.step3')}
                 </h2>
-
-                <div className="space-y-2">
-                  <Label htmlFor="full_name">{t('memorial.fullName')} *</Label>
-                  <Input
-                    id="full_name"
-                    value={personData.full_name}
-                    onChange={(e) => setPersonData({ ...personData, full_name: e.target.value })}
-                    data-testid="input-full-name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="relationship">{t('memorial.relationship')} *</Label>
-                  <Input
-                    id="relationship"
-                    placeholder="Ex: Pai, Mãe, Avô, Amigo..."
-                    value={personData.relationship}
-                    onChange={(e) => setPersonData({ ...personData, relationship: e.target.value })}
-                    data-testid="input-relationship"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="birth_city">{t('memorial.birthCity')}</Label>
-                    <Input
-                      id="birth_city"
-                      value={personData.birth_city}
-                      onChange={(e) => setPersonData({ ...personData, birth_city: e.target.value })}
-                      data-testid="input-birth-city"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="birth_state">{t('memorial.birthState')}</Label>
-                    <Input
-                      id="birth_state"
-                      value={personData.birth_state}
-                      onChange={(e) => setPersonData({ ...personData, birth_state: e.target.value })}
-                      data-testid="input-birth-state"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="death_city">{t('memorial.deathCity')}</Label>
-                    <Input
-                      id="death_city"
-                      value={personData.death_city}
-                      onChange={(e) => setPersonData({ ...personData, death_city: e.target.value })}
-                      data-testid="input-death-city"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="death_state">{t('memorial.deathState')}</Label>
-                    <Input
-                      id="death_state"
-                      value={personData.death_state}
-                      onChange={(e) => setPersonData({ ...personData, death_state: e.target.value })}
-                      data-testid="input-death-state"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="photo">{t('memorial.photo')}</Label>
-                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-                    <input
-                      type="file"
-                      id="photo"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      className="hidden"
-                      data-testid="input-photo"
-                    />
-                    <label htmlFor="photo" className="cursor-pointer">
-                      {personData.photo_url ? (
-                        <img src={personData.photo_url} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
-                      ) : (
-                        <div>
-                          <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">Clique para enviar uma foto</p>
-                        </div>
-                      )}
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="public_memorial"
-                    checked={personData.public_memorial}
-                    onCheckedChange={(checked) => setPersonData({ ...personData, public_memorial: checked })}
-                    data-testid="checkbox-public"
-                  />
-                  <Label htmlFor="public_memorial" className="cursor-pointer">
-                    {t('memorial.publicMemorial')}
-                  </Label>
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-6" data-testid="step-2">
-                <h2 className="text-2xl font-light mb-6" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                  {t('memorial.step2')}
-                </h2>
-
-                <div className="space-y-2">
-                  <Label htmlFor="main_phrase">{t('memorial.mainPhrase')} *</Label>
-                  <Input
-                    id="main_phrase"
-                    placeholder="Uma frase especial para homenagear..."
-                    value={content.main_phrase}
-                    onChange={(e) => setContent({ ...content, main_phrase: e.target.value })}
-                    data-testid="input-main-phrase"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="biography">{t('memorial.biography')} *</Label>
-                  <Textarea
-                    id="biography"
-                    rows={8}
-                    placeholder="Conte a história de vida, momentos especiais, características marcantes..."
-                    value={content.biography}
-                    onChange={(e) => setContent({ ...content, biography: e.target.value })}
-                    data-testid="input-biography"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gallery">{t('memorial.gallery')} (Até 10 fotos)</Label>
-                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-                    <input
-                      type="file"
-                      id="gallery"
-                      accept="image/*"
-                      multiple
-                      onChange={handleGalleryUpload}
-                      className="hidden"
-                      data-testid="input-gallery"
-                    />
-                    <label htmlFor="gallery" className="cursor-pointer">
-                      <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Clique para adicionar fotos ({content.gallery_urls.length}/10)
-                      </p>
-                    </label>
-                  </div>
-                  {content.gallery_urls.length > 0 && (
-                    <div className="grid grid-cols-5 gap-2 mt-4">
-                      {content.gallery_urls.map((url, index) => (
-                        <img key={index} src={url} alt={`Gallery ${index + 1}`} className="w-full h-20 object-cover rounded" />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="audio">{t('memorial.audio')} (Opcional)</Label>
-                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-                    <input
-                      type="file"
-                      id="audio"
-                      accept="audio/*"
-                      onChange={handleAudioUpload}
-                      className="hidden"
-                      data-testid="input-audio"
-                    />
-                    <label htmlFor="audio" className="cursor-pointer">
-                      {content.audio_url ? (
-                        <audio src={content.audio_url} controls className="w-full" />
-                      ) : (
-                        <div>
-                          <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">Clique para enviar um áudio</p>
-                        </div>
-                      )}
-                    </label>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="space-y-6" data-testid="step-3">
-                <h2 className="text-2xl font-light mb-6" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                  {t('memorial.step3')}
-                </h2>
-
-                <div className="space-y-2">
-                  <Label htmlFor="responsible_name">{t('memorial.responsibleName')} *</Label>
-                  <Input
-                    id="responsible_name"
-                    value={responsible.name}
-                    onChange={(e) => setResponsible({ ...responsible, name: e.target.value })}
-                    data-testid="input-responsible-name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">{t('memorial.phone')} *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+55 (00) 00000-0000"
-                    value={responsible.phone}
-                    onChange={(e) => setResponsible({ ...responsible, phone: e.target.value })}
-                    data-testid="input-phone"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t('auth.email')} *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={responsible.email}
-                    onChange={(e) => setResponsible({ ...responsible, email: e.target.value })}
-                    data-testid="input-email"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-between mt-8">
-              {step > 1 && (
-                <Button variant="outline" onClick={() => setStep(step - 1)} data-testid="button-back">
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  {t('memorial.back')}
-                </Button>
-              )}
-              <div className="ml-auto">
-                {step < 3 ? (
-                  <Button onClick={handleNext} disabled={loading} data-testid="button-next">
-                    {t('memorial.next')}
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
-                ) : (
-                  <Button onClick={handleSubmit} disabled={loading} data-testid="button-finish">
-                    {loading ? 'Salvando...' : t('memorial.finish')}
-                  </Button>
-                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+
+            <div style={{ padding: 'clamp(20px, 5vw, 32px) clamp(20px, 5vw, 36px)' }}>
+
+              {/* ── STEP 1 ── */}
+              {step === 1 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }} data-testid="step-1">
+
+                  <div>
+                    <label className="cm-label" htmlFor="full_name">{t('memorial.fullName')} *</label>
+                    <input id="full_name" className="cm-input"
+                      value={personData.full_name}
+                      onChange={(e) => setPersonData({ ...personData, full_name: e.target.value })}
+                      data-testid="input-full-name" />
+                  </div>
+
+                  <div>
+                    <label className="cm-label" htmlFor="relationship">{t('memorial.relationship')} *</label>
+                    <input id="relationship" className="cm-input"
+                      placeholder="Ex: Pai, Mãe, Avô, Amigo..."
+                      value={personData.relationship}
+                      onChange={(e) => setPersonData({ ...personData, relationship: e.target.value })}
+                      data-testid="input-relationship" />
+                  </div>
+
+                  <div className="cm-grid-2">
+                    <div>
+                      <label className="cm-label" htmlFor="birth_city">{t('memorial.birthCity')}</label>
+                      <input id="birth_city" className="cm-input"
+                        value={personData.birth_city}
+                        onChange={(e) => setPersonData({ ...personData, birth_city: e.target.value })}
+                        data-testid="input-birth-city" />
+                    </div>
+                    <div>
+                      <label className="cm-label" htmlFor="birth_state">{t('memorial.birthState')}</label>
+                      <input id="birth_state" className="cm-input"
+                        value={personData.birth_state}
+                        onChange={(e) => setPersonData({ ...personData, birth_state: e.target.value })}
+                        data-testid="input-birth-state" />
+                    </div>
+                  </div>
+
+                  <div className="cm-grid-2">
+                    <div>
+                      <label className="cm-label" htmlFor="death_city">{t('memorial.deathCity')}</label>
+                      <input id="death_city" className="cm-input"
+                        value={personData.death_city}
+                        onChange={(e) => setPersonData({ ...personData, death_city: e.target.value })}
+                        data-testid="input-death-city" />
+                    </div>
+                    <div>
+                      <label className="cm-label" htmlFor="death_state">{t('memorial.deathState')}</label>
+                      <input id="death_state" className="cm-input"
+                        value={personData.death_state}
+                        onChange={(e) => setPersonData({ ...personData, death_state: e.target.value })}
+                        data-testid="input-death-state" />
+                    </div>
+                  </div>
+
+                  {/* Photo upload */}
+                  <div>
+                    <label className="cm-label">{t('memorial.photo')}</label>
+                    <input type="file" id="photo" accept="image/*"
+                      onChange={handlePhotoUpload} className="hidden" data-testid="input-photo" />
+                    <label htmlFor="photo" className="cm-upload-zone" style={{ padding: 'clamp(20px, 5vw, 28px)', textAlign: 'center' }}>
+                      {personData.photo_url ? (
+                        <img src={personData.photo_url} alt="Preview"
+                          style={{ maxHeight: 160, margin: '0 auto', borderRadius: 12, objectFit: 'cover', boxShadow: '0 8px 24px rgba(26,39,68,0.12)' }} />
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                          <div style={{
+                            width: 48, height: 48, borderRadius: 14,
+                            background: 'rgba(90,168,224,0.12)',
+                            border: '1px solid rgba(90,168,224,0.25)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <Upload size={20} style={{ color: '#5aa8e0' }} />
+                          </div>
+                          <span style={{ color: '#3a5070', fontSize: '0.9rem', fontFamily: '"Georgia", serif' }}>
+                            Toque para enviar uma foto
+                          </span>
+                          <span style={{ color: 'rgba(58,80,112,0.5)', fontSize: '0.75rem' }}>
+                            JPG, PNG, WEBP
+                          </span>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+
+                  {/* Checkbox público */}
+                  <label className="cm-check-wrapper" htmlFor="public_memorial">
+                    <Checkbox
+                      id="public_memorial"
+                      checked={personData.public_memorial}
+                      onCheckedChange={(checked) => setPersonData({ ...personData, public_memorial: checked })}
+                      data-testid="checkbox-public"
+                      className="border-[#5aa8e0] data-[state=checked]:bg-[#5aa8e0] data-[state=checked]:border-[#5aa8e0]"
+                    />
+                    <span style={{ color: '#3a5070', fontSize: '0.9rem', fontFamily: '"Georgia", serif', lineHeight: 1.4 }}>
+                      {t('memorial.publicMemorial')}
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              {/* ── STEP 2 ── */}
+              {step === 2 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }} data-testid="step-2">
+
+                  <div>
+                    <label className="cm-label" htmlFor="main_phrase">{t('memorial.mainPhrase')} *</label>
+                    <input id="main_phrase" className="cm-input"
+                      placeholder="Uma frase especial para homenagear..."
+                      value={content.main_phrase}
+                      onChange={(e) => setContent({ ...content, main_phrase: e.target.value })}
+                      data-testid="input-main-phrase" />
+                  </div>
+
+                  <div>
+                    <label className="cm-label" htmlFor="biography">{t('memorial.biography')} *</label>
+                    <textarea id="biography" className="cm-textarea" rows={6}
+                      placeholder="Conte a história de vida, momentos especiais, características marcantes..."
+                      value={content.biography}
+                      onChange={(e) => setContent({ ...content, biography: e.target.value })}
+                      data-testid="input-biography" />
+                  </div>
+
+                  {/* Gallery upload */}
+                  <div>
+                    <label className="cm-label">{t('memorial.gallery')} (até 10 fotos)</label>
+                    <input type="file" id="gallery" accept="image/*" multiple
+                      onChange={handleGalleryUpload} className="hidden" data-testid="input-gallery" />
+                    <label htmlFor="gallery" className="cm-upload-zone" style={{ padding: '22px', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 44, height: 44, borderRadius: 12,
+                          background: 'rgba(90,168,224,0.12)',
+                          border: '1px solid rgba(90,168,224,0.25)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <Upload size={18} style={{ color: '#5aa8e0' }} />
+                        </div>
+                        <span style={{ color: '#3a5070', fontSize: '0.9rem', fontFamily: '"Georgia", serif' }}>
+                          Toque para adicionar fotos ({content.gallery_urls.length}/10)
+                        </span>
+                      </div>
+                    </label>
+                    {content.gallery_urls.length > 0 && (
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))',
+                        gap: 8,
+                        marginTop: 12,
+                      }}>
+                        {content.gallery_urls.map((url, index) => (
+                          <img key={index} src={url} alt={`Gallery ${index + 1}`}
+                            style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 10 }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Audio upload */}
+                  <div>
+                    <label className="cm-label">{t('memorial.audio')} (opcional)</label>
+                    <input type="file" id="audio" accept="audio/*"
+                      onChange={handleAudioUpload} className="hidden" data-testid="input-audio" />
+                    <label htmlFor="audio" className="cm-upload-zone" style={{ padding: '22px', textAlign: 'center' }}>
+                      {content.audio_url ? (
+                        <audio src={content.audio_url} controls style={{ width: '100%' }} />
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                          <div style={{
+                            width: 44, height: 44, borderRadius: 12,
+                            background: 'rgba(90,168,224,0.12)',
+                            border: '1px solid rgba(90,168,224,0.25)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <Upload size={18} style={{ color: '#5aa8e0' }} />
+                          </div>
+                          <span style={{ color: '#3a5070', fontSize: '0.9rem', fontFamily: '"Georgia", serif' }}>
+                            Toque para enviar um áudio
+                          </span>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 3 ── */}
+              {step === 3 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }} data-testid="step-3">
+
+                  {/* Privacy notice */}
+                  <div style={{
+                    padding: '14px 16px',
+                    borderRadius: 14,
+                    background: 'rgba(90,168,224,0.08)',
+                    border: '1px solid rgba(90,168,224,0.2)',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                  }}>
+                    <div style={{
+                      width: 6, height: 6, borderRadius: '50%',
+                      background: '#5aa8e0', flexShrink: 0, marginTop: 7,
+                    }} />
+                    <p style={{ color: '#3a5070', fontSize: '0.85rem', fontFamily: '"Georgia", serif', lineHeight: 1.6, margin: 0 }}>
+                      Suas informações são tratadas com total privacidade e usadas apenas para contato sobre o memorial.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="cm-label" htmlFor="responsible_name">{t('memorial.responsibleName')} *</label>
+                    <input id="responsible_name" className="cm-input"
+                      value={responsible.name}
+                      onChange={(e) => setResponsible({ ...responsible, name: e.target.value })}
+                      data-testid="input-responsible-name" />
+                  </div>
+
+                  <div>
+                    <label className="cm-label" htmlFor="phone">{t('memorial.phone')} *</label>
+                    <input id="phone" type="tel" className="cm-input"
+                      placeholder="+55 (00) 00000-0000"
+                      value={responsible.phone}
+                      onChange={(e) => setResponsible({ ...responsible, phone: e.target.value })}
+                      data-testid="input-phone" />
+                  </div>
+
+                  <div>
+                    <label className="cm-label" htmlFor="email">{t('auth.email')} *</label>
+                    <input id="email" type="email" className="cm-input"
+                      value={responsible.email}
+                      onChange={(e) => setResponsible({ ...responsible, email: e.target.value })}
+                      data-testid="input-email" />
+                  </div>
+                </div>
+              )}
+
+              {/* ── NAVIGATION ── */}
+              <div className="cm-nav">
+                {step > 1 ? (
+                  <button className="cm-btn-ghost" onClick={() => setStep(step - 1)} data-testid="button-back">
+                    <ChevronLeft size={15} />
+                    {t('memorial.back')}
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                {step < 3 ? (
+                  <button className="cm-btn-primary" onClick={handleNext} disabled={loading} data-testid="button-next">
+                    {t('memorial.next')}
+                    <ChevronRight size={15} />
+                  </button>
+                ) : (
+                  <button className="cm-btn-primary" onClick={handleSubmit} disabled={loading} data-testid="button-finish"
+                    style={{ background: loading ? 'rgba(26,39,68,0.5)' : '#1a2744' }}>
+                    {loading ? 'Salvando...' : t('memorial.finish')}
+                  </button>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>

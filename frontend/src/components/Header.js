@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +19,26 @@ const Header = () => {
   const { t, i18n } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Fecha menu ao redimensionar para desktop
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth >= 768) setMobileMenuOpen(false); };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Trava scroll do body quando menu mobile está aberto
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileMenuOpen]);
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === 'pt' ? 'en' : 'pt');
@@ -33,162 +53,381 @@ const Header = () => {
     window.open('https://wa.me/5522992080811', '_blank');
   };
 
+  const closeMobile = () => setMobileMenuOpen(false);
+
   return (
     <>
-      <header data-testid="main-header" className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex items-center justify-between h-20">
-            <Link to="/" className="flex items-center" data-testid="logo-link">
-              <img 
-                src="/logo-transparent.png" 
-                alt="Remember QRCode" 
-                className="h-14 w-auto"
-              />
-            </Link>
+      <style>{`
+        @keyframes headerFadeIn {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes mobileMenuSlide {
+          from { opacity: 0; transform: translateY(-10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .header-root {
+          animation: headerFadeIn 0.6s cubic-bezier(.22,1,.36,1) both;
+        }
 
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link
-                to="/"
-                data-testid="nav-home"
-                className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
-              >
+        /* Estado transparente */
+        .header-transparent {
+          background: transparent;
+          box-shadow: none;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
+
+        /* Estado flutuante — pill desktop */
+        .header-floating {
+          background: rgba(255, 255, 255, 0.72);
+          backdrop-filter: blur(18px) saturate(1.6);
+          -webkit-backdrop-filter: blur(18px) saturate(1.6);
+          box-shadow: 0 2px 24px rgba(26,39,68,0.08), 0 1px 0 rgba(255,255,255,0.6) inset;
+          margin: 10px 20px;
+          border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.55);
+        }
+
+        .header-inner {
+          transition:
+            background 0.45s cubic-bezier(.22,1,.36,1),
+            box-shadow 0.45s cubic-bezier(.22,1,.36,1),
+            border-radius 0.45s cubic-bezier(.22,1,.36,1),
+            margin 0.45s cubic-bezier(.22,1,.36,1),
+            border-color 0.45s cubic-bezier(.22,1,.36,1),
+            backdrop-filter 0.45s ease;
+        }
+
+        .header-transparent .nav-link { color: rgba(255,255,255,0.92) !important; }
+        .header-transparent .nav-link:hover { color: white !important; }
+        .header-floating .nav-link { color: #2a3d5e !important; }
+        .header-floating .nav-link:hover { color: #1a2744 !important; }
+
+        .header-transparent .header-icon { color: rgba(255,255,255,0.9); }
+        .header-floating    .header-icon { color: #2a3d5e; }
+
+        .header-transparent .header-login-btn {
+          background: rgba(255,255,255,0.18) !important;
+          border: 1.5px solid rgba(255,255,255,0.7) !important;
+          color: white !important;
+          backdrop-filter: blur(8px);
+        }
+        .header-transparent .header-login-btn:hover { background: rgba(255,255,255,0.28) !important; }
+        .header-floating .header-login-btn { background: #1a2744 !important; border: none !important; color: white !important; }
+        .header-floating .header-login-btn:hover { background: #2a3d5e !important; }
+
+        .header-transparent .header-logo { filter: brightness(0) invert(1); }
+        .header-floating    .header-logo { filter: none; }
+        .header-logo { transition: filter 0.4s ease; }
+
+        .header-transparent .mobile-toggle { color: white; }
+        .header-floating    .mobile-toggle { color: #1a2744; }
+
+        /* ── Mobile: remove pill, header full-width ── */
+        @media (max-width: 767px) {
+          .header-floating {
+            margin: 0 !important;
+            border-radius: 0 !important;
+            border-left: none !important;
+            border-right: none !important;
+            border-top: none !important;
+            border-bottom: 1px solid rgba(255,255,255,0.25) !important;
+          }
+          .header-bar { height: 52px !important; }
+          .header-logo { height: 36px !important; }
+        }
+
+        /* ── Menu mobile overlay — FORA do header para evitar stacking context ── */
+        .mobile-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 49;
+          background: rgba(200,232,245,0.97);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          overflow-y: auto;
+          animation: mobileMenuSlide 0.28s cubic-bezier(.22,1,.36,1) both;
+        }
+        .mobile-overlay-inner {
+          padding: 80px 28px 48px;
+          display: flex;
+          flex-direction: column;
+          min-height: 100%;
+        }
+        .mobile-nav-link {
+          display: block;
+          padding: 15px 0;
+          font-family: "Georgia", serif;
+          font-size: 1.05rem;
+          font-weight: 600;
+          color: #1a2744;
+          text-decoration: none;
+          border-bottom: 1px solid rgba(26,39,68,0.09);
+          transition: color 0.2s ease;
+          background: none;
+          border-top: none;
+          border-left: none;
+          border-right: none;
+          width: 100%;
+          text-align: left;
+          cursor: pointer;
+        }
+        .mobile-nav-link:last-child { border-bottom: none; }
+        .mobile-nav-link:active { color: #5aa8e0; }
+        .mobile-nav-secondary {
+          display: block;
+          padding: 12px 0;
+          font-family: "Georgia", serif;
+          font-size: 0.88rem;
+          font-weight: 500;
+          color: #3a5070;
+          text-decoration: none;
+          border-bottom: 1px solid rgba(26,39,68,0.06);
+          background: none;
+          border-top: none;
+          border-left: none;
+          border-right: none;
+          width: 100%;
+          text-align: left;
+          cursor: pointer;
+        }
+        .mobile-section-label {
+          font-family: "Georgia", serif;
+          font-size: 0.6rem;
+          font-weight: 700;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #5aa8e0;
+          margin-top: 24px;
+          margin-bottom: 4px;
+        }
+      `}</style>
+
+      {/* ── Header ── */}
+      <header
+        data-testid="main-header"
+        className="header-root fixed top-0 left-0 right-0 z-50"
+      >
+        <div className={`header-inner ${scrolled ? 'header-floating' : 'header-transparent'}`}>
+          <div className="max-w-7xl mx-auto px-4 md:px-10">
+            <div className="header-bar flex items-center justify-between h-16">
+
+              {/* Logo */}
+              <Link to="/" className="flex items-center" data-testid="logo-link" onClick={closeMobile}>
+                <img
+                  src="/logo-transparent.png"
+                  alt="Remember QRCode"
+                  className="header-logo h-11 w-auto"
+                />
+              </Link>
+
+              {/* Nav desktop */}
+              <nav className="hidden md:flex items-center space-x-7">
+                <Link to="/" data-testid="nav-home"
+                  className="nav-link text-sm font-medium transition-colors duration-200"
+                  style={{ fontFamily: '"Georgia", serif' }}
+                >
+                  {t('nav.home')}
+                </Link>
+                <Link to="/how-it-works" data-testid="nav-how-it-works"
+                  className="nav-link text-sm font-medium transition-colors duration-200"
+                  style={{ fontFamily: '"Georgia", serif' }}
+                >
+                  {t('nav.howItWorks')}
+                </Link>
+                <Link to="/explore" data-testid="nav-explore"
+                  className="nav-link text-sm font-medium transition-colors duration-200"
+                  style={{ fontFamily: '"Georgia", serif' }}
+                >
+                  {t('nav.explore')}
+                </Link>
+                <Link to="/create-memorial" data-testid="nav-create-memorial"
+                  className="nav-link text-sm font-medium transition-colors duration-200"
+                  style={{ fontFamily: '"Georgia", serif' }}
+                >
+                  {t('nav.createMemorial')}
+                </Link>
+              </nav>
+
+              {/* Ações desktop */}
+              <div className="hidden md:flex items-center space-x-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleLanguage}
+                  data-testid="language-toggle"
+                  className="header-icon rounded-full w-8 h-8 transition-colors duration-300"
+                  style={{ background: 'transparent', border: 'none' }}
+                >
+                  <Globe className="h-4 w-4" />
+                </Button>
+
+                {user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        data-testid="user-menu-trigger"
+                        className="header-icon rounded-full w-8 h-8"
+                        style={{ background: 'transparent', border: 'none' }}
+                      >
+                        <User className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 rounded-2xl shadow-xl border border-white/60 bg-white/90 backdrop-blur-xl">
+                      <DropdownMenuLabel data-testid="user-email" className="text-xs text-slate-500">{user.email}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard" data-testid="nav-dashboard">{t('nav.myAccount')}</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/my-memorials" data-testid="nav-my-memorials">{t('nav.myMemorials')}</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/my-purchases" data-testid="nav-my-purchases">{t('nav.myPurchases')}</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={openWhatsApp} data-testid="nav-support">
+                        {t('nav.support')}
+                      </DropdownMenuItem>
+                      {user.is_admin && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link to="/admin" data-testid="nav-admin">{t('nav.admin')}</Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout} data-testid="logout-button">
+                        {t('nav.logout')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <button
+                    onClick={() => setAuthModalOpen(true)}
+                    data-testid="login-button"
+                    className="header-login-btn rounded-full px-5 py-2 text-sm font-semibold transition-all duration-300"
+                    style={{ fontFamily: '"Georgia", serif', letterSpacing: '0.03em' }}
+                  >
+                    {t('nav.login')}
+                  </button>
+                )}
+              </div>
+
+              {/* Toggle mobile — globo + hamburger */}
+              <div className="flex md:hidden items-center gap-1">
+                <button
+                  onClick={toggleLanguage}
+                  className="mobile-toggle p-2 transition-colors duration-300"
+                  style={{ background: 'transparent', border: 'none' }}
+                  aria-label="Trocar idioma"
+                >
+                  <Globe className="h-4 w-4" />
+                </button>
+                <button
+                  className="mobile-toggle p-2 transition-colors duration-300"
+                  onClick={() => setMobileMenuOpen(prev => !prev)}
+                  data-testid="mobile-menu-toggle"
+                  aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+                  style={{ background: 'transparent', border: 'none' }}
+                >
+                  {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/*
+        ── Menu mobile FORA do <header> ──────────────────────────────────────
+        Renderizado diretamente no <></> para escapar do stacking context
+        criado pelo backdrop-filter do header, que quebra o position:fixed
+        dos filhos.
+      */}
+      {mobileMenuOpen && (
+        <div className="mobile-overlay md:hidden" data-testid="mobile-menu">
+          <div className="mobile-overlay-inner">
+
+            {/* Links principais */}
+            <nav style={{ marginBottom: 8 }}>
+              <Link to="/" className="mobile-nav-link" onClick={closeMobile}>
                 {t('nav.home')}
               </Link>
-              <Link
-                to="/how-it-works"
-                data-testid="nav-how-it-works"
-                className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
-              >
+              <Link to="/how-it-works" className="mobile-nav-link" onClick={closeMobile}>
                 {t('nav.howItWorks')}
               </Link>
-              <Link
-                to="/explore"
-                data-testid="nav-explore"
-                className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
-              >
+              <Link to="/explore" className="mobile-nav-link" onClick={closeMobile}>
                 {t('nav.explore')}
               </Link>
-              <Link
-                to="/create-memorial"
-                data-testid="nav-create-memorial"
-                className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
-              >
+              <Link to="/create-memorial" className="mobile-nav-link" onClick={closeMobile}>
                 {t('nav.createMemorial')}
               </Link>
             </nav>
 
-            <div className="hidden md:flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleLanguage}
-                data-testid="language-toggle"
-              >
-                <Globe className="h-5 w-5" />
-              </Button>
-
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" data-testid="user-menu-trigger">
-                      <User className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel data-testid="user-email">{user.email}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/dashboard" data-testid="nav-dashboard">{t('nav.myAccount')}</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/my-memorials" data-testid="nav-my-memorials">{t('nav.myMemorials')}</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/my-purchases" data-testid="nav-my-purchases">{t('nav.myPurchases')}</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={openWhatsApp} data-testid="nav-support">
-                      {t('nav.support')}
-                    </DropdownMenuItem>
-                    {user.is_admin && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link to="/admin" data-testid="nav-admin">{t('nav.admin')}</Link>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} data-testid="logout-button">
-                      {t('nav.logout')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button
-                  onClick={() => setAuthModalOpen(true)}
-                  className="rounded-full px-6 bg-primary hover:bg-primary/90 font-semibold"
-                  data-testid="login-button"
+            {/* Usuário logado */}
+            {user ? (
+              <div style={{ marginTop: 8 }}>
+                <p className="mobile-section-label">Minha conta</p>
+                <Link to="/dashboard" className="mobile-nav-secondary" onClick={closeMobile}>
+                  {t('nav.myAccount')}
+                </Link>
+                <Link to="/my-memorials" className="mobile-nav-secondary" onClick={closeMobile}>
+                  {t('nav.myMemorials')}
+                </Link>
+                <Link to="/my-purchases" className="mobile-nav-secondary" onClick={closeMobile}>
+                  {t('nav.myPurchases')}
+                </Link>
+                <button
+                  className="mobile-nav-secondary"
+                  onClick={() => { openWhatsApp(); closeMobile(); }}
                 >
-                  {t('nav.login')}
-                </Button>
-              )}
-            </div>
+                  {t('nav.support')}
+                </button>
+                {user.is_admin && (
+                  <Link to="/admin" className="mobile-nav-secondary" onClick={closeMobile}>
+                    {t('nav.admin')}
+                  </Link>
+                )}
+                <button
+                  onClick={() => { handleLogout(); closeMobile(); }}
+                  style={{
+                    marginTop: 24, width: '100%', borderRadius: '999px',
+                    padding: '13px 0', background: 'rgba(26,39,68,0.08)',
+                    border: '1.5px solid rgba(26,39,68,0.15)', color: '#1a2744',
+                    fontFamily: '"Georgia", serif', fontSize: '0.88rem',
+                    fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em',
+                  }}
+                >
+                  {t('nav.logout')}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setAuthModalOpen(true); closeMobile(); }}
+                data-testid="login-button"
+                style={{
+                  marginTop: 24, width: '100%', borderRadius: '999px',
+                  padding: '14px 0', background: '#1a2744',
+                  border: 'none', color: 'white',
+                  fontFamily: '"Georgia", serif', fontSize: '0.95rem',
+                  fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em',
+                  boxShadow: '0 4px 18px rgba(26,39,68,0.18)',
+                }}
+              >
+                {t('nav.login')}
+              </button>
+            )}
 
-            <button
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              data-testid="mobile-menu-toggle"
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
           </div>
-
-          {mobileMenuOpen && (
-            <div className="md:hidden py-4 space-y-4 border-t" data-testid="mobile-menu">
-              <Link to="/" className="block text-foreground hover:text-primary font-medium" onClick={() => setMobileMenuOpen(false)}>
-                {t('nav.home')}
-              </Link>
-              <Link to="/how-it-works" className="block text-foreground hover:text-primary font-medium" onClick={() => setMobileMenuOpen(false)}>
-                {t('nav.howItWorks')}
-              </Link>
-              <Link to="/explore" className="block text-foreground hover:text-primary font-medium" onClick={() => setMobileMenuOpen(false)}>
-                {t('nav.explore')}
-              </Link>
-              <Link to="/create-memorial" className="block text-foreground hover:text-primary font-medium" onClick={() => setMobileMenuOpen(false)}>
-                {t('nav.createMemorial')}
-              </Link>
-              {user ? (
-                <>
-                  <Link to="/dashboard" className="block text-foreground hover:text-primary font-medium" onClick={() => setMobileMenuOpen(false)}>
-                    {t('nav.myAccount')}
-                  </Link>
-                  <Link to="/my-memorials" className="block text-foreground hover:text-primary font-medium" onClick={() => setMobileMenuOpen(false)}>
-                    {t('nav.myMemorials')}
-                  </Link>
-                  <Link to="/my-purchases" className="block text-foreground hover:text-primary font-medium" onClick={() => setMobileMenuOpen(false)}>
-                    {t('nav.myPurchases')}
-                  </Link>
-                  <button onClick={() => { openWhatsApp(); setMobileMenuOpen(false); }} className="block text-foreground hover:text-primary font-medium w-full text-left">
-                    {t('nav.support')}
-                  </button>
-                  {user.is_admin && (
-                    <Link to="/admin" className="block text-foreground hover:text-primary font-medium" onClick={() => setMobileMenuOpen(false)}>
-                      {t('nav.admin')}
-                    </Link>
-                  )}
-                  <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="block text-foreground hover:text-primary font-medium w-full text-left">
-                    {t('nav.logout')}
-                  </button>
-                </> 
-              ) : (
-                <Button onClick={() => { setAuthModalOpen(true); setMobileMenuOpen(false); }} className="w-full rounded-full bg-primary hover:bg-primary/90 font-semibold">
-                  {t('nav.login')}
-                </Button>
-              )}
-            </div>
-          )}
         </div>
-      </header>
+      )}
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
