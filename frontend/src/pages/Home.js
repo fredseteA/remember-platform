@@ -1219,14 +1219,14 @@ const Home = () => {
             h-[320px] md:h-[400px] lg:h-[440px] rounded-3xl overflow-hidden shadow-2xl relative"
           >
             <video
-              src="/hero-video.mp4"
+              src="/video-hero.mp4"
               autoPlay loop muted playsInline
               className="absolute inset-0 w-full h-full object-cover"
             />
           </div>
         </div>
       </section>
-
+ 
       {/* ── Como Funciona ── */}
       <HowItWorksSection />
 
