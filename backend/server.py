@@ -41,38 +41,53 @@ if not firebase_admin._apps:
         raise RuntimeError("Firebase credentials não configuradas.")
 
     firebase_admin.initialize_app(cred)
-
+ 
 # Cliente Firestore síncrono
 db = firestore.client()
 
 app = FastAPI(title="Remember QrCode API")
 
-# ✅ CORS robusto: lê origens do .env ou libera tudo em desenvolvimento
-_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
-ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+from starlette.types import ASGIApp, Receive, Scope, Send
 
-# Se não configurou origens explícitas, usa allow_origins=["*"] (desenvolvimento)
-# Em produção, defina ALLOWED_ORIGINS no .env com as URLs reais
-if ALLOWED_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=ALLOWED_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["*"],
-    )
-else:
-    # Modo desenvolvimento: aceita qualquer origem
-    # ATENÇÃO: não use allow_credentials=True com allow_origins=["*"]
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["*"],
-    )
+class DynamicCORSMiddleware:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        headers = dict(scope.get("headers", []))
+        origin = headers.get(b"origin", b"").decode()
+        allowed = self._is_allowed(origin)
+
+        async def send_with_cors(message):
+            if message["type"] == "http.response.start" and allowed and origin:
+                cors_headers = [
+                    (b"access-control-allow-origin", origin.encode()),
+                    (b"access-control-allow-credentials", b"true"),
+                    (b"access-control-allow-methods", b"GET, POST, PUT, DELETE, OPTIONS, PATCH"),
+                    (b"access-control-allow-headers", b"Authorization, Content-Type, Accept"),
+                ]
+                message["headers"] = list(message.get("headers", [])) + cors_headers
+            await send(message)
+
+        await self.app(scope, receive, send_with_cors)
+
+    def _is_allowed(self, origin: str) -> bool:
+        if not origin:
+            return False
+        allowed_patterns = [
+            r"https://.*\.vercel\.app$",
+            r"https://rememberqrcode\.com\.br$",
+            r"https://www\.rememberqrcode\.com\.br$",
+            r"http://localhost:\d+$",
+            r"http://127\.0\.0\.1:\d+$",
+        ]
+        return any(re.match(p, origin) for p in allowed_patterns)
+
+app.add_middleware(DynamicCORSMiddleware)
 
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer(auto_error=False)
