@@ -219,6 +219,96 @@ class UpdateOrderStatusRequest(BaseModel):
     status: str
 
 
+# ========== NEW ADMIN MODELS ==========
+
+class Partner(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    code: str  # Código único do parceiro
+    email: EmailStr
+    phone: Optional[str] = None
+    commission_rate: float = 0.10  # 10% default
+    total_sales_month: int = 0
+    total_sales_all_time: int = 0
+    total_revenue_month: float = 0.0
+    total_revenue_all_time: float = 0.0
+    status: str = "active"  # active, inactive
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CreatePartnerRequest(BaseModel):
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    commission_rate: float = 0.10
+
+
+class UpdatePartnerRequest(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    commission_rate: Optional[float] = None
+    status: Optional[str] = None
+
+
+class AdminLog(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    admin_uid: str
+    admin_email: str
+    action: str  # update_status, archive_order, pay_commission, etc.
+    entity_type: str  # order, partner, memorial, review
+    entity_id: str
+    details: dict = {}
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class AdminNotification(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # new_order, production_pending, partner_milestone
+    title: str
+    message: str
+    entity_type: Optional[str] = None
+    entity_id: Optional[str] = None
+    read: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CommissionPayment(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    partner_id: str
+    partner_name: str
+    amount: float
+    period_month: int
+    period_year: int
+    sales_count: int
+    status: str = "pending"  # pending, paid
+    paid_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class UpdateTrackingRequest(BaseModel):
+    tracking_code: str
+
+
+class RespondReviewRequest(BaseModel):
+    response: str
+
+
+class UpdateMemorialAdminRequest(BaseModel):
+    featured: Optional[bool] = None
+    active: Optional[bool] = None
+    admin_notes: Optional[str] = None
+
+
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -364,6 +454,63 @@ def deserialize_datetime(data: dict, datetime_fields: List[str]) -> dict:
             except (ValueError, AttributeError):
                 pass
     return result
+
+
+# ========== ADMIN HELPERS ==========
+
+async def create_admin_log(admin_uid: str, admin_email: str, action: str, entity_type: str, entity_id: str, details: dict = {}):
+    """Cria um registro de log administrativo"""
+    log = AdminLog(
+        admin_uid=admin_uid,
+        admin_email=admin_email,
+        action=action,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        details=details
+    )
+    log_dict = log.model_dump()
+    log_dict = serialize_datetime(log_dict)
+    db.collection("admin_logs").document(log.id).set(log_dict)
+    return log
+
+
+async def create_admin_notification(type: str, title: str, message: str, entity_type: str = None, entity_id: str = None):
+    """Cria uma notificação interna para o admin"""
+    notification = AdminNotification(
+        type=type,
+        title=title,
+        message=message,
+        entity_type=entity_type,
+        entity_id=entity_id
+    )
+    notif_dict = notification.model_dump()
+    notif_dict = serialize_datetime(notif_dict)
+    db.collection("admin_notifications").document(notification.id).set(notif_dict)
+    return notification
+
+
+def generate_partner_code(name: str) -> str:
+    """Gera código único de parceiro baseado no nome"""
+    base_code = slugify(name)[:8].upper().replace('-', '')
+    suffix = str(uuid.uuid4())[:4].upper()
+    return f"{base_code}{suffix}"
+
+
+async def send_admin_notification_email(subject: str, html_content: str):
+    """Envia email de notificação para o administrador"""
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [ADMIN_EMAIL],
+            "subject": subject,
+            "html": html_content
+        }
+        email_result = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"✅ E-mail enviado para {ADMIN_EMAIL}. ID: {email_result.get('id')}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar e-mail: {str(e)}")
+        return False
 
 
 # ========== EMAIL NOTIFICATION ==========
@@ -965,6 +1112,7 @@ async def handle_mercadopago_webhook(request: Request, background_tasks: Backgro
 
 @api_router.get("/admin/stats")
 async def get_admin_stats(user: dict = Depends(verify_admin)):
+    """Estatísticas básicas para compatibilidade"""
     memorials_docs = list(db.collection("memorials").stream())
     total_memorials = len(memorials_docs)
 
@@ -973,13 +1121,141 @@ async def get_admin_stats(user: dict = Depends(verify_admin)):
 
     total_plaques = sum(
         1 for doc in payments_docs
-        if doc.to_dict().get("plan_type") in ["plaque", "complete"]
+        if doc.to_dict().get("plan_type") in ["plaque", "complete", "qrcode_plaque"]
     )
 
     return {
         "total_memorials": total_memorials,
         "total_orders": total_orders,
         "total_plaques": total_plaques
+    }
+
+
+@api_router.get("/admin/dashboard")
+async def get_admin_dashboard(user: dict = Depends(verify_admin)):
+    """Dashboard completo com todas as métricas"""
+    from datetime import timedelta
+    from collections import defaultdict
+    
+    now = datetime.now(timezone.utc)
+    current_month = now.month
+    current_year = now.year
+    
+    # Buscar todos os pagamentos
+    payments_docs = list(db.collection("payments").stream())
+    payments = [doc.to_dict() for doc in payments_docs]
+    
+    # Buscar memoriais
+    memorials_docs = list(db.collection("memorials").stream())
+    total_memorials = len(memorials_docs)
+    
+    # Buscar parceiros ativos
+    partners_docs = list(db.collection("partners").where(
+        filter=firestore.FieldFilter("status", "==", "active")
+    ).stream())
+    total_partners = len(list(partners_docs))
+    
+    # Calcular métricas
+    total_revenue = 0.0
+    monthly_revenue = 0.0
+    total_orders = 0
+    monthly_orders = 0
+    total_plaques = 0
+    monthly_plaques = 0
+    
+    # Vendas por mês (últimos 12 meses)
+    sales_by_month = defaultdict(lambda: {"revenue": 0.0, "orders": 0})
+    
+    # Vendas por tipo
+    sales_by_type = {"digital": 0, "plaque": 0, "complete": 0}
+    revenue_by_type = {"digital": 0.0, "plaque": 0.0, "complete": 0.0}
+    
+    for payment in payments:
+        status = payment.get("status", "")
+        if status not in ["approved", "paid"]:
+            continue
+            
+        amount = payment.get("amount", 0)
+        plan_type = payment.get("plan_type", "digital")
+        
+        # Parse created_at
+        created_at = payment.get("created_at")
+        if isinstance(created_at, str):
+            try:
+                created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            except:
+                created_at = now
+        
+        total_revenue += amount
+        total_orders += 1
+        
+        # Verificar se é do mês atual
+        if created_at.month == current_month and created_at.year == current_year:
+            monthly_revenue += amount
+            monthly_orders += 1
+        
+        # Contar placas
+        if plan_type in ["plaque", "complete", "qrcode_plaque"]:
+            total_plaques += 1
+            if created_at.month == current_month and created_at.year == current_year:
+                monthly_plaques += 1
+        
+        # Agrupar por mês
+        month_key = f"{created_at.year}-{created_at.month:02d}"
+        sales_by_month[month_key]["revenue"] += amount
+        sales_by_month[month_key]["orders"] += 1
+        
+        # Agrupar por tipo
+        type_key = plan_type if plan_type in sales_by_type else "digital"
+        sales_by_type[type_key] += 1
+        revenue_by_type[type_key] += amount
+    
+    # Calcular ticket médio
+    avg_ticket = total_revenue / total_orders if total_orders > 0 else 0
+    monthly_avg_ticket = monthly_revenue / monthly_orders if monthly_orders > 0 else 0
+    
+    # Buscar comissões pendentes
+    pending_commissions = 0.0
+    comm_docs = list(db.collection("commission_payments").where(
+        filter=firestore.FieldFilter("status", "==", "pending")
+    ).stream())
+    for doc in comm_docs:
+        pending_commissions += doc.to_dict().get("amount", 0)
+    
+    # Preparar dados do gráfico (últimos 6 meses)
+    chart_data = []
+    for i in range(5, -1, -1):
+        target_date = now - timedelta(days=30 * i)
+        month_key = f"{target_date.year}-{target_date.month:02d}"
+        month_name = target_date.strftime("%b")
+        data = sales_by_month.get(month_key, {"revenue": 0, "orders": 0})
+        chart_data.append({
+            "month": month_name,
+            "revenue": data["revenue"],
+            "orders": data["orders"]
+        })
+    
+    # Dados do gráfico por tipo
+    type_chart_data = [
+        {"name": "Digital", "value": sales_by_type["digital"], "revenue": revenue_by_type["digital"]},
+        {"name": "Placa QR", "value": sales_by_type["plaque"], "revenue": revenue_by_type["plaque"]},
+        {"name": "Completo", "value": sales_by_type["complete"], "revenue": revenue_by_type["complete"]}
+    ]
+    
+    return {
+        "total_revenue": total_revenue,
+        "monthly_revenue": monthly_revenue,
+        "avg_ticket": avg_ticket,
+        "monthly_avg_ticket": monthly_avg_ticket,
+        "total_orders": total_orders,
+        "monthly_orders": monthly_orders,
+        "total_memorials": total_memorials,
+        "total_plaques": total_plaques,
+        "monthly_plaques": monthly_plaques,
+        "total_partners": total_partners,
+        "pending_commissions": pending_commissions,
+        "sales_chart": chart_data,
+        "type_chart": type_chart_data
     }
 
 
@@ -1023,17 +1299,64 @@ async def test_email_notification(user: dict = Depends(verify_admin)):
 
 
 @api_router.get("/admin/orders")
-async def get_all_orders(user: dict = Depends(verify_admin)):
-    payments_ref = db.collection("payments").order_by("created_at", direction=firestore.Query.DESCENDING)
-    docs = payments_ref.stream()
+async def get_all_orders(
+    user: dict = Depends(verify_admin),
+    status: Optional[str] = None,
+    archived: bool = False
+):
+    """Lista todos os pedidos com filtros"""
+    payments_ref = db.collection("payments")
+    
+    # Filtrar por arquivado
+    if not archived:
+        # Por padrão, não mostrar arquivados
+        try:
+            payments_ref = payments_ref.where(
+                filter=firestore.FieldFilter("archived", "!=", True)
+            )
+        except:
+            pass  # Campo pode não existir em pedidos antigos
+    
+    docs = payments_ref.order_by("created_at", direction=firestore.Query.DESCENDING).stream()
 
     orders = []
     for doc in docs:
         order_data = doc.to_dict()
+        
+        # Filtrar por status se especificado
+        if status and order_data.get("status") != status:
+            continue
+            
+        # Filtrar arquivados
+        if not archived and order_data.get("archived", False):
+            continue
+            
         order_data = deserialize_datetime(order_data, ["created_at", "updated_at"])
         orders.append(order_data)
 
     return orders
+
+
+@api_router.get("/admin/orders/{order_id}")
+async def get_order_details(order_id: str, user: dict = Depends(verify_admin)):
+    """Detalhes completos de um pedido"""
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_data = doc.to_dict()
+    order_data = deserialize_datetime(order_data, ["created_at", "updated_at"])
+    
+    # Buscar dados do memorial associado
+    memorial_id = order_data.get("memorial_id")
+    if memorial_id:
+        memorial_doc = db.collection("memorials").document(memorial_id).get()
+        if memorial_doc.exists:
+            order_data["memorial"] = memorial_doc.to_dict()
+    
+    return order_data
 
 
 @api_router.get("/admin/memorials")
@@ -1053,9 +1376,57 @@ async def get_all_memorials(user: dict = Depends(verify_admin)):
 @api_router.put("/admin/orders/{order_id}/status")
 async def update_order_status(
     order_id: str,
-    status_update: UpdateOrderStatusRequest,  # ✅ FIX 4: Modelo Pydantic ao invés de dict
+    status_update: UpdateOrderStatusRequest,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(verify_admin)
 ):
+    """Atualiza status do pedido com histórico"""
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_data = doc.to_dict()
+    old_status = order_data.get("status", "unknown")
+    new_status = status_update.status
+    
+    # Criar entrada no histórico
+    status_history = order_data.get("status_history", [])
+    status_history.append({
+        "from_status": old_status,
+        "to_status": new_status,
+        "changed_by": user.get("email"),
+        "changed_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    order_ref.update({
+        "status": new_status,
+        "status_history": status_history,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Criar log administrativo
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "update_status",
+        "order",
+        order_id,
+        {"old_status": old_status, "new_status": new_status}
+    )
+
+    return {"message": "Status atualizado com sucesso", "new_status": new_status}
+
+
+@api_router.put("/admin/orders/{order_id}/archive")
+async def archive_order(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Arquiva um pedido (soft delete)"""
     order_ref = db.collection("payments").document(order_id)
     doc = order_ref.get()
 
@@ -1063,11 +1434,261 @@ async def update_order_status(
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
 
     order_ref.update({
-        "status": status_update.status,
+        "archived": True,
+        "archived_at": datetime.now(timezone.utc).isoformat(),
+        "archived_by": user.get("email"),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "archive_order",
+        "order",
+        order_id,
+        {}
+    )
+
+    return {"message": "Pedido arquivado com sucesso"}
+
+
+@api_router.put("/admin/orders/{order_id}/unarchive")
+async def unarchive_order(order_id: str, user: dict = Depends(verify_admin)):
+    """Desarquiva um pedido"""
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_ref.update({
+        "archived": False,
         "updated_at": datetime.now(timezone.utc).isoformat()
     })
 
-    return {"message": "Order status updated"}
+    return {"message": "Pedido desarquivado com sucesso"}
+
+
+@api_router.put("/admin/orders/{order_id}/tracking")
+async def update_tracking(
+    order_id: str,
+    tracking_data: UpdateTrackingRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Adiciona código de rastreio ao pedido"""
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_data = doc.to_dict()
+    
+    # Atualizar histórico
+    status_history = order_data.get("status_history", [])
+    status_history.append({
+        "from_status": order_data.get("status"),
+        "to_status": "shipped",
+        "changed_by": user.get("email"),
+        "changed_at": datetime.now(timezone.utc).isoformat(),
+        "tracking_code": tracking_data.tracking_code
+    })
+
+    order_ref.update({
+        "tracking_code": tracking_data.tracking_code,
+        "status": "shipped",
+        "status_history": status_history,
+        "shipped_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "add_tracking",
+        "order",
+        order_id,
+        {"tracking_code": tracking_data.tracking_code}
+    )
+
+    return {"message": "Código de rastreio adicionado", "tracking_code": tracking_data.tracking_code}
+
+
+@api_router.put("/admin/orders/{order_id}/cancel")
+async def cancel_order(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Cancela um pedido"""
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_data = doc.to_dict()
+    old_status = order_data.get("status")
+    
+    status_history = order_data.get("status_history", [])
+    status_history.append({
+        "from_status": old_status,
+        "to_status": "cancelled",
+        "changed_by": user.get("email"),
+        "changed_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    order_ref.update({
+        "status": "cancelled",
+        "status_history": status_history,
+        "cancelled_at": datetime.now(timezone.utc).isoformat(),
+        "cancelled_by": user.get("email"),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "cancel_order",
+        "order",
+        order_id,
+        {"old_status": old_status}
+    )
+
+    return {"message": "Pedido cancelado com sucesso"}
+
+
+# ========== PRODUCTION QUEUE ==========
+
+@api_router.get("/admin/production-queue")
+async def get_production_queue(user: dict = Depends(verify_admin)):
+    """Lista pedidos na fila de produção (placas pagas aguardando produção)"""
+    payments_ref = db.collection("payments")
+    docs = payments_ref.stream()
+    
+    queue = []
+    for doc in docs:
+        order_data = doc.to_dict()
+        
+        # Filtrar apenas pedidos com placa
+        plan_type = order_data.get("plan_type", "")
+        if plan_type not in ["plaque", "complete", "qrcode_plaque"]:
+            continue
+        
+        # Filtrar por status (pago mas não enviado/entregue/cancelado)
+        status = order_data.get("status", "")
+        if status not in ["approved", "paid", "in_production", "produced"]:
+            continue
+        
+        # Ignorar arquivados
+        if order_data.get("archived", False):
+            continue
+        
+        order_data = deserialize_datetime(order_data, ["created_at", "updated_at"])
+        
+        # Buscar dados do memorial
+        memorial_id = order_data.get("memorial_id")
+        if memorial_id:
+            memorial_doc = db.collection("memorials").document(memorial_id).get()
+            if memorial_doc.exists:
+                memorial_data = memorial_doc.to_dict()
+                order_data["person_name"] = memorial_data.get("person_data", {}).get("full_name", "N/A")
+                order_data["memorial_slug"] = memorial_data.get("slug")
+        
+        queue.append(order_data)
+    
+    # Ordenar por data de criação (mais antigos primeiro)
+    queue.sort(key=lambda x: x.get("created_at", ""), reverse=False)
+    
+    return queue
+
+
+@api_router.put("/admin/production/{order_id}/start")
+async def start_production(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Marca pedido como em produção"""
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_data = doc.to_dict()
+    status_history = order_data.get("status_history", [])
+    status_history.append({
+        "from_status": order_data.get("status"),
+        "to_status": "in_production",
+        "changed_by": user.get("email"),
+        "changed_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    order_ref.update({
+        "status": "in_production",
+        "production_started_at": datetime.now(timezone.utc).isoformat(),
+        "status_history": status_history,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "start_production",
+        "order",
+        order_id,
+        {}
+    )
+
+    return {"message": "Produção iniciada"}
+
+
+@api_router.put("/admin/production/{order_id}/complete")
+async def complete_production(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Marca pedido como produzido"""
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
+
+    order_data = doc.to_dict()
+    status_history = order_data.get("status_history", [])
+    status_history.append({
+        "from_status": order_data.get("status"),
+        "to_status": "produced",
+        "changed_by": user.get("email"),
+        "changed_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    order_ref.update({
+        "status": "produced",
+        "production_completed_at": datetime.now(timezone.utc).isoformat(),
+        "status_history": status_history,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "complete_production",
+        "order",
+        order_id,
+        {}
+    )
+
+    return {"message": "Produção concluída"}
 
 
 @api_router.delete("/admin/orders/{order_id}")
@@ -1082,6 +1703,566 @@ async def delete_order(order_id: str, user: dict = Depends(verify_admin)):
     logger.info(f"Pedido {order_id} excluído pelo admin {user.get('email')}")
 
     return {"message": "Pedido excluído com sucesso"}
+
+
+# ========== PARTNERS ENDPOINTS ==========
+
+@api_router.get("/admin/partners")
+async def get_all_partners(user: dict = Depends(verify_admin)):
+    """Lista todos os parceiros"""
+    partners_ref = db.collection("partners").order_by("created_at", direction=firestore.Query.DESCENDING)
+    docs = partners_ref.stream()
+
+    partners = []
+    for doc in docs:
+        partner_data = doc.to_dict()
+        partner_data = deserialize_datetime(partner_data, ["created_at", "updated_at"])
+        partners.append(partner_data)
+
+    return partners
+
+
+@api_router.post("/admin/partners")
+async def create_partner(
+    partner_req: CreatePartnerRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Cria um novo parceiro"""
+    # Gerar código único
+    code = generate_partner_code(partner_req.name)
+    
+    # Verificar se código já existe
+    existing = list(db.collection("partners").where(
+        filter=firestore.FieldFilter("code", "==", code)
+    ).limit(1).stream())
+    
+    if existing:
+        code = generate_partner_code(partner_req.name + str(uuid.uuid4())[:4])
+    
+    partner = Partner(
+        name=partner_req.name,
+        code=code,
+        email=partner_req.email,
+        phone=partner_req.phone,
+        commission_rate=partner_req.commission_rate
+    )
+    
+    partner_dict = partner.model_dump()
+    partner_dict = serialize_datetime(partner_dict)
+    
+    db.collection("partners").document(partner.id).set(partner_dict)
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "create_partner",
+        "partner",
+        partner.id,
+        {"name": partner.name, "code": code}
+    )
+    
+    return partner_dict
+
+
+@api_router.get("/admin/partners/{partner_id}")
+async def get_partner(partner_id: str, user: dict = Depends(verify_admin)):
+    """Detalhes de um parceiro"""
+    partner_ref = db.collection("partners").document(partner_id)
+    doc = partner_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Parceiro não encontrado")
+
+    partner_data = doc.to_dict()
+    partner_data = deserialize_datetime(partner_data, ["created_at", "updated_at"])
+    
+    return partner_data
+
+
+@api_router.put("/admin/partners/{partner_id}")
+async def update_partner(
+    partner_id: str,
+    updates: UpdatePartnerRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Atualiza dados do parceiro"""
+    partner_ref = db.collection("partners").document(partner_id)
+    doc = partner_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Parceiro não encontrado")
+
+    updates_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
+    updates_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    partner_ref.update(updates_dict)
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "update_partner",
+        "partner",
+        partner_id,
+        updates_dict
+    )
+
+    return {"message": "Parceiro atualizado com sucesso"}
+
+
+@api_router.get("/admin/partners/{partner_id}/sales")
+async def get_partner_sales(partner_id: str, user: dict = Depends(verify_admin)):
+    """Vendas de um parceiro"""
+    partner_ref = db.collection("partners").document(partner_id)
+    doc = partner_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Parceiro não encontrado")
+
+    partner_data = doc.to_dict()
+    partner_code = partner_data.get("code")
+    
+    # Buscar pagamentos com esse código de parceiro
+    payments_docs = list(db.collection("payments").where(
+        filter=firestore.FieldFilter("partner_code", "==", partner_code)
+    ).stream())
+    
+    now = datetime.now(timezone.utc)
+    current_month = now.month
+    current_year = now.year
+    
+    sales = []
+    monthly_total = 0.0
+    monthly_count = 0
+    
+    for doc in payments_docs:
+        payment = doc.to_dict()
+        if payment.get("status") not in ["approved", "paid"]:
+            continue
+            
+        payment = deserialize_datetime(payment, ["created_at", "updated_at"])
+        sales.append(payment)
+        
+        created_at = payment.get("created_at")
+        if isinstance(created_at, datetime):
+            if created_at.month == current_month and created_at.year == current_year:
+                monthly_total += payment.get("amount", 0)
+                monthly_count += 1
+    
+    # Calcular comissão
+    commission_rate = partner_data.get("commission_rate", 0.10)
+    
+    # Regra: se vendeu mais de 10 no mês, comissão sobe para 15%
+    if monthly_count > 10:
+        commission_rate = 0.15
+    
+    monthly_commission = monthly_total * commission_rate
+    
+    return {
+        "sales": sales,
+        "monthly_count": monthly_count,
+        "monthly_total": monthly_total,
+        "commission_rate": commission_rate,
+        "monthly_commission": monthly_commission
+    }
+
+
+@api_router.post("/admin/partners/{partner_id}/pay-commission")
+async def pay_partner_commission(
+    partner_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Registra pagamento de comissão do parceiro"""
+    partner_ref = db.collection("partners").document(partner_id)
+    doc = partner_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Parceiro não encontrado")
+
+    partner_data = doc.to_dict()
+    
+    # Calcular comissão do mês atual
+    now = datetime.now(timezone.utc)
+    sales_data = await get_partner_sales(partner_id, user)
+    
+    if sales_data["monthly_commission"] <= 0:
+        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Sem comissão pendente para este período")
+    
+    # Criar registro de pagamento de comissão
+    commission = CommissionPayment(
+        partner_id=partner_id,
+        partner_name=partner_data.get("name"),
+        amount=sales_data["monthly_commission"],
+        period_month=now.month,
+        period_year=now.year,
+        sales_count=sales_data["monthly_count"],
+        status="paid",
+        paid_at=now
+    )
+    
+    comm_dict = commission.model_dump()
+    comm_dict = serialize_datetime(comm_dict)
+    
+    db.collection("commission_payments").document(commission.id).set(comm_dict)
+    
+    # Resetar contadores mensais do parceiro
+    partner_ref.update({
+        "total_sales_month": 0,
+        "total_revenue_month": 0.0,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "pay_commission",
+        "partner",
+        partner_id,
+        {"amount": sales_data["monthly_commission"], "period": f"{now.month}/{now.year}"}
+    )
+
+    return {"message": "Comissão paga com sucesso", "amount": sales_data["monthly_commission"]}
+
+
+@api_router.get("/admin/commissions")
+async def get_all_commissions(user: dict = Depends(verify_admin)):
+    """Lista todos os pagamentos de comissão"""
+    comms_ref = db.collection("commission_payments").order_by("created_at", direction=firestore.Query.DESCENDING)
+    docs = comms_ref.stream()
+
+    commissions = []
+    for doc in docs:
+        comm_data = doc.to_dict()
+        comm_data = deserialize_datetime(comm_data, ["created_at", "paid_at"])
+        commissions.append(comm_data)
+
+    return commissions
+
+
+# ========== FINANCIAL ENDPOINTS ==========
+
+@api_router.get("/admin/finance/summary")
+async def get_finance_summary(
+    user: dict = Depends(verify_admin),
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """Resumo financeiro com filtros de período"""
+    from collections import defaultdict
+    
+    payments_docs = list(db.collection("payments").stream())
+    
+    # Parse dates
+    start = None
+    end = None
+    if start_date:
+        try:
+            start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+        except:
+            pass
+    if end_date:
+        try:
+            end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+        except:
+            pass
+    
+    total_revenue = 0.0
+    total_orders = 0
+    revenue_by_type = defaultdict(float)
+    orders_by_type = defaultdict(int)
+    revenue_by_month = defaultdict(float)
+    
+    filtered_payments = []
+    
+    for doc in payments_docs:
+        payment = doc.to_dict()
+        
+        if payment.get("status") not in ["approved", "paid"]:
+            continue
+        
+        created_at = payment.get("created_at")
+        if isinstance(created_at, str):
+            try:
+                created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            except:
+                continue
+        
+        # Aplicar filtros de data
+        if start and created_at < start:
+            continue
+        if end and created_at > end:
+            continue
+        
+        amount = payment.get("amount", 0)
+        plan_type = payment.get("plan_type", "digital")
+        
+        total_revenue += amount
+        total_orders += 1
+        revenue_by_type[plan_type] += amount
+        orders_by_type[plan_type] += 1
+        
+        month_key = f"{created_at.year}-{created_at.month:02d}"
+        revenue_by_month[month_key] += amount
+        
+        filtered_payments.append({
+            "id": payment.get("id"),
+            "amount": amount,
+            "plan_type": plan_type,
+            "user_email": payment.get("user_email"),
+            "created_at": created_at.isoformat(),
+            "status": payment.get("status")
+        })
+    
+    # Buscar comissões pendentes
+    pending_commissions = 0.0
+    comm_docs = list(db.collection("commission_payments").where(
+        filter=firestore.FieldFilter("status", "==", "pending")
+    ).stream())
+    for doc in comm_docs:
+        pending_commissions += doc.to_dict().get("amount", 0)
+    
+    # Calcular estimativa de lucro (receita - comissões)
+    total_commissions_paid = 0.0
+    paid_comm_docs = list(db.collection("commission_payments").where(
+        filter=firestore.FieldFilter("status", "==", "paid")
+    ).stream())
+    for doc in paid_comm_docs:
+        total_commissions_paid += doc.to_dict().get("amount", 0)
+    
+    estimated_profit = total_revenue - total_commissions_paid - pending_commissions
+    
+    return {
+        "total_revenue": total_revenue,
+        "total_orders": total_orders,
+        "avg_ticket": total_revenue / total_orders if total_orders > 0 else 0,
+        "revenue_by_type": dict(revenue_by_type),
+        "orders_by_type": dict(orders_by_type),
+        "revenue_by_month": dict(revenue_by_month),
+        "pending_commissions": pending_commissions,
+        "total_commissions_paid": total_commissions_paid,
+        "estimated_profit": estimated_profit,
+        "payments": filtered_payments[:100]  # Limitar a 100 registros
+    }
+
+
+@api_router.get("/admin/finance/export")
+async def export_finance_data(
+    user: dict = Depends(verify_admin),
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """Exporta dados financeiros para Excel (retorna dados JSON para o frontend processar)"""
+    summary = await get_finance_summary(user, start_date, end_date)
+    
+    # Preparar dados para exportação
+    export_data = {
+        "summary": {
+            "total_revenue": summary["total_revenue"],
+            "total_orders": summary["total_orders"],
+            "avg_ticket": summary["avg_ticket"],
+            "pending_commissions": summary["pending_commissions"],
+            "estimated_profit": summary["estimated_profit"]
+        },
+        "by_type": [
+            {"type": k, "revenue": v, "orders": summary["orders_by_type"].get(k, 0)} 
+            for k, v in summary["revenue_by_type"].items()
+        ],
+        "by_month": [
+            {"month": k, "revenue": v} 
+            for k, v in sorted(summary["revenue_by_month"].items())
+        ],
+        "transactions": summary["payments"]
+    }
+    
+    return export_data
+
+
+# ========== MEMORIALS ADMIN ENDPOINTS ==========
+
+@api_router.put("/admin/memorials/{memorial_id}")
+async def update_memorial_admin(
+    memorial_id: str,
+    updates: UpdateMemorialAdminRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Atualiza memorial (admin)"""
+    memorial_ref = db.collection("memorials").document(memorial_id)
+    doc = memorial_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Memorial não encontrado")
+
+    updates_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
+    updates_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    memorial_ref.update(updates_dict)
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "update_memorial",
+        "memorial",
+        memorial_id,
+        updates_dict
+    )
+
+    return {"message": "Memorial atualizado com sucesso"}
+
+
+@api_router.put("/admin/memorials/{memorial_id}/toggle")
+async def toggle_memorial(
+    memorial_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Ativa/desativa memorial"""
+    memorial_ref = db.collection("memorials").document(memorial_id)
+    doc = memorial_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Memorial não encontrado")
+
+    memorial_data = doc.to_dict()
+    current_active = memorial_data.get("active", True)
+    new_active = not current_active
+    
+    memorial_ref.update({
+        "active": new_active,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "toggle_memorial",
+        "memorial",
+        memorial_id,
+        {"active": new_active}
+    )
+
+    return {"message": f"Memorial {'ativado' if new_active else 'desativado'}", "active": new_active}
+
+
+@api_router.put("/admin/memorials/{memorial_id}/feature")
+async def feature_memorial(
+    memorial_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Destaca/remove destaque do memorial na página Explorar"""
+    memorial_ref = db.collection("memorials").document(memorial_id)
+    doc = memorial_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Memorial não encontrado")
+
+    memorial_data = doc.to_dict()
+    current_featured = memorial_data.get("featured", False)
+    new_featured = not current_featured
+    
+    memorial_ref.update({
+        "featured": new_featured,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "feature_memorial",
+        "memorial",
+        memorial_id,
+        {"featured": new_featured}
+    )
+
+    return {"message": f"Memorial {'destacado' if new_featured else 'removido dos destaques'}", "featured": new_featured}
+
+
+# ========== NOTIFICATIONS ENDPOINTS ==========
+
+@api_router.get("/admin/notifications")
+async def get_admin_notifications(user: dict = Depends(verify_admin)):
+    """Lista notificações do admin"""
+    notifs_ref = db.collection("admin_notifications").order_by("created_at", direction=firestore.Query.DESCENDING).limit(50)
+    docs = notifs_ref.stream()
+
+    notifications = []
+    for doc in docs:
+        notif_data = doc.to_dict()
+        notif_data = deserialize_datetime(notif_data, ["created_at"])
+        notifications.append(notif_data)
+
+    return notifications
+
+
+@api_router.get("/admin/notifications/unread-count")
+async def get_unread_count(user: dict = Depends(verify_admin)):
+    """Conta notificações não lidas"""
+    notifs_ref = db.collection("admin_notifications").where(
+        filter=firestore.FieldFilter("read", "==", False)
+    )
+    docs = list(notifs_ref.stream())
+    return {"count": len(docs)}
+
+
+@api_router.put("/admin/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, user: dict = Depends(verify_admin)):
+    """Marca notificação como lida"""
+    notif_ref = db.collection("admin_notifications").document(notification_id)
+    doc = notif_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Notificação não encontrada")
+
+    notif_ref.update({"read": True})
+    return {"message": "Notificação marcada como lida"}
+
+
+@api_router.put("/admin/notifications/read-all")
+async def mark_all_notifications_read(user: dict = Depends(verify_admin)):
+    """Marca todas as notificações como lidas"""
+    notifs_ref = db.collection("admin_notifications").where(
+        filter=firestore.FieldFilter("read", "==", False)
+    )
+    docs = notifs_ref.stream()
+    
+    for doc in docs:
+        doc.reference.update({"read": True})
+    
+    return {"message": "Todas as notificações marcadas como lidas"}
+
+
+# ========== ADMIN LOGS ENDPOINTS ==========
+
+@api_router.get("/admin/logs")
+async def get_admin_logs(
+    user: dict = Depends(verify_admin),
+    limit: int = 100,
+    entity_type: Optional[str] = None
+):
+    """Lista logs administrativos"""
+    logs_ref = db.collection("admin_logs").order_by("created_at", direction=firestore.Query.DESCENDING)
+    
+    if entity_type:
+        logs_ref = logs_ref.where(filter=firestore.FieldFilter("entity_type", "==", entity_type))
+    
+    docs = logs_ref.limit(limit).stream()
+
+    logs = []
+    for doc in docs:
+        log_data = doc.to_dict()
+        log_data = deserialize_datetime(log_data, ["created_at"])
+        logs.append(log_data)
+
+    return logs
 
 
 # ========== REVIEWS ENDPOINTS ==========
@@ -1191,7 +2372,11 @@ async def get_all_reviews(user: dict = Depends(verify_admin)):
 
 
 @api_router.put("/admin/reviews/{review_id}/approve")
-async def approve_review(review_id: str, user: dict = Depends(verify_admin)):
+async def approve_review(
+    review_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
     review_ref = db.collection("reviews").document(review_id)
     doc = review_ref.get()
 
@@ -1199,12 +2384,87 @@ async def approve_review(review_id: str, user: dict = Depends(verify_admin)):
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Avaliação não encontrada")
 
     review_ref.update({"approved": True})
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "approve_review",
+        "review",
+        review_id,
+        {}
+    )
 
     return {"message": "Avaliação aprovada com sucesso"}
 
 
+@api_router.put("/admin/reviews/{review_id}/reject")
+async def reject_review(
+    review_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Reprova uma avaliação"""
+    review_ref = db.collection("reviews").document(review_id)
+    doc = review_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Avaliação não encontrada")
+
+    review_ref.update({"approved": False})
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "reject_review",
+        "review",
+        review_id,
+        {}
+    )
+
+    return {"message": "Avaliação reprovada"}
+
+
+@api_router.post("/admin/reviews/{review_id}/respond")
+async def respond_to_review(
+    review_id: str,
+    response_data: RespondReviewRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Responde a uma avaliação"""
+    review_ref = db.collection("reviews").document(review_id)
+    doc = review_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Avaliação não encontrada")
+
+    review_ref.update({
+        "admin_response": response_data.response,
+        "response_date": datetime.now(timezone.utc).isoformat(),
+        "responded_by": user.get("email")
+    })
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "respond_review",
+        "review",
+        review_id,
+        {"response": response_data.response[:100]}
+    )
+
+    return {"message": "Resposta adicionada com sucesso"}
+
+
 @api_router.delete("/admin/reviews/{review_id}")
-async def delete_review(review_id: str, user: dict = Depends(verify_admin)):
+async def delete_review(
+    review_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
     review_ref = db.collection("reviews").document(review_id)
     doc = review_ref.get()
 
@@ -1212,6 +2472,16 @@ async def delete_review(review_id: str, user: dict = Depends(verify_admin)):
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Avaliação não encontrada")
 
     review_ref.delete()
+    
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"),
+        user.get("email"),
+        "delete_review",
+        "review",
+        review_id,
+        {}
+    )
 
     return {"message": "Avaliação excluída com sucesso"}
 
