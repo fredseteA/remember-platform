@@ -186,6 +186,39 @@ class ConfirmPaymentRequest(BaseModel):
 class UpdateOrderStatusRequest(BaseModel):
     status: str
 
+class CreatePartnerRequest(BaseModel):
+    """Substitui o CreatePartnerRequest existente"""
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    supporter_code: str          # obrigatório, definido manualmente
+    commission_rate: float = 0.10
+
+
+class SupporterCommission(BaseModel):
+    """Registro de comissão por pedido"""
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    order_id: str
+    partner_id: str
+    partner_name: str
+    supporter_code: str
+    commission_amount: float
+    commission_status: str = "pending"   # pending | available | paid | canceled
+    paid_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# Atualizar CreatePaymentRequest para incluir supporter_code
+class CreatePaymentRequest(BaseModel):
+    memorial_id: str
+    plan_type: str
+    transaction_amount: float
+    description: str
+    payer_email: EmailStr
+    payment_method_id: str = "pix"
+    supporter_code: Optional[str] = None   # ← NOVO campo
 
 # ========== NEW ADMIN MODELS ==========
 
@@ -206,12 +239,6 @@ class Partner(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
-class CreatePartnerRequest(BaseModel):
-    name: str
-    email: EmailStr
-    phone: Optional[str] = None
-    commission_rate: float = 0.10
 
 
 class UpdatePartnerRequest(BaseModel):
@@ -405,6 +432,101 @@ def deserialize_datetime(data: dict, datetime_fields: List[str]) -> dict:
             except (ValueError, AttributeError):
                 pass
     return result
+
+DISCOUNT_PERCENTAGE = 5.0   # desconto fixo ao usar código
+
+def supporter_service_validate(code: str) -> Optional[dict]:
+    """
+    Valida um código de apoiador.
+    Retorna o documento do parceiro ou None se inválido/inativo.
+    """
+    if not code:
+        return None
+    code = code.strip().upper()
+    docs = list(
+        db.collection("partners")
+        .where(filter=firestore.FieldFilter("supporter_code", "==", code))
+        .where(filter=firestore.FieldFilter("status", "==", "active"))
+        .limit(1)
+        .stream()
+    )
+    return docs[0].to_dict() if docs else None
+
+
+def commission_service_calculate(original_amount: float, commission_rate: float) -> dict:
+    """
+    Aplica o desconto e calcula a comissão.
+    Todas as fórmulas exatas do spec:
+        discount_amount   = original_amount * 0.05
+        final_amount      = original_amount - discount_amount
+        commission_amount = final_amount * commission_rate
+    """
+    discount_amount   = round(original_amount * (DISCOUNT_PERCENTAGE / 100), 2)
+    final_amount      = round(original_amount - discount_amount, 2)
+    commission_amount = round(final_amount * commission_rate, 2)
+    return {
+        "original_amount":    original_amount,
+        "discount_amount":    discount_amount,
+        "final_amount":       final_amount,
+        "commission_rate":    commission_rate,
+        "commission_amount":  commission_amount,
+        "discount_percentage": DISCOUNT_PERCENTAGE,
+    }
+
+
+async def send_supporter_sale_email(partner_data: dict, payment_data: dict, calc: dict):
+    """Email automático ao apoiador quando uma venda é gerada com seu código."""
+    try:
+        order_id = payment_data.get("id", "")[:8]
+        html = f"""
+        <!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+        <body style="font-family:Arial,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+            <h2 style="color:#3b82f6;">🎉 Nova venda com seu código!</h2>
+            <p>Olá, <strong>{partner_data.get('name')}</strong>!</p>
+            <p>Uma venda foi realizada usando seu código <strong>{partner_data.get('supporter_code')}</strong>.</p>
+            <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+                <tr>
+                    <td style="padding:10px;background:#f8f9fa;font-weight:bold;border-bottom:1px solid #ddd;">Pedido</td>
+                    <td style="padding:10px;background:#fff;border-bottom:1px solid #ddd;">#{order_id}</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px;background:#f8f9fa;font-weight:bold;border-bottom:1px solid #ddd;">Valor Original</td>
+                    <td style="padding:10px;background:#fff;border-bottom:1px solid #ddd;">R$ {calc['original_amount']:.2f}</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px;background:#f8f9fa;font-weight:bold;border-bottom:1px solid #ddd;">Desconto Aplicado</td>
+                    <td style="padding:10px;background:#fff;border-bottom:1px solid #ddd;color:#16a34a;">- R$ {calc['discount_amount']:.2f} ({int(DISCOUNT_PERCENTAGE)}%)</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px;background:#f8f9fa;font-weight:bold;border-bottom:1px solid #ddd;">Valor Final</td>
+                    <td style="padding:10px;background:#fff;border-bottom:1px solid #ddd;font-weight:bold;">R$ {calc['final_amount']:.2f}</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px;background:#f8f9fa;font-weight:bold;">Sua Comissão</td>
+                    <td style="padding:10px;background:#fff;color:#f59e0b;font-size:18px;font-weight:bold;">R$ {calc['commission_amount']:.2f}</td>
+                </tr>
+            </table>
+            <div style="background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;padding:12px;margin:16px 0;">
+                <p style="margin:0;color:#92400e;font-size:14px;">
+                    ⏳ <strong>Status:</strong> Pendente — a comissão fica disponível após a entrega do pedido.
+                </p>
+            </div>
+            <hr style="border:none;border-top:1px solid #eee;margin:30px 0;">
+            <p style="font-size:12px;color:#888;text-align:center;">
+                © {datetime.now().year} Remember QRCode
+            </p>
+        </body></html>
+        """
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [partner_data.get("email")],
+            "subject": "Nova venda com seu código 🎉 — Remember QRCode",
+            "html": html
+        }
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"✅ Email de venda enviado ao apoiador {partner_data.get('email')}. ID: {result.get('id')}")
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar email ao apoiador: {str(e)}")
 
 
 # ========== ADMIN HELPERS ==========
@@ -715,6 +837,67 @@ def get_memorial_for_order(order_data: dict) -> dict:
             return mem_doc.to_dict()
     return {}
 
+def _set_commission_available_on_deliver(order_id: str):
+    """Chamada quando pedido é marcado como 'entregue'. pending → available."""
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+    if not doc.exists:
+        return
+    order_data = doc.to_dict()
+    if order_data.get("commission_status") == "pending":
+        order_ref.update({
+            "commission_status": "available",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+        comm_docs = list(
+            db.collection("supporter_commissions")
+            .where(filter=firestore.FieldFilter("order_id", "==", order_id))
+            .where(filter=firestore.FieldFilter("commission_status", "==", "pending"))
+            .stream()
+        )
+        for cd in comm_docs:
+            cd.reference.update({
+                "commission_status": "available",
+                "available_at": datetime.now(timezone.utc).isoformat()
+            })
+        logger.info(f"✅ Comissão do pedido {order_id} marcada como 'available'")
+
+
+def _cancel_commission(order_id: str):
+    """Cancela comissão quando pedido é cancelado. Se já 'paid', registra ajuste manual."""
+    order_ref = db.collection("payments").document(order_id)
+    doc = order_ref.get()
+    if not doc.exists:
+        return
+    order_data = doc.to_dict()
+    current_status = order_data.get("commission_status")
+
+    if current_status in ("pending", "available"):
+        order_ref.update({
+            "commission_status": "canceled",
+            "commission_amount": 0,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+        comm_docs = list(
+            db.collection("supporter_commissions")
+            .where(filter=firestore.FieldFilter("order_id", "==", order_id))
+            .stream()
+        )
+        for cd in comm_docs:
+            cd.reference.update({
+                "commission_status": "canceled",
+                "commission_amount": 0,
+                "canceled_at": datetime.now(timezone.utc).isoformat()
+            })
+        logger.info(f"✅ Comissão do pedido {order_id} cancelada")
+
+    elif current_status == "paid":
+        db.collection("commission_adjustments").add({
+            "order_id": order_id,
+            "note": "Pedido cancelado após comissão paga — ajuste manual necessário",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        logger.warning(f"⚠️ Pedido {order_id} cancelado mas comissão já estava 'paid'. Ajuste manual registrado.")
 
 # ========== AUTH ENDPOINTS ==========
 
@@ -850,40 +1033,92 @@ async def update_memorial(
 # ========== PAYMENT ENDPOINTS ==========
 
 @api_router.post("/payments/create-checkout")
-async def create_checkout(payment_req: CreatePaymentRequest, token_data: dict = Depends(verify_firebase_token)):
-    logger.info("=" * 60)
-    logger.info("=== INICIANDO CRIAÇÃO DE PREFERENCE (CHECKOUT PRO) ===")
-    logger.info("=" * 60)
+async def create_checkout(
+    payment_req: CreatePaymentRequest,
+    background_tasks: BackgroundTasks,
+    token_data: dict = Depends(verify_firebase_token)
+):
+    logger.info("=== INICIANDO CRIAÇÃO DE CHECKOUT ===")
 
     memorial_doc = db.collection("memorials").document(payment_req.memorial_id).get()
     if not memorial_doc.exists:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Memorial not found")
+        raise HTTPException(status_code=404, detail="Memorial not found")
 
     memorial = memorial_doc.to_dict()
 
     if not mp_access_token:
-        raise HTTPException(status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Mercado Pago não configurado")
+        raise HTTPException(status_code=500, detail="Mercado Pago não configurado")
 
+    # ── Lógica de código do apoiador (toda validação aqui no backend) ──
+    supporter_data    = None
+    calc              = None
+    original_amount   = payment_req.transaction_amount
+    final_amount      = original_amount
+    discount_amount   = 0.0
+    commission_amount = 0.0
+    commission_rate   = 0.0
+    commission_status = None
+    supporter_id      = None
+    supporter_code    = None
+
+    if payment_req.supporter_code:
+        raw_code = payment_req.supporter_code.strip().upper()
+        supporter_data = supporter_service_validate(raw_code)
+        if not supporter_data:
+            raise HTTPException(status_code=400, detail="Código de apoiador inválido ou inativo.")
+
+        commission_rate = supporter_data.get("commission_rate", 0.10)
+        calc = commission_service_calculate(original_amount, commission_rate)
+
+        final_amount      = calc["final_amount"]
+        discount_amount   = calc["discount_amount"]
+        commission_amount = calc["commission_amount"]
+        commission_status = "pending"
+        supporter_id      = supporter_data.get("id")
+        supporter_code    = raw_code
+
+        logger.info(f"Código apoiador '{raw_code}' válido. Desconto: R${discount_amount} | Comissão: R${commission_amount}")
+
+    # Cria o registro de pagamento com todos os campos novos
     payment = Payment(
         memorial_id=payment_req.memorial_id,
         user_id=token_data["uid"],
         user_email=payment_req.payer_email,
         plan_type=payment_req.plan_type,
-        amount=payment_req.transaction_amount,
+        amount=final_amount,                 # valor cobrado = final
         status="pending"
     )
 
+    # Campos extras (Firestore é schemaless, podemos salvar direto)
+    payment_dict = payment.model_dump()
+    payment_dict.update({
+        "original_amount":    original_amount,
+        "discount_amount":    discount_amount,
+        "final_amount":       final_amount,
+        "supporter_id":       supporter_id,
+        "supporter_code":     supporter_code,
+        "commission_rate":    commission_rate,
+        "commission_amount":  commission_amount,
+        "commission_status":  commission_status,
+    })
+    payment_dict = serialize_datetime(payment_dict)
+
     try:
-        backend_url = os.getenv('REACT_APP_BACKEND_URL', 'http://localhost:8001')
+        backend_url  = os.getenv('REACT_APP_BACKEND_URL', 'http://localhost:8001')
         frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 
         preference_payload = {
-            "items": [{"title": payment_req.description, "quantity": 1, "unit_price": float(payment_req.transaction_amount), "currency_id": "BRL"}],
+            "items": [{
+                "title": payment_req.description,
+                "quantity": 1,
+                "unit_price": float(final_amount),
+                "currency_id": "BRL"
+            }],
             "payer": {"email": payment_req.payer_email},
             "back_urls": {
                 "success": f"{frontend_url}/payment/success?payment_id={payment.id}",
                 "failure": f"{frontend_url}/payment/failure?payment_id={payment.id}",
-                "pending": f"{frontend_url}/payment/pending?payment_id={payment.id}"
+                "pending": f"{frontend_url}/payment/pending?payment_id={payment.id}",
             },
             "auto_return": "approved",
             "external_reference": payment.id,
@@ -894,34 +1129,60 @@ async def create_checkout(payment_req: CreatePaymentRequest, token_data: dict = 
         result = mp_sdk.preference().create(preference_payload)
 
         if result["status"] == 201:
-            mp_preference = result["response"]
-            preference_id = mp_preference.get("id")
-            init_point = mp_preference.get("init_point")
+            mp_preference  = result["response"]
+            preference_id  = mp_preference.get("id")
+            init_point     = mp_preference.get("init_point")
             if not init_point:
-                raise HTTPException(status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Mercado Pago não retornou URL de checkout")
-            payment.mercadopago_payment_id = preference_id
-            payment_dict = payment.model_dump()
-            payment_dict = serialize_datetime(payment_dict)
+                raise HTTPException(status_code=500, detail="Mercado Pago não retornou URL de checkout")
+
+            payment_dict["mercadopago_payment_id"] = preference_id
             db.collection("payments").document(payment.id).set(payment_dict)
-            return {"success": True, "payment_id": payment.id, "preference_id": preference_id, "checkout_url": init_point, "message": "Checkout criado com sucesso"}
+
+            # Salvar registro de comissão separado
+            if supporter_data and commission_amount > 0:
+                comm = SupporterCommission(
+                    order_id=payment.id,
+                    partner_id=supporter_id,
+                    partner_name=supporter_data.get("name", ""),
+                    supporter_code=supporter_code,
+                    commission_amount=commission_amount,
+                    commission_status="pending",
+                )
+                comm_dict = comm.model_dump()
+                comm_dict = serialize_datetime(comm_dict)
+                db.collection("supporter_commissions").document(comm.id).set(comm_dict)
+
+                # Email ao apoiador em background
+                background_tasks.add_task(send_supporter_sale_email, supporter_data, payment_dict, calc)
+
+            return {
+                "success": True,
+                "payment_id": payment.id,
+                "preference_id": preference_id,
+                "checkout_url": init_point,
+                "message": "Checkout criado com sucesso",
+                # Informações do desconto para o frontend confirmar
+                "discount_applied": discount_amount > 0,
+                "discount_amount": discount_amount,
+                "final_amount": final_amount,
+            }
 
         elif result["status"] == 400:
-            error_response = result.get("response", {})
-            error_msg = error_response.get('message', 'Erro ao criar preference')
-            causes = error_response.get('cause', [])
-            if isinstance(causes, list) and causes:
-                error_msg = causes[0].get('description', error_msg)
-            raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=f"Mercado Pago: {error_msg}")
+            err = result.get("response", {})
+            causes = err.get("cause", [])
+            msg = causes[0].get("description", err.get("message", "Erro ao criar preference")) if causes else err.get("message", "Erro")
+            raise HTTPException(status_code=400, detail=f"Mercado Pago: {msg}")
 
         else:
-            raise HTTPException(status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao criar checkout (status {result.get('status')})")
+            raise HTTPException(status_code=500, detail=f"Erro ao criar checkout (status {result.get('status')})")
 
     except HTTPException:
         raise
     except Exception as e:
         import traceback
-        logger.error(f"❌ EXCEÇÃO: {type(e).__name__} - {str(e)}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro interno ao processar pagamento: {str(e)}")
+        logger.error(f"❌ {type(e).__name__}: {str(e)}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+
 
 
 @api_router.get("/payments/my", response_model=List[Payment])
@@ -1316,23 +1577,86 @@ async def update_order_status(
     new_status = status_update.status
 
     status_history = order_data.get("status_history", [])
-    status_history.append({"from_status": old_status, "to_status": new_status, "changed_by": user.get("email"), "changed_at": datetime.now(timezone.utc).isoformat()})
+    status_history.append({
+        "from_status": old_status,
+        "to_status": new_status,
+        "changed_by": user.get("email"),
+        "changed_at": datetime.now(timezone.utc).isoformat()
+    })
 
-    order_ref.update({"status": new_status, "status_history": status_history, "updated_at": datetime.now(timezone.utc).isoformat()})
+    order_ref.update({
+        "status": new_status,
+        "status_history": status_history,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
 
-    background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "update_status", "order", order_id, {"old_status": old_status, "new_status": new_status})
+    # ✅ Quando entregue: libera comissão do apoiador (pending → available)
+    if new_status == "entregue":
+        _set_commission_available_on_deliver(order_id)
+
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"), user.get("email"),
+        "update_status", "order", order_id,
+        {"old_status": old_status, "new_status": new_status}
+    )
 
     return {"message": "Status atualizado com sucesso", "new_status": new_status}
 
 
-@api_router.put("/admin/orders/{order_id}/archive")
-async def archive_order(order_id: str, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
+@api_router.put("/admin/orders/{order_id}/cancel")
+async def cancel_order(
+    order_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
     order_ref = db.collection("payments").document(order_id)
-    if not order_ref.get().exists:
+    doc = order_ref.get()
+    if not doc.exists:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
-    order_ref.update({"archived": True, "archived_at": datetime.now(timezone.utc).isoformat(), "archived_by": user.get("email"), "updated_at": datetime.now(timezone.utc).isoformat()})
-    background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "archive_order", "order", order_id, {})
-    return {"message": "Pedido arquivado com sucesso"}
+
+    order_data = doc.to_dict()
+    old_status = order_data.get("status")
+    status_history = order_data.get("status_history", [])
+    status_history.append({
+        "from_status": old_status,
+        "to_status": "cancelled",
+        "changed_by": user.get("email"),
+        "changed_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    order_ref.update({
+        "status": "cancelled",
+        "status_history": status_history,
+        "cancelled_at": datetime.now(timezone.utc).isoformat(),
+        "cancelled_by": user.get("email"),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    # ✅ Cancela comissão do apoiador (pending/available → canceled)
+    _cancel_commission(order_id)
+
+    # Deletar memorial associado
+    memorial_id = order_data.get("memorial_id")
+    if memorial_id:
+        try:
+            db.collection("memorials").document(memorial_id).delete()
+            logger.info(f"Memorial {memorial_id} deletado após cancelamento do pedido {order_id}")
+        except Exception as e:
+            logger.error(f"Erro ao deletar memorial {memorial_id}: {str(e)}")
+
+    background_tasks.add_task(
+        create_admin_log,
+        user.get("uid"), user.get("email"),
+        "cancel_order", "order", order_id,
+        {"old_status": old_status}
+    )
+
+    # Email ao cliente
+    memorial_data = get_memorial_for_order(order_data)
+    background_tasks.add_task(send_order_status_email, order_data, memorial_data, "cancelled")
+
+    return {"message": "Pedido cancelado com sucesso"}
 
 
 @api_router.put("/admin/orders/{order_id}/unarchive")
@@ -1390,44 +1714,6 @@ async def update_tracking(
     )
 
     return {"message": "Código de rastreio adicionado", "tracking_code": tracking_data.tracking_code}
-
-
-@api_router.put("/admin/orders/{order_id}/cancel")
-async def cancel_order(order_id: str, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
-    order_ref = db.collection("payments").document(order_id)
-    doc = order_ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Pedido não encontrado")
-
-    order_data = doc.to_dict()
-    old_status = order_data.get("status")
-    status_history = order_data.get("status_history", [])
-    status_history.append({"from_status": old_status, "to_status": "cancelled", "changed_by": user.get("email"), "changed_at": datetime.now(timezone.utc).isoformat()})
-
-    order_ref.update({
-        "status": "cancelled",
-        "status_history": status_history,
-        "cancelled_at": datetime.now(timezone.utc).isoformat(),
-        "cancelled_by": user.get("email"),
-        "updated_at": datetime.now(timezone.utc).isoformat()
-    })
-
-    # Deletar memorial associado
-    memorial_id = order_data.get("memorial_id")
-    if memorial_id:
-        try:
-            db.collection("memorials").document(memorial_id).delete()
-            logger.info(f"Memorial {memorial_id} deletado apos cancelamento do pedido {order_id}")
-        except Exception as e:
-            logger.error(f"Erro ao deletar memorial {memorial_id}: {str(e)}")
-
-    background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "cancel_order", "order", order_id, {"old_status": old_status})
-
-    # Email ao cliente
-    memorial_data = get_memorial_for_order(order_data)
-    background_tasks.add_task(send_order_status_email, order_data, memorial_data, "cancelled")
-
-    return {"message": "Pedido cancelado com sucesso"}
 
 
 # ========== PRODUCTION QUEUE ==========
@@ -1549,29 +1835,118 @@ async def delete_order(order_id: str, user: dict = Depends(verify_admin)):
 
 # ========== PARTNERS ENDPOINTS ==========
 
+@api_router.get("/supporters/validate/{code}")
+async def validate_supporter_code(code: str):
+    """Rota pública — frontend valida o código antes de mostrar o desconto."""
+    supporter = supporter_service_validate(code)
+    if not supporter:
+        raise HTTPException(status_code=404, detail="Código inválido ou inativo.")
+    return {
+        "valid": True,
+        "supporter_name": supporter.get("name"),
+        "discount_percentage": DISCOUNT_PERCENTAGE,
+    }
+
+
 @api_router.get("/admin/partners")
 async def get_all_partners(user: dict = Depends(verify_admin)):
+    """Retorna parceiros com totais de comissão calculados em tempo real."""
     partners_ref = db.collection("partners").order_by("created_at", direction=firestore.Query.DESCENDING)
-    docs = partners_ref.stream()
-    partners = []
+    docs = list(partners_ref.stream())
+    result = []
+    now = datetime.now(timezone.utc)
+
     for doc in docs:
-        partner_data = doc.to_dict()
-        partner_data = deserialize_datetime(partner_data, ["created_at", "updated_at"])
-        partners.append(partner_data)
-    return partners
+        p = doc.to_dict()
+        p = deserialize_datetime(p, ["created_at", "updated_at"])
+        partner_id = p.get("id")
+
+        comm_docs = list(
+            db.collection("supporter_commissions")
+            .where(filter=firestore.FieldFilter("partner_id", "==", partner_id))
+            .stream()
+        )
+        pending = available = paid = 0.0
+        sales_this_month = 0
+
+        for cd in comm_docs:
+            c = cd.to_dict()
+            amt = c.get("commission_amount", 0) or 0
+            s = c.get("commission_status", "")
+            if s == "pending":   pending   += amt
+            if s == "available": available += amt
+            if s == "paid":      paid      += amt
+            created = c.get("created_at")
+            if isinstance(created, str):
+                try:
+                    created = datetime.fromisoformat(created.replace('Z', '+00:00'))
+                except: pass
+            if isinstance(created, datetime):
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                if created.month == now.month and created.year == now.year:
+                    sales_this_month += 1
+
+        p["commission_pending"]   = round(pending, 2)
+        p["commission_available"] = round(available, 2)
+        p["commission_paid"]      = round(paid, 2)
+        p["total_sales_month"]    = sales_this_month
+        result.append(p)
+
+    return result
 
 
 @api_router.post("/admin/partners")
-async def create_partner(partner_req: CreatePartnerRequest, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
-    code = generate_partner_code(partner_req.name)
-    existing = list(db.collection("partners").where(filter=firestore.FieldFilter("code", "==", code)).limit(1).stream())
+async def create_partner(
+    partner_req: CreatePartnerRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Cria parceiro com código manual único."""
+    import re as _re
+    code = partner_req.supporter_code.strip().upper()
+
+    if not _re.match(r'^[A-Z0-9_\-]{3,20}$', code):
+        raise HTTPException(
+            status_code=400,
+            detail="Código inválido. Use letras maiúsculas, números, _ ou -. Entre 3 e 20 caracteres."
+        )
+
+    existing = list(
+        db.collection("partners")
+        .where(filter=firestore.FieldFilter("supporter_code", "==", code))
+        .limit(1).stream()
+    )
     if existing:
-        code = generate_partner_code(partner_req.name + str(uuid.uuid4())[:4])
-    partner = Partner(name=partner_req.name, code=code, email=partner_req.email, phone=partner_req.phone, commission_rate=partner_req.commission_rate)
-    partner_dict = partner.model_dump()
-    partner_dict = serialize_datetime(partner_dict)
-    db.collection("partners").document(partner.id).set(partner_dict)
-    background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "create_partner", "partner", partner.id, {"name": partner.name, "code": code})
+        raise HTTPException(status_code=400, detail=f"Código '{code}' já está em uso.")
+
+    partner_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+
+    partner_dict = {
+        "id": partner_id,
+        "name": partner_req.name,
+        "email": partner_req.email,
+        "phone": partner_req.phone,
+        "supporter_code": code,
+        "code": code,                   # campo legado mantido para compatibilidade
+        "commission_rate": partner_req.commission_rate,
+        "status": "active",
+        "commission_pending":   0.0,
+        "commission_available": 0.0,
+        "commission_paid":      0.0,
+        "total_sales_month":    0,
+        "total_revenue_month":  0.0,
+        "total_revenue_all_time": 0.0,
+        "created_at": now,
+        "updated_at": now,
+    }
+    db.collection("partners").document(partner_id).set(partner_dict)
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "create_partner", "partner", partner_id,
+        {"name": partner_req.name, "code": code}
+    )
     return partner_dict
 
 
@@ -1586,75 +1961,126 @@ async def get_partner(partner_id: str, user: dict = Depends(verify_admin)):
 
 
 @api_router.put("/admin/partners/{partner_id}")
-async def update_partner(partner_id: str, updates: UpdatePartnerRequest, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
+async def update_partner(
+    partner_id: str,
+    updates: UpdatePartnerRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
     partner_ref = db.collection("partners").document(partner_id)
     if not partner_ref.get().exists:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Parceiro não encontrado")
     updates_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
     updates_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     partner_ref.update(updates_dict)
-    background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "update_partner", "partner", partner_id, updates_dict)
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "update_partner", "partner", partner_id, updates_dict
+    )
     return {"message": "Parceiro atualizado com sucesso"}
 
 
 @api_router.get("/admin/partners/{partner_id}/sales")
-async def get_partner_sales(partner_id: str, user: dict = Depends(verify_admin)):
+async def get_partner_sales(
+    partner_id: str,
+    user: dict = Depends(verify_admin),
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+):
+    """Relatório de vendas de um parceiro com filtro de período."""
     doc = db.collection("partners").document(partner_id).get()
     if not doc.exists:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Parceiro não encontrado")
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+
     partner_data = doc.to_dict()
-    partner_code = partner_data.get("code")
-    payments_docs = list(db.collection("payments").where(filter=firestore.FieldFilter("partner_code", "==", partner_code)).stream())
-    now = datetime.now(timezone.utc)
+    supporter_code = partner_data.get("supporter_code") or partner_data.get("code")
+
+    payments_docs = list(
+        db.collection("payments")
+        .where(filter=firestore.FieldFilter("supporter_code", "==", supporter_code))
+        .stream()
+    )
+
+    start = end = None
+    if start_date:
+        try:
+            start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            if start.tzinfo is None: start = start.replace(tzinfo=timezone.utc)
+        except: pass
+    if end_date:
+        try:
+            end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            if end.tzinfo is None: end = end.replace(tzinfo=timezone.utc)
+        except: pass
+
     sales = []
-    monthly_total = 0.0
-    monthly_count = 0
-    for doc in payments_docs:
-        payment = doc.to_dict()
-        if payment.get("status") not in ["approved", "paid"]:
-            continue
-        payment = deserialize_datetime(payment, ["created_at", "updated_at"])
-        sales.append(payment)
-        created_at = payment.get("created_at")
-        if isinstance(created_at, datetime):
-            if created_at.month == now.month and created_at.year == now.year:
-                monthly_total += payment.get("amount", 0)
-                monthly_count += 1
-    commission_rate = partner_data.get("commission_rate", 0.10)
-    if monthly_count > 10:
-        commission_rate = 0.15
-    return {"sales": sales, "monthly_count": monthly_count, "monthly_total": monthly_total, "commission_rate": commission_rate, "monthly_commission": monthly_total * commission_rate}
+    for pd in payments_docs:
+        p = pd.to_dict()
+        p = deserialize_datetime(p, ["created_at", "updated_at"])
+        created = p.get("created_at")
+        if isinstance(created, datetime):
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+            if start and created < start: continue
+            if end   and created > end:   continue
+        sales.append(p)
+
+    return {"sales": sales, "partner": partner_data}
 
 
-@api_router.post("/admin/partners/{partner_id}/pay-commission")
-async def pay_partner_commission(partner_id: str, background_tasks: BackgroundTasks, user: dict = Depends(verify_admin)):
-    doc = db.collection("partners").document(partner_id).get()
+@api_router.get("/admin/commissions/available")
+async def get_available_commissions(user: dict = Depends(verify_admin)):
+    """Lista comissões com status 'available' prontas para pagamento."""
+    docs = list(
+        db.collection("supporter_commissions")
+        .where(filter=firestore.FieldFilter("commission_status", "==", "available"))
+        .stream()
+    )
+    result = []
+    for d in docs:
+        c = d.to_dict()
+        c = deserialize_datetime(c, ["created_at"])
+        result.append(c)
+    return result
+
+
+@api_router.put("/admin/commissions/{commission_id}/pay")
+async def pay_commission(
+    commission_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(verify_admin)
+):
+    """Marca uma comissão individual como paga."""
+    comm_ref = db.collection("supporter_commissions").document(commission_id)
+    doc = comm_ref.get()
     if not doc.exists:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Parceiro não encontrado")
-    partner_data = doc.to_dict()
-    now = datetime.now(timezone.utc)
-    sales_data = await get_partner_sales(partner_id, user)
-    if sales_data["monthly_commission"] <= 0:
-        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Sem comissão pendente para este período")
-    commission = CommissionPayment(partner_id=partner_id, partner_name=partner_data.get("name"), amount=sales_data["monthly_commission"], period_month=now.month, period_year=now.year, sales_count=sales_data["monthly_count"], status="paid", paid_at=now)
-    comm_dict = commission.model_dump()
-    comm_dict = serialize_datetime(comm_dict)
-    db.collection("commission_payments").document(commission.id).set(comm_dict)
-    db.collection("partners").document(partner_id).update({"total_sales_month": 0, "total_revenue_month": 0.0, "updated_at": datetime.now(timezone.utc).isoformat()})
-    background_tasks.add_task(create_admin_log, user.get("uid"), user.get("email"), "pay_commission", "partner", partner_id, {"amount": sales_data["monthly_commission"], "period": f"{now.month}/{now.year}"})
-    return {"message": "Comissão paga com sucesso", "amount": sales_data["monthly_commission"]}
+        raise HTTPException(status_code=404, detail="Comissão não encontrada")
 
+    comm_data = doc.to_dict()
+    if comm_data.get("commission_status") != "available":
+        raise HTTPException(status_code=400, detail="Comissão não está disponível para pagamento")
 
-@api_router.get("/admin/commissions")
-async def get_all_commissions(user: dict = Depends(verify_admin)):
-    comms_ref = db.collection("commission_payments").order_by("created_at", direction=firestore.Query.DESCENDING)
-    docs = comms_ref.stream()
-    commissions = []
-    for doc in docs:
-        comm_data = doc.to_dict()
-        comm_data = deserialize_datetime(comm_data, ["created_at", "paid_at"])
-        commissions.append(comm_data)
-    return commissions
+    now = datetime.now(timezone.utc).isoformat()
+    comm_ref.update({
+        "commission_status": "paid",
+        "paid_at": now,
+        "paid_by": user.get("email"),
+    })
+
+    order_id = comm_data.get("order_id")
+    if order_id:
+        db.collection("payments").document(order_id).update({
+            "commission_status": "paid",
+            "commission_paid_at": now,
+            "updated_at": now,
+        })
+
+    background_tasks.add_task(
+        create_admin_log, user.get("uid"), user.get("email"),
+        "pay_commission", "commission", commission_id,
+        {"amount": comm_data.get("commission_amount"), "partner": comm_data.get("partner_name")}
+    )
+    return {"message": "Comissão marcada como paga", "amount": comm_data.get("commission_amount")}
 
 
 # ========== FINANCIAL ENDPOINTS ==========
@@ -1669,27 +2095,22 @@ async def get_finance_summary(
 
     payments_docs = list(db.collection("payments").stream())
 
-    start = None
-    end = None
+    start = end = None
     if start_date:
         try:
             start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
-            if start.tzinfo is None:
-                start = start.replace(tzinfo=timezone.utc)
-        except:
-            pass
+            if start.tzinfo is None: start = start.replace(tzinfo=timezone.utc)
+        except: pass
     if end_date:
         try:
             end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
-            if end.tzinfo is None:
-                end = end.replace(tzinfo=timezone.utc)
-        except:
-            pass
+            if end.tzinfo is None: end = end.replace(tzinfo=timezone.utc)
+        except: pass
 
     total_revenue = 0.0
-    total_orders = 0
-    revenue_by_type = defaultdict(float)
-    orders_by_type = defaultdict(int)
+    total_orders  = 0
+    revenue_by_type  = defaultdict(float)
+    orders_by_type   = defaultdict(int)
     revenue_by_month = defaultdict(float)
     filtered_payments = []
 
@@ -1703,49 +2124,95 @@ async def get_finance_summary(
                 created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
                 if created_at.tzinfo is None:
                     created_at = created_at.replace(tzinfo=timezone.utc)
-            except:
-                continue
-        if start and created_at < start:
-            continue
-        if end and created_at > end:
-            continue
-        amount = payment.get("amount", 0)
+            except: continue
+        if start and created_at < start: continue
+        if end   and created_at > end:   continue
+
+        amount    = payment.get("amount", 0)
         plan_type = payment.get("plan_type", "digital")
         total_revenue += amount
-        total_orders += 1
-        revenue_by_type[plan_type] += amount
-        orders_by_type[plan_type] += 1
+        total_orders  += 1
+        revenue_by_type[plan_type]  += amount
+        orders_by_type[plan_type]   += 1
         month_key = f"{created_at.year}-{created_at.month:02d}"
         revenue_by_month[month_key] += amount
-        filtered_payments.append({"id": payment.get("id"), "amount": amount, "plan_type": plan_type, "user_email": payment.get("user_email"), "created_at": created_at.isoformat(), "status": payment.get("status")})
 
-    pending_commissions = 0.0
-    for doc in list(db.collection("commission_payments").where(filter=firestore.FieldFilter("status", "==", "pending")).stream()):
-        pending_commissions += doc.to_dict().get("amount", 0)
+        # ── Campos novos incluídos na listagem de transações ──
+        filtered_payments.append({
+            "id":                payment.get("id"),
+            "amount":            amount,
+            "original_amount":   payment.get("original_amount", amount),
+            "discount_amount":   payment.get("discount_amount", 0.0),
+            "final_amount":      payment.get("final_amount", amount),
+            "plan_type":         plan_type,
+            "user_email":        payment.get("user_email"),
+            "supporter_code":    payment.get("supporter_code"),
+            "commission_amount": payment.get("commission_amount", 0.0),
+            "commission_status": payment.get("commission_status"),
+            "created_at":        created_at.isoformat(),
+            "status":            payment.get("status"),
+        })
 
+    # ── Totais de comissão pela nova coleção supporter_commissions ──
+    pending_commissions   = 0.0
+    available_commissions = 0.0
     total_commissions_paid = 0.0
-    for doc in list(db.collection("commission_payments").where(filter=firestore.FieldFilter("status", "==", "paid")).stream()):
-        total_commissions_paid += doc.to_dict().get("amount", 0)
+    total_with_code       = 0
+
+    comm_docs = list(db.collection("supporter_commissions").stream())
+    for d in comm_docs:
+        c   = d.to_dict()
+        amt = c.get("commission_amount", 0) or 0
+        s   = c.get("commission_status", "")
+        if s == "pending":   pending_commissions   += amt
+        if s == "available": available_commissions += amt
+        if s == "paid":      total_commissions_paid += amt
+        if s != "canceled":  total_with_code += 1
+
+    sales_with_code_pct = round(
+        (total_with_code / total_orders * 100) if total_orders > 0 else 0.0, 1
+    )
 
     return {
-        "total_revenue": total_revenue, "total_orders": total_orders,
-        "avg_ticket": total_revenue / total_orders if total_orders > 0 else 0,
-        "revenue_by_type": dict(revenue_by_type), "orders_by_type": dict(orders_by_type),
-        "revenue_by_month": dict(revenue_by_month), "pending_commissions": pending_commissions,
-        "total_commissions_paid": total_commissions_paid,
-        "estimated_profit": total_revenue - total_commissions_paid - pending_commissions,
-        "payments": filtered_payments[:100]
+        "total_revenue":          total_revenue,
+        "total_orders":           total_orders,
+        "avg_ticket":             total_revenue / total_orders if total_orders > 0 else 0,
+        "revenue_by_type":        dict(revenue_by_type),
+        "orders_by_type":         dict(orders_by_type),
+        "revenue_by_month":       dict(revenue_by_month),
+        # ── comissões com os 3 status ──
+        "pending_commissions":    round(pending_commissions, 2),
+        "available_commissions":  round(available_commissions, 2),
+        "total_commissions_paid": round(total_commissions_paid, 2),
+        "sales_with_code_pct":    sales_with_code_pct,
+        "estimated_profit":       round(
+            total_revenue - total_commissions_paid - pending_commissions - available_commissions, 2
+        ),
+        "payments": filtered_payments[:100],
     }
 
 
+
 @api_router.get("/admin/finance/export")
-async def export_finance_data(user: dict = Depends(verify_admin), start_date: Optional[str] = None, end_date: Optional[str] = None):
+async def export_finance_data(
+    user: dict = Depends(verify_admin),
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
     summary = await get_finance_summary(user, start_date, end_date)
     return {
-        "summary": {"total_revenue": summary["total_revenue"], "total_orders": summary["total_orders"], "avg_ticket": summary["avg_ticket"], "pending_commissions": summary["pending_commissions"], "estimated_profit": summary["estimated_profit"]},
-        "by_type": [{"type": k, "revenue": v, "orders": summary["orders_by_type"].get(k, 0)} for k, v in summary["revenue_by_type"].items()],
-        "by_month": [{"month": k, "revenue": v} for k, v in sorted(summary["revenue_by_month"].items())],
-        "transactions": summary["payments"]
+        "summary": {
+            "total_revenue":          summary["total_revenue"],
+            "total_orders":           summary["total_orders"],
+            "avg_ticket":             summary["avg_ticket"],
+            "pending_commissions":    summary["pending_commissions"],
+            "available_commissions":  summary["available_commissions"],
+            "total_commissions_paid": summary["total_commissions_paid"],
+            "estimated_profit":       summary["estimated_profit"],
+        },
+        "by_type":      [{"type": k, "revenue": v, "orders": summary["orders_by_type"].get(k, 0)} for k, v in summary["revenue_by_type"].items()],
+        "by_month":     [{"month": k, "revenue": v} for k, v in sorted(summary["revenue_by_month"].items())],
+        "transactions": summary["payments"],   # já contém todos os campos novos
     }
 
 
