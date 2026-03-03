@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import QRCodeModal from '../../components/QRCodeModal';
+import { QrCode } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import {
@@ -82,7 +84,8 @@ const ProductionCard = ({ order, onAction }) => {
   const [trackingCode, setTrackingCode]           = useState(order.tracking_code || '');
   const [showTrackingInput, setShowTrackingInput] = useState(false);
   const [showCancelModal, setShowCancelModal]     = useState(false);
-  const [showAddress, setShowAddress] = useState(false);
+  const [showAddress, setShowAddress]             = useState(false);
+  const [qrModal, setQrModal]                     = useState(false);
 
   const statusConfig = PRODUCTION_STATUS[order.status] || PRODUCTION_STATUS.approved;
   const isCancelled  = order.status === 'cancelled';
@@ -346,6 +349,17 @@ const ProductionCard = ({ order, onAction }) => {
               Cancelar Pedido
             </button>
           )}
+
+          {/* ← MODAL FORA do bloco de cancelar */}
+          {qrModal && (
+            <QRCodeModal
+              slug={order.memorial_slug}
+              name={order.person_name || 'Memorial'}
+              onClose={() => setQrModal(false)}
+              highRes={true}
+            />
+          )}
+
         </div>
       </div>
     </>
