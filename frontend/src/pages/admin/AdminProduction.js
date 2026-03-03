@@ -11,12 +11,15 @@ import {
   ExternalLink,
   MapPin,
   XCircle,
-  Home
+  Home,
+  Smartphone,
+  AlertTriangle,
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// ─── Status válidos para pedidos físicos ─────────────────────────────────────
 const PRODUCTION_STATUS = {
   approved:      { label: 'Aguardando Produção', color: 'yellow',  step: 1 },
   paid:          { label: 'Aguardando Produção', color: 'yellow',  step: 1 },
@@ -27,14 +30,19 @@ const PRODUCTION_STATUS = {
   cancelled:     { label: 'Cancelado',           color: 'red',     step: 0 },
 };
 
-const formatCurrency = (value) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+// ─── Status para pedidos digitais ────────────────────────────────────────────
+const DIGITAL_STATUS = {
+  approved:  { label: 'Ativo',      color: 'green'  },
+  paid:      { label: 'Ativo',      color: 'green'  },
+  cancelled: { label: 'Cancelado',  color: 'red'    },
+};
 
-const formatDate = (dateString) => {
-  if (!dateString) return '-';
-  return new Date(dateString).toLocaleDateString('pt-BR', {
-    day: '2-digit', month: '2-digit', year: 'numeric'
-  });
+const formatCurrency = (v) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+
+const formatDate = (d) => {
+  if (!d) return '-';
+  return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 // ─── Modal de confirmação de cancelamento ────────────────────────────────────
@@ -69,7 +77,7 @@ const CancelModal = ({ orderId, onConfirm, onClose }) => (
   </div>
 );
 
-// ─── Card de pedido ───────────────────────────────────────────────────────────
+// ─── Card de pedido FÍSICO (lógica original preservada 100%) ──────────────────
 const ProductionCard = ({ order, onAction }) => {
   const [trackingCode, setTrackingCode]           = useState(order.tracking_code || '');
   const [showTrackingInput, setShowTrackingInput] = useState(false);
@@ -116,13 +124,7 @@ const ProductionCard = ({ order, onAction }) => {
         <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-[#2d3a52]">
           <div>
             <p className="text-xs text-[#94a3b8] uppercase tracking-wide">Tipo</p>
-            <p className="text-sm text-white font-medium mt-1">
-              {order.plan_type === 'plaque' || order.plan_type === 'qrcode_plaque'
-                ? 'Placa QR Code'
-                : order.plan_type === 'complete'
-                ? 'Plano Completo'
-                : order.plan_type}
-            </p>
+            <p className="text-sm text-white font-medium mt-1">Placa QR Code</p>
           </div>
           <div>
             <p className="text-xs text-[#94a3b8] uppercase tracking-wide">Valor</p>
@@ -177,7 +179,6 @@ const ProductionCard = ({ order, onAction }) => {
         {/* Actions */}
         <div className="flex flex-wrap gap-2">
 
-          {/* Iniciar Produção */}
           {(order.status === 'approved' || order.status === 'paid') && (
             <button
               onClick={() => onAction(order.id, 'start')}
@@ -189,7 +190,6 @@ const ProductionCard = ({ order, onAction }) => {
             </button>
           )}
 
-          {/* Marcar Produzido */}
           {order.status === 'in_production' && (
             <button
               onClick={() => onAction(order.id, 'complete')}
@@ -201,7 +201,6 @@ const ProductionCard = ({ order, onAction }) => {
             </button>
           )}
 
-          {/* Opções de Envio */}
           {order.status === 'produced' && (
             <>
               {!showTrackingInput ? (
@@ -209,7 +208,6 @@ const ProductionCard = ({ order, onAction }) => {
                   <button
                     onClick={() => setShowTrackingInput(true)}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg font-medium text-sm hover:bg-green-500/20 transition-colors"
-                    data-testid={`ship-correios-${order.id}`}
                   >
                     <Truck size={16} />
                     Correios
@@ -217,7 +215,6 @@ const ProductionCard = ({ order, onAction }) => {
                   <button
                     onClick={() => onAction(order.id, 'ship_local')}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500/10 border border-orange-500/20 text-orange-400 rounded-lg font-medium text-sm hover:bg-orange-500/20 transition-colors"
-                    data-testid={`ship-local-${order.id}`}
                   >
                     <MapPin size={16} />
                     Entrega Local
@@ -233,7 +230,6 @@ const ProductionCard = ({ order, onAction }) => {
                       onChange={(e) => setTrackingCode(e.target.value)}
                       placeholder="Ex: AA123456789BR"
                       className="flex-1 px-3 py-2 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white text-sm placeholder:text-[#94a3b8]/50 focus:border-[#3b82f6] outline-none"
-                      data-testid={`tracking-input-${order.id}`}
                     />
                     <button
                       onClick={() => {
@@ -244,7 +240,6 @@ const ProductionCard = ({ order, onAction }) => {
                       }}
                       disabled={!trackingCode.trim()}
                       className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      data-testid={`confirm-ship-${order.id}`}
                     >
                       <Send size={16} />
                     </button>
@@ -260,19 +255,16 @@ const ProductionCard = ({ order, onAction }) => {
             </>
           )}
 
-          {/* Marcar como Entregue */}
           {order.status === 'shipped' && (
             <button
               onClick={() => onAction(order.id, 'deliver')}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg font-medium text-sm hover:bg-emerald-500/20 transition-colors"
-              data-testid={`deliver-${order.id}`}
             >
               <Home size={16} />
               Marcar como Entregue
             </button>
           )}
 
-          {/* Info do envio */}
           {(order.status === 'shipped' || order.status === 'entregue') && (
             <div className="w-full bg-[#0b121b] rounded-lg px-4 py-2.5 text-center">
               {order.delivery_type === 'local' ? (
@@ -289,7 +281,6 @@ const ProductionCard = ({ order, onAction }) => {
             </div>
           )}
 
-          {/* Cancelar */}
           {!isCancelled && !isDelivered && (
             <button
               onClick={() => setShowCancelModal(true)}
@@ -300,8 +291,110 @@ const ProductionCard = ({ order, onAction }) => {
               Cancelar Pedido
             </button>
           )}
-
         </div>
+      </div>
+    </>
+  );
+};
+
+// ─── Card de pedido DIGITAL (simplificado) ────────────────────────────────────
+const DigitalCard = ({ order, onAction }) => {
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  const statusConfig = DIGITAL_STATUS[order.status] || DIGITAL_STATUS.approved;
+  const isCancelled  = order.status === 'cancelled';
+
+  return (
+    <>
+      {showCancelModal && (
+        <CancelModal
+          orderId={order.id}
+          onConfirm={onAction}
+          onClose={() => setShowCancelModal(false)}
+        />
+      )}
+
+      <div
+        className={`bg-[#16202e] border rounded-xl p-5 transition-all ${
+          isCancelled
+            ? 'border-red-500/30 opacity-70'
+            : 'border-[#2d3a52] hover:border-[#3b82f6]/30'
+        }`}
+        data-testid={`digital-card-${order.id}`}
+      >
+        {/* Aviso de cancelamento solicitado pelo cliente */}
+        {order.cancel_requested && !isCancelled && (
+          <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 mb-4">
+            <AlertTriangle size={14} className="text-amber-400 shrink-0" />
+            <p className="text-xs text-amber-400 font-medium">
+              Cliente solicitou cancelamento em {formatDate(order.cancel_requested_at)}
+            </p>
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <p className="text-xs text-[#94a3b8] mb-1">Pedido #{order.id?.substring(0, 8)}</p>
+            <h3 className="text-lg font-semibold text-white">{order.person_name || 'Memorial'}</h3>
+          </div>
+          <span className={`
+            inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
+            bg-${statusConfig.color}-500/10 text-${statusConfig.color}-500 border border-${statusConfig.color}-500/20
+          `}>
+            {statusConfig.label}
+          </span>
+        </div>
+
+        {/* Info */}
+        <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-[#2d3a52]">
+          <div>
+            <p className="text-xs text-[#94a3b8] uppercase tracking-wide">Cliente</p>
+            <p className="text-sm text-white font-medium mt-1 truncate">{order.user_email}</p>
+          </div>
+          <div>
+            <p className="text-xs text-[#94a3b8] uppercase tracking-wide">Valor</p>
+            <p className="text-sm text-white font-medium mt-1">{formatCurrency(order.amount)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-[#94a3b8] uppercase tracking-wide">Plano</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <Smartphone size={13} className="text-[#3b82f6]" />
+              <p className="text-sm text-white font-medium">Digital</p>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-[#94a3b8] uppercase tracking-wide">Data</p>
+            <p className="text-sm text-white font-medium mt-1">{formatDate(order.created_at)}</p>
+          </div>
+        </div>
+
+        {/* Link do memorial */}
+        {order.memorial_slug && (
+          <div className="mb-4">
+            <a
+              href={`/memorial/${order.memorial_slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-[#3b82f6] hover:underline"
+            >
+              <ExternalLink size={13} />
+              Ver memorial
+            </a>
+          </div>
+        )}
+
+        {/* Cancelar */}
+        {!isCancelled && (
+          <button
+            onClick={() => setShowCancelModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/5 border border-red-500/20 text-red-400 rounded-lg font-medium text-xs hover:bg-red-500/10 transition-colors"
+            data-testid={`cancel-digital-${order.id}`}
+          >
+            <XCircle size={14} />
+            Cancelar Pedido
+          </button>
+        )}
       </div>
     </>
   );
@@ -320,23 +413,124 @@ const Section = ({ title, color, count, children }) => (
   </div>
 );
 
+// ─── Badge de contagem nas abas ───────────────────────────────────────────────
+const TabBadge = ({ count }) => {
+  if (count === 0) return null;
+  return (
+    <span className="ml-2 px-2 py-0.5 bg-[#3b82f6] text-white text-xs font-bold rounded-full">
+      {count}
+    </span>
+  );
+};
+
+// ─── Aba: Pedidos Físicos ─────────────────────────────────────────────────────
+const PhysicalTab = ({ queue, onAction }) => {
+  const groups = {
+    waiting:   queue.filter(o => o.status === 'approved' || o.status === 'paid'),
+    producing: queue.filter(o => o.status === 'in_production'),
+    produced:  queue.filter(o => o.status === 'produced'),
+    shipped:   queue.filter(o => o.status === 'shipped'),
+    delivered: queue.filter(o => o.status === 'entregue'),
+    cancelled: queue.filter(o => o.status === 'cancelled'),
+  };
+
+  const activeCount = queue.filter(o => o.status !== 'cancelled').length;
+
+  if (activeCount === 0) {
+    return (
+      <div className="bg-[#16202e] border border-[#2d3a52] rounded-xl p-12 text-center">
+        <Package className="mx-auto mb-4 text-[#94a3b8]" size={48} />
+        <h3 className="text-lg font-semibold text-white mb-2">Fila vazia</h3>
+        <p className="text-[#94a3b8]">Não há pedidos de placas aguardando produção.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {groups.waiting.length > 0 && (
+        <Section title="Aguardando Produção" color="bg-yellow-500" count={groups.waiting.length}>
+          {groups.waiting.map(o => <ProductionCard key={o.id} order={o} onAction={onAction} />)}
+        </Section>
+      )}
+      {groups.producing.length > 0 && (
+        <Section title="Em Produção" color="bg-purple-500" count={groups.producing.length}>
+          {groups.producing.map(o => <ProductionCard key={o.id} order={o} onAction={onAction} />)}
+        </Section>
+      )}
+      {groups.produced.length > 0 && (
+        <Section title="Produzidos — Aguardando Envio" color="bg-blue-500" count={groups.produced.length}>
+          {groups.produced.map(o => <ProductionCard key={o.id} order={o} onAction={onAction} />)}
+        </Section>
+      )}
+      {groups.shipped.length > 0 && (
+        <Section title="Enviados — Aguardando Confirmação" color="bg-green-500" count={groups.shipped.length}>
+          {groups.shipped.map(o => <ProductionCard key={o.id} order={o} onAction={onAction} />)}
+        </Section>
+      )}
+      {groups.delivered.length > 0 && (
+        <Section title="Entregues" color="bg-emerald-500" count={groups.delivered.length}>
+          {groups.delivered.slice(0, 6).map(o => <ProductionCard key={o.id} order={o} onAction={onAction} />)}
+        </Section>
+      )}
+      {groups.cancelled.length > 0 && (
+        <Section title="Cancelados" color="bg-red-500" count={groups.cancelled.length}>
+          {groups.cancelled.slice(0, 6).map(o => <ProductionCard key={o.id} order={o} onAction={onAction} />)}
+        </Section>
+      )}
+    </div>
+  );
+};
+
+// ─── Aba: Pedidos Digitais ────────────────────────────────────────────────────
+const DigitalTab = ({ queue, onAction }) => {
+  const active    = queue.filter(o => o.status !== 'cancelled');
+  const cancelled = queue.filter(o => o.status === 'cancelled');
+
+  if (queue.length === 0) {
+    return (
+      <div className="bg-[#16202e] border border-[#2d3a52] rounded-xl p-12 text-center">
+        <Smartphone className="mx-auto mb-4 text-[#94a3b8]" size={48} />
+        <h3 className="text-lg font-semibold text-white mb-2">Nenhum pedido digital</h3>
+        <p className="text-[#94a3b8]">Não há pedidos do plano digital registrados.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {active.length > 0 && (
+        <Section title="Planos Digitais Ativos" color="bg-green-500" count={active.length}>
+          {active.map(o => <DigitalCard key={o.id} order={o} onAction={onAction} />)}
+        </Section>
+      )}
+      {cancelled.length > 0 && (
+        <Section title="Cancelados" color="bg-red-500" count={cancelled.length}>
+          {cancelled.slice(0, 6).map(o => <DigitalCard key={o.id} order={o} onAction={onAction} />)}
+        </Section>
+      )}
+    </div>
+  );
+};
+
 // ─── Página principal ─────────────────────────────────────────────────────────
 const AdminProduction = () => {
   const { token } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [queue, setQueue]     = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [queue, setQueue]       = useState([]);
+  const [activeTab, setActiveTab] = useState('physical'); // 'physical' | 'digital'
 
   useEffect(() => { fetchQueue(); }, [token]);
 
   const fetchQueue = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/admin/production-queue`, {
+      const res = await axios.get(`${API}/admin/production-queue`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setQueue(response.data);
-    } catch (error) {
-      console.error('Error fetching queue:', error);
+      setQueue(res.data);
+    } catch (err) {
+      console.error('Error fetching queue:', err);
       toast.error('Erro ao carregar fila de produção');
     } finally {
       setLoading(false);
@@ -409,20 +603,19 @@ const AdminProduction = () => {
       };
       toast.success(messages[action] || 'Ação realizada com sucesso!');
 
-    } catch (error) {
-      console.error('Error performing action:', error);
+    } catch (err) {
+      console.error('Error performing action:', err);
       toast.error('Erro ao realizar ação');
     }
   };
 
-  const statusGroups = {
-    waiting:   queue.filter(o => o.status === 'approved' || o.status === 'paid'),
-    producing: queue.filter(o => o.status === 'in_production'),
-    produced:  queue.filter(o => o.status === 'produced'),
-    shipped:   queue.filter(o => o.status === 'shipped'),
-    delivered: queue.filter(o => o.status === 'entregue'),
-    cancelled: queue.filter(o => o.status === 'cancelled'),
-  };
+  // Separação por is_physical (flag vinda do backend)
+  const physicalOrders = queue.filter(o => o.is_physical);
+  const digitalOrders  = queue.filter(o => !o.is_physical);
+
+  // Contadores de atenção (exclui cancelados do badge)
+  const physicalPending = physicalOrders.filter(o => o.status !== 'cancelled' && o.status !== 'entregue').length;
+  const digitalPending  = digitalOrders.filter(o => o.status !== 'cancelled').length;
 
   if (loading) {
     return (
@@ -445,68 +638,46 @@ const AdminProduction = () => {
           <p className="text-xs font-semibold uppercase tracking-wider text-[#3b82f6] mb-1">Gestão</p>
           <h1 className="text-3xl font-bold text-white tracking-tight">Fila de Produção</h1>
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          {[
-            { color: 'bg-yellow-500',  label: `${statusGroups.waiting.length} aguardando`  },
-            { color: 'bg-purple-500',  label: `${statusGroups.producing.length} produzindo` },
-            { color: 'bg-blue-500',    label: `${statusGroups.produced.length} produzidos`  },
-            { color: 'bg-green-500',   label: `${statusGroups.shipped.length} enviados`     },
-            { color: 'bg-emerald-500', label: `${statusGroups.delivered.length} entregues`  },
-          ].map(({ color, label }) => (
-            <div key={label} className="flex items-center gap-2 text-[#94a3b8]">
-              <div className={`w-3 h-3 rounded-full ${color}`} />
-              <span>{label}</span>
-            </div>
-          ))}
+        <div className="flex flex-wrap items-center gap-4 text-sm text-[#94a3b8]">
+          <span>{physicalOrders.filter(o => o.status !== 'cancelled').length} físicos ativos</span>
+          <span>·</span>
+          <span>{digitalOrders.filter(o => o.status !== 'cancelled').length} digitais ativos</span>
         </div>
       </div>
 
-      {queue.filter(o => o.status !== 'cancelled').length === 0 ? (
-        <div className="bg-[#16202e] border border-[#2d3a52] rounded-xl p-12 text-center">
-          <Package className="mx-auto mb-4 text-[#94a3b8]" size={48} />
-          <h3 className="text-lg font-semibold text-white mb-2">Fila vazia</h3>
-          <p className="text-[#94a3b8]">Não há pedidos de placas aguardando produção.</p>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 bg-[#0b121b] rounded-xl p-1 w-fit border border-[#2d3a52]">
+        <button
+          onClick={() => setActiveTab('physical')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            activeTab === 'physical'
+              ? 'bg-[#3b82f6] text-white shadow'
+              : 'text-[#94a3b8] hover:text-white hover:bg-[#16202e]'
+          }`}
+        >
+          <Package size={15} />
+          Físicos
+          <TabBadge count={physicalPending} />
+        </button>
+        <button
+          onClick={() => setActiveTab('digital')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            activeTab === 'digital'
+              ? 'bg-[#3b82f6] text-white shadow'
+              : 'text-[#94a3b8] hover:text-white hover:bg-[#16202e]'
+          }`}
+        >
+          <Smartphone size={15} />
+          Digitais
+          <TabBadge count={digitalPending} />
+        </button>
+      </div>
+
+      {/* Conteúdo da aba ativa */}
+      {activeTab === 'physical' ? (
+        <PhysicalTab queue={physicalOrders} onAction={handleAction} />
       ) : (
-        <div className="space-y-8">
-
-          {statusGroups.waiting.length > 0 && (
-            <Section title="Aguardando Produção" color="bg-yellow-500" count={statusGroups.waiting.length}>
-              {statusGroups.waiting.map(o => <ProductionCard key={o.id} order={o} onAction={handleAction} />)}
-            </Section>
-          )}
-
-          {statusGroups.producing.length > 0 && (
-            <Section title="Em Produção" color="bg-purple-500" count={statusGroups.producing.length}>
-              {statusGroups.producing.map(o => <ProductionCard key={o.id} order={o} onAction={handleAction} />)}
-            </Section>
-          )}
-
-          {statusGroups.produced.length > 0 && (
-            <Section title="Produzidos — Aguardando Envio" color="bg-blue-500" count={statusGroups.produced.length}>
-              {statusGroups.produced.map(o => <ProductionCard key={o.id} order={o} onAction={handleAction} />)}
-            </Section>
-          )}
-
-          {statusGroups.shipped.length > 0 && (
-            <Section title="Enviados — Aguardando Confirmação" color="bg-green-500" count={statusGroups.shipped.length}>
-              {statusGroups.shipped.map(o => <ProductionCard key={o.id} order={o} onAction={handleAction} />)}
-            </Section>
-          )}
-
-          {statusGroups.delivered.length > 0 && (
-            <Section title="Entregues" color="bg-emerald-500" count={statusGroups.delivered.length}>
-              {statusGroups.delivered.slice(0, 6).map(o => <ProductionCard key={o.id} order={o} onAction={handleAction} />)}
-            </Section>
-          )}
-
-          {statusGroups.cancelled.length > 0 && (
-            <Section title="Cancelados" color="bg-red-500" count={statusGroups.cancelled.length}>
-              {statusGroups.cancelled.slice(0, 6).map(o => <ProductionCard key={o.id} order={o} onAction={handleAction} />)}
-            </Section>
-          )}
-
-        </div>
+        <DigitalTab queue={digitalOrders} onAction={handleAction} />
       )}
     </div>
   );

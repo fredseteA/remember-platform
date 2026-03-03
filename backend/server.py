@@ -1431,31 +1431,55 @@ async def cancel_order(order_id: str, background_tasks: BackgroundTasks, user: d
 
 
 # ========== PRODUCTION QUEUE ==========
+# ALTERAÇÃO: removido filtro exclusivo de plan_type físico.
+# Agora retorna físicos (plaque, complete, qrcode_plaque) E digitais (digital).
+# Campo is_physical adicionado para o frontend separar as abas.
+# Zero impacto em qualquer outra rota.
 
 @api_router.get("/admin/production-queue")
 async def get_production_queue(user: dict = Depends(verify_admin)):
+    PHYSICAL_TYPES = {"plaque", "complete", "qrcode_plaque"}
+    DIGITAL_TYPES  = {"digital"}
+    VALID_STATUSES = {"approved", "paid", "in_production", "produced", "shipped", "entregue", "cancelled"}
+
     payments_ref = db.collection("payments")
     docs = payments_ref.stream()
     queue = []
+
     for doc in docs:
         order_data = doc.to_dict()
         plan_type = order_data.get("plan_type", "")
-        if plan_type not in ["plaque", "complete", "qrcode_plaque"]:
+        order_status = order_data.get("status", "")
+
+        # Aceita físicos e digitais; ignora qualquer outro plan_type desconhecido
+        if plan_type not in PHYSICAL_TYPES and plan_type not in DIGITAL_TYPES:
             continue
-        status = order_data.get("status", "")
-        if status not in ["approved", "paid", "in_production", "produced", "shipped", "entregue", "cancelled"]:
+
+        # Apenas os status relevantes para produção/gestão
+        if order_status not in VALID_STATUSES:
             continue
+
+        # Pedidos arquivados não aparecem
         if order_data.get("archived", False):
             continue
+
         order_data = deserialize_datetime(order_data, ["created_at", "updated_at"])
+
+        # Enriquece com dados do memorial (nome da pessoa e slug)
         memorial_id = order_data.get("memorial_id")
         if memorial_id:
             memorial_doc = db.collection("memorials").document(memorial_id).get()
             if memorial_doc.exists:
                 memorial_data = memorial_doc.to_dict()
-                order_data["person_name"] = memorial_data.get("person_data", {}).get("full_name", "N/A")
+                order_data["person_name"]   = memorial_data.get("person_data", {}).get("full_name", "N/A")
                 order_data["memorial_slug"] = memorial_data.get("slug")
+
+        # Flag usada pelo frontend para separar as abas — não altera nenhum dado do banco
+        order_data["is_physical"] = plan_type in PHYSICAL_TYPES
+
         queue.append(order_data)
+
+    # Mais antigos primeiro (mesma ordenação de antes)
     queue.sort(key=lambda x: x.get("created_at", ""), reverse=False)
     return queue
 
