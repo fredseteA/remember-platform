@@ -440,6 +440,122 @@ async def send_payment_notification_email(payment_data: dict, memorial_data: dic
         logger.error(f"❌ Erro ao enviar e-mail de notificação: {str(e)}")
         return False
 
+async def send_order_status_email(order_data: dict, memorial_data: dict, new_status: str, tracking_code: str = None, delivery_type: str = "correios"):
+    """Envia email ao cliente quando status do pedido muda"""
+    try:
+        responsible = memorial_data.get('responsible', {}) if memorial_data else {}
+        person_data = memorial_data.get('person_data', {}) if memorial_data else {}
+        
+        customer_email = order_data.get('user_email') or responsible.get('email')
+        customer_name = responsible.get('name', 'Cliente')
+        person_name = person_data.get('full_name', 'seu ente querido')
+        order_id = order_data.get('id', '')[:8]
+        amount = order_data.get('amount', 0)
+        formatted_amount = f"R$ {amount:.2f}".replace('.', ',')
+
+        subjects = {
+            'paid': '✅ Compra confirmada — Remember QRCode',
+            'in_production': '🔧 Produção iniciada — Remember QRCode',
+            'produced': '📦 Produto finalizado — Remember QRCode',
+            'shipped_correios': '🚚 Pedido enviado — Remember QRCode',
+            'shipped_local': '🛵 Saiu para entrega — Remember QRCode',
+            'cancelled': '❌ Pedido cancelado — Remember QRCode',
+        }
+
+        status_key = new_status
+        if new_status == 'shipped':
+            status_key = f'shipped_{delivery_type}'
+
+        bodies = {
+            'paid': f"""
+                <h2 style="color:#16a34a;">✅ Compra confirmada!</h2>
+                <p>Olá, <strong>{customer_name}</strong>!</p>
+                <p>Sua compra do memorial de <strong>{person_name}</strong> foi confirmada com sucesso.</p>
+                <p><strong>Valor:</strong> {formatted_amount}</p>
+                <p><strong>Pedido:</strong> #{order_id}</p>
+                <hr/>
+                <p>Em até <strong>24 horas</strong> iniciaremos a produção da sua placa.</p>
+                <p>Você receberá um email assim que a produção começar.</p>
+            """,
+            'in_production': f"""
+                <h2 style="color:#8b5cf6;">🔧 Produção iniciada!</h2>
+                <p>Olá, <strong>{customer_name}</strong>!</p>
+                <p>A produção da placa do memorial de <strong>{person_name}</strong> foi iniciada.</p>
+                <p><strong>Pedido:</strong> #{order_id}</p>
+                <hr/>
+                <p>O prazo estimado é de <strong>2 a 3 dias úteis</strong>.</p>
+                <p>Você será avisado quando o produto estiver pronto para envio.</p>
+            """,
+            'produced': f"""
+                <h2 style="color:#3b82f6;">📦 Produto finalizado!</h2>
+                <p>Olá, <strong>{customer_name}</strong>!</p>
+                <p>A placa do memorial de <strong>{person_name}</strong> foi produzida e está pronta.</p>
+                <p><strong>Pedido:</strong> #{order_id}</p>
+                <hr/>
+                <p>Seu pedido será despachado em breve.</p>
+                <p>Você receberá o código de rastreio assim que for enviado.</p>
+            """,
+            'shipped_correios': f"""
+                <h2 style="color:#f59e0b;">🚚 Pedido enviado!</h2>
+                <p>Olá, <strong>{customer_name}</strong>!</p>
+                <p>A placa do memorial de <strong>{person_name}</strong> foi enviada pelos Correios.</p>
+                <p><strong>Pedido:</strong> #{order_id}</p>
+                <hr/>
+                <p><strong>Código de rastreio:</strong></p>
+                <p style="font-size:20px;font-family:monospace;background:#f0f0f0;padding:12px;border-radius:6px;letter-spacing:2px;">
+                    {tracking_code}
+                </p>
+                <p>Rastreie seu pedido em: <a href="https://rastreamento.correios.com.br">correios.com.br</a></p>
+            """,
+            'shipped_local': f"""
+                <h2 style="color:#f59e0b;">🛵 Saiu para entrega!</h2>
+                <p>Olá, <strong>{customer_name}</strong>!</p>
+                <p>A placa do memorial de <strong>{person_name}</strong> saiu para <strong>entrega local</strong>.</p>
+                <p><strong>Pedido:</strong> #{order_id}</p>
+                <hr/>
+                <p>Nosso entregador está a caminho. Fique atento!</p>
+            """,
+            'cancelled': f"""
+                <h2 style="color:#ef4444;">❌ Pedido cancelado</h2>
+                <p>Olá, <strong>{customer_name}</strong>!</p>
+                <p>Seu pedido <strong>#{order_id}</strong> foi cancelado.</p>
+                <hr/>
+                <p>O reembolso será processado em até <strong>7 dias úteis</strong>.</p>
+                <p>Em caso de dúvidas, entre em contato conosco pelo WhatsApp.</p>
+            """,
+        }
+
+        if status_key not in subjects:
+            return False
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family:Arial,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+            {bodies[status_key]}
+            <hr style="border:none;border-top:1px solid #eee;margin:30px 0;">
+            <p style="font-size:12px;color:#888;text-align:center;">
+                © {datetime.now().year} Remember QRCode — Transformando lembranças em homenagens.
+            </p>
+        </body>
+        </html>
+        """
+
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [customer_email],
+            "subject": subjects[status_key],
+            "html": html_content
+        }
+
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"✅ Email de status '{new_status}' enviado para {customer_email}. ID: {result.get('id')}")
+        return True
+
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar email de status '{new_status}': {str(e)}")
+        return False
 
 # ========== AUTH ENDPOINTS ==========
 
