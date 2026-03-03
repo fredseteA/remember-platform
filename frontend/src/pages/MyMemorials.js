@@ -2,11 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
-import { Heart, Eye, Edit } from 'lucide-react';
-import { useState } from 'react';
+import { Heart, Eye } from 'lucide-react';
 import QRCodeModal from '../components/QRCodeModal';
 import { QrCode } from 'lucide-react';
 
