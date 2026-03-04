@@ -302,6 +302,14 @@ const Header = () => {
                           </DropdownMenuItem>
                         </>
                       )}
+                      {user.role === 'apoiador' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link to="/apoiador" data-testid="nav-apoiador">Painel do Apoiador</Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} data-testid="logout-button">
                         {t('nav.logout')}
@@ -393,6 +401,11 @@ const Header = () => {
                 {user.is_admin && (
                   <Link to="/admin" className="mobile-nav-secondary" onClick={closeMobile}>
                     {t('nav.admin')}
+                  </Link>
+                )}
+                {user.role === 'apoiador' && (
+                  <Link to="/apoiador" className="mobile-nav-secondary" onClick={closeMobile}>
+                    Painel do Apoiador
                   </Link>
                 )}
                 <button
