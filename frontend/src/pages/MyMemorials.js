@@ -393,6 +393,7 @@ const MyMemorials = () => {
                         Ver
                       </button>
                     </Link>
+
                     {memorial.status === 'published' && (
                       <button
                         className="mm-btn-outline"
@@ -406,6 +407,15 @@ const MyMemorials = () => {
                         <QrCode size={14} />
                       </button>
                     )}
+
+                    {memorial.status === 'published' && (
+                      <Link to={`/edit-memorial/${memorial.id}`} style={{ flex: 1 }}>
+                        <button className="mm-btn-outline" style={{ width: '100%' }}>
+                          ✏️ Editar
+                        </button>
+                      </Link>
+                    )}
+
                     {memorial.status === 'draft' && (
                       <Link to={`/select-plan/${memorial.id}`} style={{ flex: 1 }}>
                         <button className="mm-btn-primary" style={{ width: '100%' }} data-testid="button-publish">
