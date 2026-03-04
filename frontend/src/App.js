@@ -23,6 +23,11 @@ import MyMemorials from './pages/MyMemorials';
 import MyPurchases from './pages/MyPurchases';
 import EditMemorial from './pages/EditMemorial';
 
+//Apoiador Pages
+import ApoiadorRoute from './routes/ApoiadorRoute';
+import ApoiadorDashboard from './pages/apoiador/ApoiadorDashboard';
+import { ApoiadorVendas, ApoiadorComissoes, ApoiadorMeuCodigo } from './pages/apoiador/ApoiadorPages';
+
 // Admin Pages
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -87,9 +92,9 @@ const AppLayout = ({ children }) => {
   const location = useLocation();
   const isMemorialPage = location.pathname.startsWith('/memorial/');
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isApoiadorPage = location.pathname.startsWith('/apoiador'); // ← ADICIONAR
 
-  // Admin pages have their own layout
-  if (isAdminPage) {
+  if (isAdminPage || isApoiadorPage) { // ← ADICIONAR isApoiadorPage aqui
     return (
       <div className="App min-h-screen">
         {children}
@@ -193,6 +198,20 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+
+                {/* Apoiador Routes */}
+                <Route path="/apoiador" element={
+                  <ApoiadorRoute><ApoiadorDashboard /></ApoiadorRoute>
+                } />
+                <Route path="/apoiador/vendas" element={
+                  <ApoiadorRoute><ApoiadorVendas /></ApoiadorRoute>
+                } />
+                <Route path="/apoiador/comissoes" element={
+                  <ApoiadorRoute><ApoiadorComissoes /></ApoiadorRoute>
+                } />
+                <Route path="/apoiador/meu-codigo" element={
+                  <ApoiadorRoute><ApoiadorMeuCodigo /></ApoiadorRoute>
+                } />
                 
                 {/* Admin Routes */}
                 <Route
