@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
-import { Heart, Eye, Edit } from 'lucide-react';
+import { Heart, Eye } from 'lucide-react';
+import QRCodeModal from '../components/QRCodeModal';
+import { QrCode } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -14,6 +14,7 @@ const MyMemorials = () => {
   const { token } = useAuth();
   const [memorials, setMemorials] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [qrModal, setQrModal] = useState(null); // { slug, name }
 
   useEffect(() => {
     const fetchMemorials = async () => {
@@ -54,6 +55,7 @@ const MyMemorials = () => {
   }
 
   return (
+    <>
     <div
       className="overflow-x-hidden"
       data-testid="my-memorials-page"
@@ -391,6 +393,19 @@ const MyMemorials = () => {
                         Ver
                       </button>
                     </Link>
+                    {memorial.status === 'published' && (
+                      <button
+                        className="mm-btn-outline"
+                        onClick={() => setQrModal({
+                          slug: memorial.slug || memorial.id,
+                          name: memorial.person_data.full_name,
+                        })}
+                        title="Ver QR Code"
+                        style={{ minWidth: 44, padding: '10px 14px' }}
+                      >
+                        <QrCode size={14} />
+                      </button>
+                    )}
                     {memorial.status === 'draft' && (
                       <Link to={`/select-plan/${memorial.id}`} style={{ flex: 1 }}>
                         <button className="mm-btn-primary" style={{ width: '100%' }} data-testid="button-publish">
@@ -406,6 +421,15 @@ const MyMemorials = () => {
         )}
       </div>
     </div>
+
+    {qrModal && (
+      <QRCodeModal
+        slug={qrModal.slug}
+        name={qrModal.name}
+        onClose={() => setQrModal(null)}
+      />
+    )}
+  </>
   );
 };
 
