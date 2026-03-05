@@ -358,6 +358,15 @@ class CreateApoiadorUserRequest(BaseModel):
     name: str
     partner_id: Optional[str] = None
 
+class CreatePartnerWithAccessRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    phone: Optional[str] = None
+    supporter_code: str
+    commission_rate: float = 0.10
+    monthly_goal: int = 10
+
 # ========== FIREBASE AUTH VERIFICATION ==========
 
 async def verify_firebase_token(
@@ -2259,7 +2268,7 @@ async def get_all_partners(user: dict = Depends(verify_admin)):
 
 @api_router.post("/admin/partners")
 async def create_partner(
-    partner_req: CreatePartnerRequest,
+    partner_req: CreatePartnerWithAccessRequest,
     background_tasks: BackgroundTasks,
     user: dict = Depends(verify_admin)
 ):
@@ -2267,31 +2276,45 @@ async def create_partner(
     code = partner_req.supporter_code.strip().upper()
 
     if not _re.match(r'^[A-Z0-9_\-]{3,20}$', code):
-        raise HTTPException(
-            status_code=400,
-            detail="Código inválido. Use letras maiúsculas, números, _ ou -. Entre 3 e 20 caracteres."
-        )
+        raise HTTPException(status_code=400, detail="Código inválido.")
 
-    existing = list(
+    # Verifica código duplicado
+    existing_code = list(
         db.collection("partners")
         .where(filter=firestore.FieldFilter("supporter_code", "==", code))
         .limit(1).stream()
     )
-    if existing:
+    if existing_code:
         raise HTTPException(status_code=400, detail=f"Código '{code}' já está em uso.")
 
-    if partner_req.firebase_uid:
-        uid_existing = list(
-            db.collection("partners")
-            .where(filter=firestore.FieldFilter("firebase_uid", "==", partner_req.firebase_uid.strip()))
-            .limit(1).stream()
+    # Cria usuário no Firebase Auth
+    try:
+        firebase_user = auth.create_user(
+            email=partner_req.email,
+            password=partner_req.password,
+            display_name=partner_req.name,
         )
-        if uid_existing:
-            raise HTTPException(status_code=400, detail="Este Firebase UID já está vinculado a outro parceiro.")
+    except auth.EmailAlreadyExistsError:
+        raise HTTPException(status_code=400, detail="Este email já está cadastrado.")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao criar usuário: {str(e)}")
 
-    partner_id = str(uuid.uuid4())
+    uid = firebase_user.uid
     now = datetime.now(timezone.utc).isoformat()
+    partner_id = str(uuid.uuid4())
 
+    # Cria documento users com role apoiador
+    db.collection("users").document(uid).set({
+        "firebase_uid": uid,
+        "email": partner_req.email,
+        "name": partner_req.name,
+        "role": "apoiador",
+        "phone": partner_req.phone,
+        "created_at": now,
+        "updated_at": now,
+    })
+
+    # Cria documento partners vinculado
     partner_dict = {
         "id": partner_id,
         "name": partner_req.name,
@@ -2299,26 +2322,28 @@ async def create_partner(
         "phone": partner_req.phone,
         "supporter_code": code,
         "code": code,
+        "firebase_uid": uid,
         "commission_rate": partner_req.commission_rate,
+        "monthly_goal": partner_req.monthly_goal,
         "status": "active",
-        "commission_pending":   0.0,
+        "commission_pending": 0.0,
         "commission_available": 0.0,
-        "commission_paid":      0.0,
-        "total_sales_month":    0,
-        "total_revenue_month":  0.0,
+        "commission_paid": 0.0,
+        "total_sales_month": 0,
+        "total_revenue_month": 0.0,
         "total_revenue_all_time": 0.0,
         "created_at": now,
         "updated_at": now,
-        "firebase_uid": partner_req.firebase_uid.strip() if partner_req.firebase_uid else None,
     }
     db.collection("partners").document(partner_id).set(partner_dict)
+
     background_tasks.add_task(
         create_admin_log, user.get("uid"), user.get("email"),
-        "create_partner", "partner", partner_id,
-        {"name": partner_req.name, "code": code}
+        "create_partner_with_access", "partner", partner_id,
+        {"name": partner_req.name, "code": code, "email": partner_req.email}
     )
-    return partner_dict
 
+    return partner_dict
 
 @api_router.get("/admin/partners/{partner_id}")
 async def get_partner(partner_id: str, user: dict = Depends(verify_admin)):

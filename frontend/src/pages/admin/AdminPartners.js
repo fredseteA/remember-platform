@@ -3,10 +3,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
 import {
-  Users, Plus, Copy, Check, X, DollarSign,
+  Users, Plus, Copy, Check, X,
   Edit2, FileText, ChevronDown, ChevronUp,
-  AlertCircle, Clock, CheckCircle2, Banknote,
-  Target, TrendingUp, Eye, UserCheck, Link2,
+  Clock, CheckCircle2, Banknote, Eye,
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -41,7 +40,6 @@ const ProgressBar = ({ value, max, color = '#3b82f6', label }) => {
 const ViewAsApoiadorModal = ({ partner, onClose }) => {
   const code = partner.supporter_code || partner.code;
   const referralLink = `${FRONTEND_URL}/?apoio=${code}`;
-
   const monthSales = partner.total_sales_month || 0;
   const LEVELS = [
     { min: 0,  max: 9,        rate: 10, label: 'Iniciante', color: '#64748b' },
@@ -84,14 +82,12 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
             ))}
           </div>
           <div className="bg-[#0b121b] border border-[#2d3a52] rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-xs text-[#94a3b8] uppercase tracking-wide mb-1">Nível Atual</p>
-                <span className="text-xs font-bold px-2 py-1 rounded-full"
-                  style={{ background: `${level.color}20`, color: level.color }}>
-                  {level.label} — {level.rate}%
-                </span>
-              </div>
+            <div className="mb-3">
+              <p className="text-xs text-[#94a3b8] uppercase tracking-wide mb-1">Nível Atual</p>
+              <span className="text-xs font-bold px-2 py-1 rounded-full"
+                style={{ background: `${level.color}20`, color: level.color }}>
+                {level.label} — {level.rate}%
+              </span>
             </div>
             <div className="h-2.5 bg-[#16202e] rounded-full overflow-hidden mb-2">
               <div className="h-full rounded-full"
@@ -233,7 +229,7 @@ const ReportModal = ({ partner, token, onClose }) => {
 
 // ─── Card de parceiro ────────────────────────────────────────────────────────
 const PartnerCard = ({
-  partner, copiedCode, onCopy, onEdit, onToggle, onReport, onViewAs, onCreateAccess, token
+  partner, copiedCode, onCopy, onEdit, onToggle, onReport, onViewAs, token
 }) => {
   const [expanded, setExpanded] = useState(false);
   const code           = partner.supporter_code || partner.code;
@@ -331,12 +327,6 @@ const PartnerCard = ({
             data-testid={`viewas-partner-${partner.id}`}>
             <Eye size={14} />
           </button>
-          <button onClick={() => onCreateAccess(partner)}
-            className="px-3 py-2 bg-green-500/10 text-green-400 rounded-lg text-sm hover:bg-green-500/20 transition-colors"
-            title="Criar Acesso Apoiador"
-            data-testid={`access-partner-${partner.id}`}>
-            <UserCheck size={14} />
-          </button>
         </div>
       </div>
 
@@ -425,16 +415,14 @@ const AdminPartners = () => {
   const [copiedCode, setCopiedCode]         = useState(null);
   const [reportPartner, setReportPartner]   = useState(null);
   const [viewAsPartner, setViewAsPartner]   = useState(null);
-  const [createAccessPartner, setCreateAccessPartner] = useState(null);
-  const [accessForm, setAccessForm]         = useState({ email: '', password: '' });
-  const [creatingAccess, setCreatingAccess] = useState(false);
+  const [submitting, setSubmitting]         = useState(false);
 
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '',
     supporter_code: '',
+    password: '',
     commission_rate: 0.10,
     monthly_goal: 10,
-    firebase_uid: '',
   });
   const [codeError, setCodeError] = useState('');
 
@@ -465,42 +453,36 @@ const AdminPartners = () => {
       const err = validateCode(formData.supporter_code);
       if (err) { setCodeError(err); return; }
     }
-    if (formData.firebase_uid) {
-      const uid = formData.firebase_uid.trim();
-      if (uid.length < 20 || uid.length > 128) {
-        toast.error('Firebase UID inválido. Deve ter entre 20 e 128 caracteres.');
-        return;
-      }
-      if (!/^[a-zA-Z0-9]+$/.test(uid)) {
-        toast.error('Firebase UID inválido. Apenas letras e números.');
-        return;
-      }
-      const duplicate = partners.find(p =>
-        p.firebase_uid === uid && p.id !== editingPartner?.id
-      );
-      if (duplicate) {
-        toast.error(`Este UID já está vinculado ao parceiro "${duplicate.name}".`);
-        return;
-      }
-    }
+    setSubmitting(true);
     try {
       if (editingPartner) {
         await axios.put(`${API}/admin/partners/${editingPartner.id}`,
           {
-            name: formData.name, email: formData.email,
-            phone: formData.phone, commission_rate: formData.commission_rate,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            commission_rate: formData.commission_rate,
             monthly_goal: formData.monthly_goal || 10,
-            firebase_uid: formData.firebase_uid || undefined,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success('Parceiro atualizado!');
       } else {
-        const res = await axios.post(`${API}/admin/partners`, formData,
+        // Criação: parceiro + acesso Firebase em um só endpoint
+        const res = await axios.post(`${API}/admin/partners`,
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            supporter_code: formData.supporter_code,
+            password: formData.password,
+            commission_rate: formData.commission_rate,
+            monthly_goal: formData.monthly_goal || 10,
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setPartners(p => [res.data, ...p]);
-        toast.success('Parceiro criado!');
+        toast.success(`Parceiro criado! Login: ${formData.email}`);
       }
       closeModal();
       fetchPartners();
@@ -511,28 +493,8 @@ const AdminPartners = () => {
       } else {
         toast.error(msg);
       }
-    }
-  };
-
-  // ← CORRIGIDO: fora do handleSubmit
-  const handleCreateAccess = async (e) => {
-    e.preventDefault();
-    setCreatingAccess(true);
-    try {
-      await axios.post(`${API}/admin/apoiador/create-user`, {
-        email: accessForm.email,
-        password: accessForm.password,
-        name: createAccessPartner.name,
-        partner_id: createAccessPartner.id,
-      }, { headers: { Authorization: `Bearer ${token}` } });
-      toast.success(`Acesso criado! Login: ${accessForm.email}`);
-      setCreateAccessPartner(null);
-      setAccessForm({ email: '', password: '' });
-      fetchPartners();
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Erro ao criar acesso.');
     } finally {
-      setCreatingAccess(false);
+      setSubmitting(false);
     }
   };
 
@@ -556,12 +518,13 @@ const AdminPartners = () => {
   const openEditModal = (partner) => {
     setEditingPartner(partner);
     setFormData({
-      name: partner.name, email: partner.email,
+      name: partner.name,
+      email: partner.email,
       phone: partner.phone || '',
       supporter_code: partner.supporter_code || partner.code || '',
+      password: '',
       commission_rate: partner.commission_rate,
       monthly_goal: partner.monthly_goal || 10,
-      firebase_uid: partner.firebase_uid || '',
     });
     setCodeError('');
     setShowModal(true);
@@ -570,7 +533,7 @@ const AdminPartners = () => {
   const closeModal = () => {
     setShowModal(false);
     setEditingPartner(null);
-    setFormData({ name: '', email: '', phone: '', supporter_code: '', commission_rate: 0.10, monthly_goal: 10, firebase_uid: '' });
+    setFormData({ name: '', email: '', phone: '', supporter_code: '', password: '', commission_rate: 0.10, monthly_goal: 10 });
     setCodeError('');
   };
 
@@ -599,54 +562,6 @@ const AdminPartners = () => {
       {viewAsPartner && (
         <ViewAsApoiadorModal partner={viewAsPartner} onClose={() => setViewAsPartner(null)} />
       )}
-      {createAccessPartner && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#16202e] border border-[#2d3a52] rounded-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-[#2d3a52]">
-              <div>
-                <h2 className="text-lg font-semibold text-white">Criar Acesso</h2>
-                <p className="text-xs text-[#94a3b8] mt-0.5">
-                  Parceiro: <span className="text-white font-medium">{createAccessPartner.name}</span>
-                </p>
-              </div>
-              <button onClick={() => setCreateAccessPartner(null)}
-                className="p-2 rounded-lg hover:bg-[#2d3a52] text-[#94a3b8] hover:text-white transition-colors">
-                <X size={18} />
-              </button>
-            </div>
-            <form onSubmit={handleCreateAccess} className="p-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Email de acesso</label>
-                <input type="email" required value={accessForm.email}
-                  onChange={e => setAccessForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Senha</label>
-                <input type="password" required minLength={6} value={accessForm.password}
-                  onChange={e => setAccessForm(f => ({ ...f, password: e.target.value }))}
-                  placeholder="Mínimo 6 caracteres"
-                  className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none" />
-              </div>
-              <div className="bg-[#0b121b] rounded-lg p-3">
-                <p className="text-xs text-[#94a3b8]">
-                  ℹ️ Será criada uma conta com <strong className="text-white">role: apoiador</strong> já vinculada a este parceiro. Entregue o email e senha ao apoiador.
-                </p>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setCreateAccessPartner(null)}
-                  className="flex-1 px-4 py-2.5 bg-[#2d3a52] text-white rounded-lg font-medium hover:bg-[#374763] transition-colors">
-                  Cancelar
-                </button>
-                <button type="submit" disabled={creatingAccess}
-                  className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50">
-                  {creatingAccess ? 'Criando...' : 'Criar Acesso'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -655,7 +570,12 @@ const AdminPartners = () => {
           <h1 className="text-3xl font-bold text-white tracking-tight">Parceiros</h1>
         </div>
         <button
-          onClick={() => { setEditingPartner(null); setFormData({ name: '', email: '', phone: '', supporter_code: '', commission_rate: 0.10, monthly_goal: 10, firebase_uid: '' }); setCodeError(''); setShowModal(true); }}
+          onClick={() => {
+            setEditingPartner(null);
+            setFormData({ name: '', email: '', phone: '', supporter_code: '', password: '', commission_rate: 0.10, monthly_goal: 10 });
+            setCodeError('');
+            setShowModal(true);
+          }}
           className="flex items-center gap-2 px-4 py-2.5 bg-[#3b82f6] text-white rounded-lg font-medium hover:bg-[#3b82f6]/90 transition-colors"
           data-testid="add-partner-btn"
         >
@@ -706,7 +626,6 @@ const AdminPartners = () => {
               onToggle={toggleStatus}
               onReport={setReportPartner}
               onViewAs={setViewAsPartner}
-              onCreateAccess={(p) => { setCreateAccessPartner(p); setAccessForm({ email: p.email, password: '' }); }}
             />
           ))}
         </div>
@@ -726,6 +645,8 @@ const AdminPartners = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
+
+              {/* Nome */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Nome</label>
                 <input type="text" required value={formData.name}
@@ -733,6 +654,8 @@ const AdminPartners = () => {
                   className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none"
                   data-testid="partner-name-input" />
               </div>
+
+              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Email</label>
                 <input type="email" required value={formData.email}
@@ -740,6 +663,29 @@ const AdminPartners = () => {
                   className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none"
                   data-testid="partner-email-input" />
               </div>
+
+              {/* Senha — apenas na criação */}
+              {!editingPartner && (
+                <div>
+                  <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">
+                    Senha de acesso <span className="text-xs text-red-400">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.password}
+                    onChange={e => setFormData(f => ({ ...f, password: e.target.value }))}
+                    placeholder="Mínimo 6 caracteres"
+                    className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none"
+                  />
+                  <p className="text-[#94a3b8]/60 text-xs mt-1">
+                    O apoiador usará este email e senha para acessar o painel.
+                  </p>
+                </div>
+              )}
+
+              {/* Telefone */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Telefone</label>
                 <input type="tel" value={formData.phone}
@@ -747,6 +693,8 @@ const AdminPartners = () => {
                   className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none"
                   data-testid="partner-phone-input" />
               </div>
+
+              {/* Código — apenas na criação */}
               {!editingPartner && (
                 <div>
                   <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">
@@ -772,6 +720,8 @@ const AdminPartners = () => {
                   </p>
                 </div>
               )}
+
+              {/* Comissão */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Taxa de Comissão</label>
                 <select value={formData.commission_rate}
@@ -784,6 +734,8 @@ const AdminPartners = () => {
                   <option value={0.20}>20%</option>
                 </select>
               </div>
+
+              {/* Meta mensal */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Meta mensal de vendas</label>
                 <input type="number" min={1} max={999} value={formData.monthly_goal}
@@ -792,35 +744,16 @@ const AdminPartners = () => {
                   data-testid="partner-goal-input" />
                 <p className="text-[#94a3b8]/60 text-xs mt-1">Número de vendas para a barra de progresso.</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">
-                  Firebase UID do usuário
-                  <span className="text-xs text-[#94a3b8]/60 ml-2">(para vincular ao painel do apoiador)</span>
-                </label>
-                <input type="text" value={formData.firebase_uid}
-                  onChange={e => setFormData(f => ({ ...f, firebase_uid: e.target.value.trim() }))}
-                  placeholder="Ex: abc123XYZ..."
-                  className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none font-mono text-sm"
-                  data-testid="partner-uid-input" />
-                <p className="text-[#94a3b8]/60 text-xs mt-1">
-                  Encontre no Firebase Console → Authentication → UID do usuário.
-                </p>
-                {!formData.firebase_uid && (
-                  <p className="text-amber-400/70 text-xs mt-1">⚠️ Sem UID, o apoiador não acessará o painel.</p>
-                )}
-                {formData.firebase_uid && formData.firebase_uid.length >= 20 && (
-                  <p className="text-green-400/70 text-xs mt-1">✓ UID válido</p>
-                )}
-              </div>
+
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeModal}
                   className="flex-1 px-4 py-2.5 bg-[#2d3a52] text-white rounded-lg font-medium hover:bg-[#374763] transition-colors">
                   Cancelar
                 </button>
-                <button type="submit"
-                  className="flex-1 px-4 py-2.5 bg-[#3b82f6] text-white rounded-lg font-medium hover:bg-[#3b82f6]/90 transition-colors"
+                <button type="submit" disabled={submitting}
+                  className="flex-1 px-4 py-2.5 bg-[#3b82f6] text-white rounded-lg font-medium hover:bg-[#3b82f6]/90 transition-colors disabled:opacity-50"
                   data-testid="save-partner-btn">
-                  {editingPartner ? 'Salvar' : 'Criar Parceiro'}
+                  {submitting ? 'Salvando...' : editingPartner ? 'Salvar' : 'Criar Parceiro'}
                 </button>
               </div>
             </form>
