@@ -6,17 +6,17 @@ import axios from 'axios';
 const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
 
 export default function ApoiadorRoute({ children }) {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const [status, setStatus] = useState('loading'); // 'loading' | 'allowed' | 'denied'
 
   useEffect(() => {
-    if (!currentUser) {
+    if (!user) {
       setStatus('denied');
       return;
     }
     (async () => {
       try {
-        const token = await currentUser.getIdToken();
+        const token = await user.getIdToken();
         const res = await axios.get(`${API}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -30,7 +30,7 @@ export default function ApoiadorRoute({ children }) {
         setStatus('denied');
       }
     })();
-  }, [currentUser]);
+  }, [user]);
 
   if (status === 'loading') {
     return (
