@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Heart, Mail, Phone } from 'lucide-react';
+import { Heart, Mail, Phone, MessageCircle, Shield, Truck, Headphones } from 'lucide-react';
 
 const PHONE_NUMBER = '\u002B55 22 99208-0811';
 const PHONE_HREF = 'https://wa.me/5522992080811';
@@ -28,19 +28,22 @@ const footerStyles = `
     0%,100% { transform: translateY(0) translateX(0); }
     55%     { transform: translateY(-9px) translateX(-6px); }
   }
+
+  /* ── Nav link com underline deslizante ── */
   .footer-link {
-    color: #3a5070;
+    color: #4a6080;
     font-family: "Georgia", serif;
-    font-size: 0.88rem;
+    font-size: 0.83rem;
     text-decoration: none;
     position: relative;
     display: inline-block;
+    line-height: 1.5;
     transition: color 0.18s ease;
   }
   .footer-link::after {
     content: '';
     position: absolute;
-    bottom: -2px; left: 0; right: 0;
+    bottom: -1px; left: 0; right: 0;
     height: 1px; border-radius: 1px;
     background: #1a2744;
     transform: scaleX(0);
@@ -50,10 +53,11 @@ const footerStyles = `
   .footer-link:hover { color: #1a2744; }
   .footer-link:hover::after { transform: scaleX(1); }
 
+  /* ── Links legais do rodapé ── */
   .footer-link-sm {
-    color: #7a9bb5;
+    color: rgba(58,80,112,0.55);
     font-family: "Georgia", serif;
-    font-size: 0.72rem;
+    font-size: 0.71rem;
     text-decoration: none;
     position: relative;
     display: inline-block;
@@ -64,7 +68,7 @@ const footerStyles = `
     position: absolute;
     bottom: -1px; left: 0; right: 0;
     height: 1px; border-radius: 1px;
-    background: #1a2744;
+    background: #3a5070;
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.22s cubic-bezier(.22,1,.36,1);
@@ -72,35 +76,79 @@ const footerStyles = `
   .footer-link-sm:hover { color: #1a2744; }
   .footer-link-sm:hover::after { transform: scaleX(1); }
 
+  /* ── Botões sociais ── */
   .footer-social-btn {
     display: flex; align-items: center; justify-content: center;
-    width: 38px; height: 38px; border-radius: 50%;
-    background: rgba(255,255,255,0.5);
-    border: 1px solid rgba(255,255,255,0.78);
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid rgba(255,255,255,0.72);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 2px 10px rgba(26,39,68,0.08);
+    box-shadow: 0 1px 6px rgba(26,39,68,0.07);
     color: #2a3d5e; text-decoration: none; flex-shrink: 0;
-    transition: background 0.25s ease, transform 0.25s cubic-bezier(.22,1,.36,1),
-      box-shadow 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    transition: background 0.22s ease, transform 0.22s cubic-bezier(.22,1,.36,1),
+      box-shadow 0.22s ease, color 0.22s ease, border-color 0.22s ease;
   }
   .footer-social-btn:hover {
-    transform: translateY(-3px) scale(1.1);
-    box-shadow: 0 8px 20px rgba(26,39,68,0.15);
+    transform: translateY(-2px) scale(1.08);
+    box-shadow: 0 6px 16px rgba(26,39,68,0.13);
   }
-  .footer-social-btn.whatsapp:hover { background: #25D366; color: white; border-color: #25D366; }
+  .footer-social-btn.whatsapp:hover  { background: #25D366; color: white; border-color: #25D366; }
   .footer-social-btn.instagram:hover {
     background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
     color: white; border-color: transparent;
   }
-  .footer-divider { border: none; border-top: 1px solid rgba(26,39,68,0.1); margin: 0; }
-`;
 
-const headingStyle = {
-  fontFamily: '"Georgia", serif',
-  fontSize: '0.72rem', fontWeight: 700,
-  letterSpacing: '0.18em', textTransform: 'uppercase',
-  color: '#2a3d5e', marginBottom: '16px',
-};
+  /* ── Coluna heading ── */
+  .footer-col-heading {
+    font-family: "Georgia", serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #1a2744;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(26,39,68,0.1);
+  }
+
+  /* ── Divider ── */
+  .footer-divider {
+    border: none;
+    border-top: 1px solid rgba(26,39,68,0.1);
+    margin: 0;
+  }
+
+  /* ── Garantia badge ── */
+  .footer-guarantee-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.35);
+    border: 1px solid rgba(255,255,255,0.65);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+  .footer-guarantee-item:hover {
+    background: rgba(255,255,255,0.55);
+    box-shadow: 0 3px 12px rgba(26,39,68,0.07);
+  }
+
+  /* ── Suporte link row ── */
+  .footer-contact-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(26,39,68,0.06);
+  }
+  .footer-contact-row:last-child { border-bottom: none; }
+  .footer-contact-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(90,168,224,0.12);
+    flex-shrink: 0; margin-top: 1px;
+  }
+
+  @media (max-width: 767px) {
+    .footer-cloud-l, .footer-cloud-r { display: none !important; }
+  }
+`;
 
 const Footer = ({ startColor = '#eef8fb' }) => {
   const { t } = useTranslation();
@@ -122,117 +170,252 @@ const Footer = ({ startColor = '#eef8fb' }) => {
     { to: '/politica-de-entrega',                   label: 'Política de Entrega' },
   ];
 
-  const guarantees = ['Compra Segura', 'Entrega Rastreável', 'Suporte Dedicado'];
+  const guarantees = [
+    { label: 'Compra Segura',       icon: <Shield  size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} /> },
+    { label: 'Entrega Rastreável',  icon: <Truck   size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} /> },
+    { label: 'Suporte Dedicado',    icon: <Headphones size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} /> },
+  ];
+
+  /* ── Links empresa (col 3) — subconjunto de institutionalLinks ── */
+  const companyLinks = [
+    { to: '/sobre',                                 label: 'Sobre nós' },
+    { to: '/politica-de-privacidade',               label: 'Privacidade' },
+    { to: '/termos-e-condicoes',                    label: 'Termos e Condições' },
+    { to: '/politica-de-entrega',                   label: 'Política de Entrega' },
+    { to: '/politica-de-troca-devolucao-reembolso', label: 'Cancelamento e Reembolso' },
+  ];
 
   return (
     <footer
       data-testid="main-footer"
       style={{
         background: `linear-gradient(180deg, ${startColor} 0%, #ddf0f7 30%, #c8e8f5 60%, #a8d8f0 100%)`,
-        marginTop: 0, borderTop: 'none', position: 'relative', overflow: 'hidden',
+        marginTop: 0,
+        borderTop: 'none',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
       <style>{footerStyles}</style>
 
-      <div className="absolute top-[-10px] left-[-50px] w-44 md:w-60 opacity-70 pointer-events-none select-none hidden md:block"
+      {/* Nuvens decorativas */}
+      <div className="footer-cloud-l absolute top-[-10px] left-[-50px] w-44 md:w-60 opacity-60 pointer-events-none select-none hidden md:block"
         style={{ animation: 'floatFoot1 10s ease-in-out infinite' }}>
         <img src="/clouds/cloud3.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
-      <div className="absolute bottom-[20%] right-[-40px] w-40 md:w-52 opacity-60 pointer-events-none select-none"
+      <div className="footer-cloud-r absolute bottom-[15%] right-[-40px] w-40 md:w-52 opacity-50 pointer-events-none select-none"
         style={{ animation: 'floatFoot2 12s ease-in-out infinite' }}>
         <img src="/clouds/cloud2.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-12 pt-14 md:pt-20 pb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 md:gap-8 mb-12 md:mb-16">
+      {/* ── Linha superior separadora ── */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0,
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent 0%, rgba(26,39,68,0.12) 30%, rgba(26,39,68,0.18) 50%, rgba(26,39,68,0.12) 70%, transparent 100%)',
+      }} />
 
-          {/* Col 1+2 — Logo + social */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <img src="/logo-transparent.png" alt="Remember QRCode"
-              style={{ height: 56, width: 'auto', marginBottom: 12 }} />
-            <p style={{ color: '#3a5070', fontSize: '0.82rem', lineHeight: 1.65, fontFamily: '"Georgia", serif', maxWidth: 180, marginBottom: 20 }}>
-              Preservando memórias e homenageando vidas com amor e respeito.
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-14 pt-16 md:pt-24 pb-8">
+
+        {/* ══ Grid principal — 5 colunas ══ */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(1, 1fr)',
+            gap: '40px 32px',
+            marginBottom: '56px',
+          }}
+          className="footer-main-grid"
+        >
+          <style>{`
+            @media (min-width: 640px) {
+              .footer-main-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            }
+            @media (min-width: 1024px) {
+              .footer-main-grid { grid-template-columns: 1.8fr 1fr 1.2fr 1.1fr 1fr !important; gap: 40px 48px !important; }
+            }
+          `}</style>
+
+          {/* ── Col 1: Marca ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <img
+              src="/logo-transparent.png"
+              alt="Remember QRCode"
+              style={{ height: 52, width: 'auto', marginBottom: 14, objectFit: 'contain', objectPosition: 'left' }}
+            />
+            <p style={{
+              color: '#4a6080',
+              fontSize: '0.84rem',
+              lineHeight: 1.72,
+              fontFamily: '"Georgia", serif',
+              maxWidth: 210,
+              marginBottom: 24,
+            }}>
+              Memoriais digitais para preservar histórias e homenagear vidas.
             </p>
-            <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#2a3d5e', marginBottom: 12 }}>
+
+            {/* Redes sociais */}
+            <p style={{
+              fontFamily: '"Georgia", serif', fontSize: '0.62rem', fontWeight: 700,
+              letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: '#1a2744', opacity: 0.5, marginBottom: 10,
+            }}>
               Siga-nos
             </p>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
               <a href={INSTAGRAM_HREF} target="_blank" rel="noopener noreferrer"
                 className="footer-social-btn instagram" aria-label="Instagram" title="Instagram">
-                <InstagramIcon size={16} />
+                <InstagramIcon size={15} />
               </a>
               <a href={PHONE_HREF} target="_blank" rel="noopener noreferrer"
                 className="footer-social-btn whatsapp" aria-label="WhatsApp" title="WhatsApp">
-                <WhatsAppIcon size={16} />
+                <WhatsAppIcon size={15} />
               </a>
             </div>
           </div>
 
-          {/* Col 3 — Links rápidos */}
+          {/* ── Col 2: Produto ── */}
           <div>
-            <h4 style={headingStyle}>Links Rápidos</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <p className="footer-col-heading">Produto</p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 11 }}>
               {quickLinks.map(({ to, label }) => (
-                <li key={to}><Link to={to} className="footer-link">{label}</Link></li>
+                <li key={to}>
+                  <Link to={to} className="footer-link">{label}</Link>
+                </li>
               ))}
             </ul>
           </div>
 
-          {/* Col 4 — Institucional */}
+          {/* ── Col 3: Empresa ── */}
           <div>
-            <h4 style={headingStyle}>Institucional</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {institutionalLinks.map(({ to, label }) => (
-                <li key={to}><Link to={to} className="footer-link" style={{ fontSize: '0.82rem' }}>{label}</Link></li>
+            <p className="footer-col-heading">Empresa</p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 11 }}>
+              {companyLinks.map(({ to, label }) => (
+                <li key={to}>
+                  <Link to={to} className="footer-link">{label}</Link>
+                </li>
               ))}
             </ul>
           </div>
 
-          {/* Col 5 — Suporte + Garantias */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-            <div>
-              <h4 style={headingStyle}>Suporte</h4>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Phone size={14} style={{ color: '#5aa8e0', flexShrink: 0 }} />
+          {/* ── Col 4: Suporte ── */}
+          <div>
+            <p className="footer-col-heading">Suporte</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <div className="footer-contact-row">
+                <div className="footer-contact-icon">
+                  <Phone size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.67rem', color: 'rgba(26,39,68,0.4)', fontFamily: '"Georgia", serif', marginBottom: 2, letterSpacing: '0.05em' }}>
+                    Telefone / WhatsApp
+                  </p>
                   <a href={PHONE_HREF} target="_blank" rel="noopener noreferrer"
-                    className="footer-link" style={{ fontSize: '0.85rem' }}>{PHONE_NUMBER}</a>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                  <Mail size={14} style={{ color: '#5aa8e0', flexShrink: 0, marginTop: 2 }} />
+                    className="footer-link" style={{ fontSize: '0.8rem' }}>
+                    {PHONE_NUMBER}
+                  </a>
+                </div>
+              </div>
+              <div className="footer-contact-row">
+                <div className="footer-contact-icon">
+                  <Mail size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.67rem', color: 'rgba(26,39,68,0.4)', fontFamily: '"Georgia", serif', marginBottom: 2, letterSpacing: '0.05em' }}>
+                    E-mail
+                  </p>
                   <a href={'mailto:' + EMAIL} className="footer-link"
-                    style={{ fontSize: '0.85rem', wordBreak: 'break-all' }}>{EMAIL}</a>
-                </li>
-              </ul>
+                    style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>
+                    {EMAIL}
+                  </a>
+                </div>
+              </div>
+              <div className="footer-contact-row">
+                <div className="footer-contact-icon">
+                  <MessageCircle size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.67rem', color: 'rgba(26,39,68,0.4)', fontFamily: '"Georgia", serif', marginBottom: 2, letterSpacing: '0.05em' }}>
+                    Chat
+                  </p>
+                  <a href={PHONE_HREF} target="_blank" rel="noopener noreferrer"
+                    className="footer-link" style={{ fontSize: '0.8rem' }}>
+                    Falar no WhatsApp
+                  </a>
+                </div>
+              </div>
             </div>
-            <div>
-              <h4 style={headingStyle}>Garantias</h4>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {guarantees.map((item) => (
-                  <li key={item} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Heart size={13} style={{ color: '#5aa8e0', flexShrink: 0 }} />
-                    <span style={{ color: '#3a5070', fontSize: '0.85rem', fontFamily: '"Georgia", serif' }}>{item}</span>
-                  </li>
-                ))}
-              </ul>
+          </div>
+
+          {/* ── Col 5: Garantias ── */}
+          <div>
+            <p className="footer-col-heading">Garantias</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {guarantees.map(({ label, icon }) => (
+                <div key={label} className="footer-guarantee-item">
+                  {icon}
+                  <span style={{
+                    color: '#3a5070',
+                    fontSize: '0.8rem',
+                    fontFamily: '"Georgia", serif',
+                    fontWeight: 600,
+                    lineHeight: 1.3,
+                  }}>
+                    {label}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
         </div>
 
+        {/* ══ Rodapé final ══ */}
         <hr className="footer-divider" />
 
-        <div style={{ paddingTop: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
-          <img src="/logo-transparent.png" alt="Remember QRCode" style={{ height: 36, width: 'auto', opacity: 0.6 }} />
-          <p style={{ color: '#3a5070', fontSize: '0.78rem', fontFamily: '"Georgia", serif', opacity: 0.8 }}>
-            {'© ' + currentYear + ' Remember QRCode. Todos os direitos reservados.'}
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', justifyContent: 'center', marginTop: '4px' }}>
-            {institutionalLinks.map(({ to, label }) => (
-              <Link key={to} to={to} className="footer-link-sm">{label}</Link>
+        <div style={{
+          paddingTop: '28px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '16px',
+          textAlign: 'center',
+        }}>
+          {/* Copyright + logo mini */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img
+              src="/logo-transparent.png"
+              alt="Remember QRCode"
+              style={{ height: 22, width: 'auto', opacity: 0.4 }}
+            />
+            <p style={{
+              color: 'rgba(58,80,112,0.6)',
+              fontSize: '0.75rem',
+              fontFamily: '"Georgia", serif',
+            }}>
+              {'© ' + currentYear + ' Remember QRCode · Todos os direitos reservados.'}
+            </p>
+          </div>
+
+          {/* Links legais separados por ponto */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '4px 0',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+            {institutionalLinks.map(({ to, label }, i) => (
+              <span key={to} style={{ display: 'flex', alignItems: 'center' }}>
+                <Link to={to} className="footer-link-sm" style={{ padding: '0 10px' }}>{label}</Link>
+                {i < institutionalLinks.length - 1 && (
+                  <span style={{ color: 'rgba(58,80,112,0.25)', fontSize: '0.65rem', userSelect: 'none' }}>·</span>
+                )}
+              </span>
             ))}
           </div>
         </div>
+
       </div>
     </footer>
   );
