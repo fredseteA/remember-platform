@@ -4,7 +4,20 @@ import { Heart, Mail, Phone } from 'lucide-react';
 
 const PHONE_NUMBER = '\u002B55 22 99208-0811';
 const PHONE_HREF = 'https://wa.me/5522992080811';
+const INSTAGRAM_HREF = 'https://www.instagram.com/remember.qrcode?igsh=bmVsZHliOXl3bWh4';
 const EMAIL = 'rememberqrcode@gmail.com';
+
+const WhatsAppIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
+
+const InstagramIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+);
 
 const footerStyles = `
   @keyframes floatFoot1 {
@@ -20,36 +33,75 @@ const footerStyles = `
     font-family: "Georgia", serif;
     font-size: 0.88rem;
     text-decoration: none;
-    transition: color 0.25s ease;
+    position: relative;
+    display: inline-block;
+    transition: color 0.18s ease;
+  }
+  .footer-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0; right: 0;
+    height: 1px; border-radius: 1px;
+    background: #1a2744;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.22s cubic-bezier(.22,1,.36,1);
   }
   .footer-link:hover { color: #1a2744; }
-  .footer-divider {
-    border: none;
-    border-top: 1px solid rgba(26,39,68,0.1);
-    margin: 0;
+  .footer-link:hover::after { transform: scaleX(1); }
+
+  .footer-link-sm {
+    color: #7a9bb5;
+    font-family: "Georgia", serif;
+    font-size: 0.72rem;
+    text-decoration: none;
+    position: relative;
+    display: inline-block;
+    transition: color 0.18s ease;
   }
+  .footer-link-sm::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 1px; border-radius: 1px;
+    background: #1a2744;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.22s cubic-bezier(.22,1,.36,1);
+  }
+  .footer-link-sm:hover { color: #1a2744; }
+  .footer-link-sm:hover::after { transform: scaleX(1); }
+
+  .footer-social-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.78);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(26,39,68,0.08);
+    color: #2a3d5e; text-decoration: none; flex-shrink: 0;
+    transition: background 0.25s ease, transform 0.25s cubic-bezier(.22,1,.36,1),
+      box-shadow 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  }
+  .footer-social-btn:hover {
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 8px 20px rgba(26,39,68,0.15);
+  }
+  .footer-social-btn.whatsapp:hover { background: #25D366; color: white; border-color: #25D366; }
+  .footer-social-btn.instagram:hover {
+    background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
+    color: white; border-color: transparent;
+  }
+  .footer-divider { border: none; border-top: 1px solid rgba(26,39,68,0.1); margin: 0; }
 `;
 
 const headingStyle = {
   fontFamily: '"Georgia", serif',
-  fontSize: '0.72rem',
-  fontWeight: 700,
-  letterSpacing: '0.18em',
-  textTransform: 'uppercase',
-  color: '#2a3d5e',
-  marginBottom: '16px',
+  fontSize: '0.72rem', fontWeight: 700,
+  letterSpacing: '0.18em', textTransform: 'uppercase',
+  color: '#2a3d5e', marginBottom: '16px',
 };
 
-/**
- * Footer com gradiente contínuo em relação à página anterior.
- *
- * @param {string} startColor - Cor FINAL da última section da página atual.
- *
- * Uso por página:
- *   Home         → <Footer startColor="#eef8fb" />   (WhyChooseUs termina em #eef8fb)
- *   How It Works → <Footer startColor="#5aa8e0" />   (IncludedSection termina em #5aa8e0)
- *   Páginas brancas → <Footer startColor="#ffffff" />
- */
 const Footer = ({ startColor = '#eef8fb' }) => {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
@@ -61,129 +113,126 @@ const Footer = ({ startColor = '#eef8fb' }) => {
     { to: '/create-memorial', label: t('nav.createMemorial') },
   ];
 
+  const institutionalLinks = [
+    { to: '/sobre',                                 label: 'Sobre a Remember QRCode' },
+    { to: '/politica-de-responsabilidade',          label: 'Política de Responsabilidade' },
+    { to: '/politica-de-privacidade',               label: 'Política de Privacidade' },
+    { to: '/politica-de-troca-devolucao-reembolso', label: 'Troca, Devolução e Reembolso' },
+    { to: '/termos-e-condicoes',                    label: 'Termos e Condições' },
+    { to: '/politica-de-entrega',                   label: 'Política de Entrega' },
+  ];
+
   const guarantees = ['Compra Segura', 'Entrega Rastreável', 'Suporte Dedicado'];
 
-  const sectionBg = {
-    // Começa exatamente na cor final da section anterior → sem linha de corte
-    background: `linear-gradient(180deg, ${startColor} 0%, #ddf0f7 30%, #c8e8f5 60%, #a8d8f0 100%)`,
-    marginTop: 0,
-    borderTop: 'none',
-    position: 'relative',
-    overflow: 'hidden',
-  };
-
   return (
-    <footer data-testid="main-footer" style={sectionBg}>
+    <footer
+      data-testid="main-footer"
+      style={{
+        background: `linear-gradient(180deg, ${startColor} 0%, #ddf0f7 30%, #c8e8f5 60%, #a8d8f0 100%)`,
+        marginTop: 0, borderTop: 'none', position: 'relative', overflow: 'hidden',
+      }}
+    >
       <style>{footerStyles}</style>
 
-      {/* Nuvem esquerda */}
-      <div
-        className="absolute top-[-10px] left-[-50px] w-44 md:w-60 opacity-70 pointer-events-none select-none hidden md:block"
-        style={{ animation: 'floatFoot1 10s ease-in-out infinite' }}
-      >
-        <img src="/clouds/cloud3.png" alt="" draggable={false}
-          style={{ width: '100%', height: 'auto', display: 'block' }} />
+      <div className="absolute top-[-10px] left-[-50px] w-44 md:w-60 opacity-70 pointer-events-none select-none hidden md:block"
+        style={{ animation: 'floatFoot1 10s ease-in-out infinite' }}>
+        <img src="/clouds/cloud3.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
+      </div>
+      <div className="absolute bottom-[20%] right-[-40px] w-40 md:w-52 opacity-60 pointer-events-none select-none"
+        style={{ animation: 'floatFoot2 12s ease-in-out infinite' }}>
+        <img src="/clouds/cloud2.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
-      {/* Nuvem direita */}
-      <div
-        className="absolute bottom-[20%] right-[-40px] w-40 md:w-52 opacity-60 pointer-events-none select-none"
-        style={{ animation: 'floatFoot2 12s ease-in-out infinite' }}
-      >
-        <img src="/clouds/cloud2.png" alt="" draggable={false}
-          style={{ width: '100%', height: 'auto', display: 'block' }} />
-      </div>
-
-      {/* Conteúdo */}
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-12 pt-14 md:pt-20 pb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 md:gap-8 mb-12 md:mb-16">
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 md:gap-12 mb-12 md:mb-16">
-
-          {/* Logo */}
-          <div className="sm:col-span-2 md:col-span-1">
-            <img
-              src="/logo-transparent.png"
-              alt="Remember QRCode"
-              style={{ height: 64, width: 'auto', marginBottom: 14 }}
-            />
-            <p style={{ color: '#3a5070', fontSize: '0.85rem', lineHeight: 1.7, fontFamily: '"Georgia", serif', maxWidth: 220 }}>
+          {/* Col 1+2 — Logo + social */}
+          <div className="sm:col-span-2 lg:col-span-2">
+            <img src="/logo-transparent.png" alt="Remember QRCode"
+              style={{ height: 64, width: 'auto', marginBottom: 14 }} />
+            <p style={{ color: '#3a5070', fontSize: '0.85rem', lineHeight: 1.7, fontFamily: '"Georgia", serif', maxWidth: 240, marginBottom: 22 }}>
               Preservando memórias e homenageando vidas com amor e respeito.
             </p>
+            <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#2a3d5e', marginBottom: 12 }}>
+              Siga-nos
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <a href={INSTAGRAM_HREF} target="_blank" rel="noopener noreferrer"
+                className="footer-social-btn instagram" aria-label="Instagram" title="Instagram">
+                <InstagramIcon size={16} />
+              </a>
+              <a href={PHONE_HREF} target="_blank" rel="noopener noreferrer"
+                className="footer-social-btn whatsapp" aria-label="WhatsApp" title="WhatsApp">
+                <WhatsAppIcon size={16} />
+              </a>
+            </div>
           </div>
 
-          {/* Links rápidos */}
+          {/* Col 3 — Links rápidos */}
           <div>
             <h4 style={headingStyle}>Links Rápidos</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {quickLinks.map(({ to, label }) => (
-                <li key={to}>
-                  <Link to={to} className="footer-link">{label}</Link>
-                </li>
+                <li key={to}><Link to={to} className="footer-link">{label}</Link></li>
               ))}
             </ul>
           </div>
 
-          {/* Suporte */}
+          {/* Col 4 — Institucional */}
           <div>
-            <h4 style={headingStyle}>Suporte</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <li style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Phone size={14} style={{ color: '#5aa8e0', flexShrink: 0 }} />
-                <a
-                  href={PHONE_HREF}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="footer-link"
-                  style={{ fontSize: '0.85rem' }}
-                >
-                  {PHONE_NUMBER}
-                </a>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <Mail size={14} style={{ color: '#5aa8e0', flexShrink: 0, marginTop: 2 }} />
-                <a
-                  href={'mailto:' + EMAIL}
-                  className="footer-link"
-                  style={{ fontSize: '0.85rem', wordBreak: 'break-all' }}
-                >
-                  {EMAIL}
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Garantias */}
-          <div>
-            <h4 style={headingStyle}>Garantias</h4>
+            <h4 style={headingStyle}>Institucional</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {guarantees.map((item) => (
-                <li key={item} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Heart size={13} style={{ color: '#5aa8e0', flexShrink: 0 }} />
-                  <span style={{ color: '#3a5070', fontSize: '0.85rem', fontFamily: '"Georgia", serif' }}>
-                    {item}
-                  </span>
-                </li>
+              {institutionalLinks.map(({ to, label }) => (
+                <li key={to}><Link to={to} className="footer-link" style={{ fontSize: '0.82rem' }}>{label}</Link></li>
               ))}
             </ul>
           </div>
+
+          {/* Col 5 — Suporte + Garantias */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+            <div>
+              <h4 style={headingStyle}>Suporte</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <li style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Phone size={14} style={{ color: '#5aa8e0', flexShrink: 0 }} />
+                  <a href={PHONE_HREF} target="_blank" rel="noopener noreferrer"
+                    className="footer-link" style={{ fontSize: '0.85rem' }}>{PHONE_NUMBER}</a>
+                </li>
+                <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <Mail size={14} style={{ color: '#5aa8e0', flexShrink: 0, marginTop: 2 }} />
+                  <a href={'mailto:' + EMAIL} className="footer-link"
+                    style={{ fontSize: '0.85rem', wordBreak: 'break-all' }}>{EMAIL}</a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 style={headingStyle}>Garantias</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {guarantees.map((item) => (
+                  <li key={item} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Heart size={13} style={{ color: '#5aa8e0', flexShrink: 0 }} />
+                    <span style={{ color: '#3a5070', fontSize: '0.85rem', fontFamily: '"Georgia", serif' }}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
         </div>
 
-        {/* Divisor */}
         <hr className="footer-divider" />
 
-        {/* Rodapé final */}
         <div style={{ paddingTop: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
-          <img
-            src="/logo-transparent.png"
-            alt="Remember QRCode"
-            style={{ height: 36, width: 'auto', opacity: 0.6 }}
-          />
+          <img src="/logo-transparent.png" alt="Remember QRCode" style={{ height: 36, width: 'auto', opacity: 0.6 }} />
           <p style={{ color: '#3a5070', fontSize: '0.78rem', fontFamily: '"Georgia", serif', opacity: 0.8 }}>
             {'© ' + currentYear + ' Remember QRCode. Todos os direitos reservados.'}
           </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', justifyContent: 'center', marginTop: '4px' }}>
+            {institutionalLinks.map(({ to, label }) => (
+              <Link key={to} to={to} className="footer-link-sm">{label}</Link>
+            ))}
+          </div>
         </div>
-
       </div>
     </footer>
   );
