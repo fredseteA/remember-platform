@@ -2,179 +2,84 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import ApoiadorLayout from '../../layouts/ApoiadorLayout';
 import axios from 'axios';
-import {
-  Coins,
-  RefreshCw,
-  Clock,
-  Wallet,
-  CheckCircle,
-  ChevronDown,
-  Filter,
-  X,
-} from 'lucide-react';
+import { Coins, RefreshCw, Clock, Wallet, CheckCircle, ChevronDown, Filter, X } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
 
 const COMMISSION_STATUS = {
-  pending:   { label: 'Pendente',    color: '#f59e0b', desc: 'Aguardando entrega do pedido' },
-  available: { label: 'Disponível',  color: '#8b5cf6', desc: 'Pronta para recebimento' },
-  paid:      { label: 'Paga',        color: '#16a34a', desc: 'Já recebida' },
-  canceled:  { label: 'Cancelada',   color: '#ef4444', desc: 'Pedido cancelado' },
+  pending:   { label: 'Pendente',   color: '#f59e0b', desc: 'Aguardando entrega do pedido' },
+  available: { label: 'Disponível', color: '#8b5cf6', desc: 'Pronta para recebimento' },
+  paid:      { label: 'Paga',       color: '#16a34a', desc: 'Já recebida' },
+  canceled:  { label: 'Cancelada',  color: '#ef4444', desc: 'Pedido cancelado' },
 };
 
 function StatusBadge({ status }) {
   const cfg = COMMISSION_STATUS[status] || { label: status, color: '#9aaac0' };
-  return (
-    <span style={{
-      background: `${cfg.color}18`, color: cfg.color,
-      padding: '4px 10px', borderRadius: 20,
-      fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap',
-    }}>{cfg.label}</span>
-  );
+  return <span style={{ background: `${cfg.color}18`, color: cfg.color, padding: '4px 10px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>{cfg.label}</span>;
 }
 
 function SummaryCard({ icon: Icon, label, value, sub, accent, delay = 0 }) {
   const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setVisible(true), delay);
-    return () => clearTimeout(t);
-  }, [delay]);
-
+  useEffect(() => { const t = setTimeout(() => setVisible(true), delay); return () => clearTimeout(t); }, [delay]);
   return (
-    <div style={{
-      background: '#fff',
-      borderRadius: 16,
-      padding: '22px 24px',
-      border: '1px solid #e8edf4',
-      boxShadow: '0 2px 12px rgba(26,39,68,0.05)',
-      opacity: visible ? 1 : 0,
-      transform: visible ? 'translateY(0)' : 'translateY(14px)',
-      transition: 'opacity 0.4s ease, transform 0.4s ease',
-    }}>
+    <div style={{ background: '#fff', borderRadius: 16, padding: '22px 24px', border: '1px solid #e8edf4', boxShadow: '0 2px 12px rgba(26,39,68,0.05)', opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(14px)', transition: 'opacity 0.4s ease, transform 0.4s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <span style={{ fontSize: '0.73rem', color: '#7a8aaa', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
-          {label}
-        </span>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10,
-          background: `${accent}15`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Icon size={18} style={{ color: accent }} />
-        </div>
+        <span style={{ fontSize: '0.73rem', color: '#7a8aaa', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</span>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={18} style={{ color: accent }} /></div>
       </div>
-      <p style={{
-        fontFamily: '"Georgia", serif',
-        fontSize: 'clamp(1.4rem, 3vw, 1.85rem)',
-        fontWeight: 700, color: '#1a2744', margin: 0, lineHeight: 1.1,
-      }}>{value}</p>
-      {sub && (
-        <p style={{ fontSize: '0.75rem', color: '#9aaac0', marginTop: 6 }}>{sub}</p>
-      )}
+      <p style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.4rem, 3vw, 1.85rem)', fontWeight: 700, color: '#1a2744', margin: 0, lineHeight: 1.1 }}>{value}</p>
+      {sub && <p style={{ fontSize: '0.75rem', color: '#9aaac0', marginTop: 6 }}>{sub}</p>}
     </div>
   );
 }
 
-// Agrupa comissões por mês para a tabela de períodos
 function groupByMonth(commissions) {
   const groups = {};
   commissions.forEach(c => {
     const d = c.created_at ? new Date(c.created_at) : null;
     if (!d) return;
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    if (!groups[key]) {
-      groups[key] = {
-        key,
-        label: d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-        total: 0,
-        paid: 0,
-        pending: 0,
-        available: 0,
-        count: 0,
-        items: [],
-      };
-    }
+    if (!groups[key]) groups[key] = { key, label: d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }), total: 0, paid: 0, pending: 0, available: 0, count: 0, items: [] };
     groups[key].total += c.commission_amount || 0;
     groups[key].count += 1;
     groups[key].items.push(c);
-    if (c.commission_status === 'paid') groups[key].paid += c.commission_amount || 0;
-    if (c.commission_status === 'pending') groups[key].pending += c.commission_amount || 0;
+    if (c.commission_status === 'paid')      groups[key].paid      += c.commission_amount || 0;
+    if (c.commission_status === 'pending')   groups[key].pending   += c.commission_amount || 0;
     if (c.commission_status === 'available') groups[key].available += c.commission_amount || 0;
   });
   return Object.values(groups).sort((a, b) => b.key.localeCompare(a.key));
 }
 
-// Linha expandível da tabela de períodos
 function PeriodRow({ group }) {
   const [expanded, setExpanded] = useState(false);
-  const hasPaid = group.paid > 0;
-  const hasAvailable = group.available > 0;
   const label = group.label.charAt(0).toUpperCase() + group.label.slice(1);
-
   return (
     <>
-      <tr
-        onClick={() => setExpanded(!expanded)}
-        style={{
-          borderBottom: expanded ? 'none' : '1px solid #f0f4f8',
-          cursor: 'pointer',
-          background: expanded ? '#f8fafc' : 'transparent',
-          transition: 'background 0.15s',
-        }}
+      <tr onClick={() => setExpanded(!expanded)} style={{ borderBottom: expanded ? 'none' : '1px solid #f0f4f8', cursor: 'pointer', background: expanded ? '#f8fafc' : 'transparent', transition: 'background 0.15s' }}
         onMouseEnter={e => { if (!expanded) e.currentTarget.style.background = '#f8fafc'; }}
         onMouseLeave={e => { if (!expanded) e.currentTarget.style.background = 'transparent'; }}
       >
         <td style={{ padding: '13px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ChevronDown size={14} style={{
-              color: '#9aaac0',
-              transform: expanded ? 'rotate(180deg)' : 'none',
-              transition: '0.2s',
-            }} />
-            <span style={{ fontFamily: '"Georgia", serif', fontWeight: 600, color: '#1a2744', fontSize: '0.88rem' }}>
-              {label}
-            </span>
+            <ChevronDown size={14} style={{ color: '#9aaac0', transform: expanded ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+            <span style={{ fontFamily: '"Georgia", serif', fontWeight: 600, color: '#1a2744', fontSize: '0.88rem' }}>{label}</span>
           </div>
         </td>
-        <td style={{ padding: '13px 16px', color: '#1a2744', fontWeight: 600, fontSize: '0.88rem' }}>
-          R$ {group.total.toFixed(2)}
-        </td>
+        <td style={{ padding: '13px 16px', color: '#1a2744', fontWeight: 600, fontSize: '0.88rem' }}>R$ {group.total.toFixed(2)}</td>
         <td style={{ padding: '13px 16px' }}>
-          {hasPaid ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#16a34a', fontWeight: 600, fontSize: '0.82rem' }}>
-              <CheckCircle size={14} /> Sim — R$ {group.paid.toFixed(2)}
-            </span>
-          ) : hasAvailable ? (
-            <span style={{ color: '#8b5cf6', fontWeight: 600, fontSize: '0.82rem' }}>Disponível</span>
-          ) : (
-            <span style={{ color: '#f59e0b', fontWeight: 600, fontSize: '0.82rem' }}>Pendente</span>
-          )}
+          {group.paid > 0 ? <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#16a34a', fontWeight: 600, fontSize: '0.82rem' }}><CheckCircle size={14} /> Sim — R$ {group.paid.toFixed(2)}</span>
+            : group.available > 0 ? <span style={{ color: '#8b5cf6', fontWeight: 600, fontSize: '0.82rem' }}>Disponível</span>
+            : <span style={{ color: '#f59e0b', fontWeight: 600, fontSize: '0.82rem' }}>Pendente</span>}
         </td>
-        <td style={{ padding: '13px 16px', color: '#7a8aaa', fontSize: '0.8rem' }}>
-          {group.count} venda{group.count !== 1 ? 's' : ''}
-        </td>
+        <td style={{ padding: '13px 16px', color: '#7a8aaa', fontSize: '0.8rem' }}>{group.count} venda{group.count !== 1 ? 's' : ''}</td>
       </tr>
-
-      {/* Linhas expandidas */}
       {expanded && group.items.map((item, i) => (
-        <tr key={i} style={{
-          background: '#f8fafc',
-          borderBottom: i === group.items.length - 1 ? '2px solid #e8edf4' : '1px solid #eef2f8',
-        }}>
-          <td style={{ padding: '10px 16px 10px 40px', color: '#5a6a8a', fontSize: '0.8rem' }}>
-            {item.created_at ? new Date(item.created_at).toLocaleDateString('pt-BR') : '—'}
-          </td>
-          <td style={{ padding: '10px 16px', color: '#16a34a', fontWeight: 600, fontSize: '0.8rem' }}>
-            R$ {Number(item.commission_amount || 0).toFixed(2)}
-          </td>
-          <td style={{ padding: '10px 16px' }}>
-            <StatusBadge status={item.commission_status} />
-          </td>
+        <tr key={i} style={{ background: '#f8fafc', borderBottom: i === group.items.length - 1 ? '2px solid #e8edf4' : '1px solid #eef2f8' }}>
+          <td style={{ padding: '10px 16px 10px 40px', color: '#5a6a8a', fontSize: '0.8rem' }}>{item.created_at ? new Date(item.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+          <td style={{ padding: '10px 16px', color: '#16a34a', fontWeight: 600, fontSize: '0.8rem' }}>R$ {Number(item.commission_amount || 0).toFixed(2)}</td>
+          <td style={{ padding: '10px 16px' }}><StatusBadge status={item.commission_status} /></td>
           <td style={{ padding: '10px 16px', color: '#9aaac0', fontSize: '0.78rem' }}>
-            {item.commission_status === 'paid' && item.paid_at
-              ? `Pago em ${new Date(item.paid_at).toLocaleDateString('pt-BR')}`
-              : COMMISSION_STATUS[item.commission_status]?.desc || '—'
-            }
+            {item.commission_status === 'paid' && item.paid_at ? `Pago em ${new Date(item.paid_at).toLocaleDateString('pt-BR')}` : COMMISSION_STATUS[item.commission_status]?.desc || '—'}
           </td>
         </tr>
       ))}
@@ -183,7 +88,7 @@ function PeriodRow({ group }) {
 }
 
 export function ApoiadorComissoes() {
-  const { currentUser } = useAuth();
+  const { user } = useAuth(); // ← CORRIGIDO: era currentUser
   const [commissions, setCommissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -192,33 +97,20 @@ export function ApoiadorComissoes() {
 
   const fetchData = async () => {
     try {
-      const token = await currentUser.getIdToken();
-      const res = await axios.get(`${API}/apoiador/commissions`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const token = await user.getIdToken(); // ← CORRIGIDO
+      const res = await axios.get(`${API}/apoiador/commissions`, { headers: { Authorization: `Bearer ${token}` } });
       setCommissions(res.data?.commissions || []);
-    } catch {
-      setError('Não foi possível carregar as comissões.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+    } catch { setError('Não foi possível carregar as comissões.'); }
+    finally { setLoading(false); setRefreshing(false); }
   };
 
-  useEffect(() => { if (currentUser) fetchData(); }, [currentUser]);
+  useEffect(() => { if (user) fetchData(); }, [user]); // ← CORRIGIDO
   const handleRefresh = () => { setRefreshing(true); fetchData(); };
 
-  // Totais
   const totalPending   = commissions.filter(c => c.commission_status === 'pending').reduce((a, c) => a + (c.commission_amount || 0), 0);
   const totalAvailable = commissions.filter(c => c.commission_status === 'available').reduce((a, c) => a + (c.commission_amount || 0), 0);
   const totalPaid      = commissions.filter(c => c.commission_status === 'paid').reduce((a, c) => a + (c.commission_amount || 0), 0);
-
-  // Filtro
-  const filtered = useMemo(() => {
-    if (!filterStatus) return commissions;
-    return commissions.filter(c => c.commission_status === filterStatus);
-  }, [commissions, filterStatus]);
-
+  const filtered = useMemo(() => !filterStatus ? commissions : commissions.filter(c => c.commission_status === filterStatus), [commissions, filterStatus]);
   const groups = useMemo(() => groupByMonth(filtered), [filtered]);
 
   if (loading) return (
@@ -237,10 +129,7 @@ export function ApoiadorComissoes() {
     <ApoiadorLayout>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, textAlign: 'center', border: '1px solid #fecaca' }}>
         <p style={{ color: '#ef4444', marginBottom: 16 }}>{error}</p>
-        <button onClick={handleRefresh} style={{
-          padding: '10px 24px', background: '#1a2744', color: '#fff',
-          border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: '"Georgia", serif',
-        }}>Tentar novamente</button>
+        <button onClick={handleRefresh} style={{ padding: '10px 24px', background: '#1a2744', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: '"Georgia", serif' }}>Tentar novamente</button>
       </div>
     </ApoiadorLayout>
   );
@@ -248,133 +137,47 @@ export function ApoiadorComissoes() {
   return (
     <ApoiadorLayout>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <Coins size={22} style={{ color: '#5aa8e0' }} />
-              <h1 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.3rem,3vw,1.7rem)', fontWeight: 700, color: '#1a2744', margin: 0 }}>
-                Comissões
-              </h1>
+              <h1 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.3rem,3vw,1.7rem)', fontWeight: 700, color: '#1a2744', margin: 0 }}>Comissões</h1>
             </div>
-            <p style={{ color: '#5a6a8a', fontSize: '0.86rem', margin: 0 }}>
-              Acompanhe suas comissões pendentes, disponíveis e pagas.
-            </p>
+            <p style={{ color: '#5a6a8a', fontSize: '0.86rem', margin: 0 }}>Acompanhe suas comissões pendentes, disponíveis e pagas.</p>
           </div>
-          <button onClick={handleRefresh} disabled={refreshing} style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            padding: '9px 16px', background: '#fff',
-            border: '1px solid #e8edf4', borderRadius: 10,
-            cursor: 'pointer', color: '#5a6a8a', fontSize: '0.82rem',
-            fontFamily: '"Georgia", serif',
-          }}>
-            <RefreshCw size={14} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
-            Atualizar
+          <button onClick={handleRefresh} disabled={refreshing} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#fff', border: '1px solid #e8edf4', borderRadius: 10, cursor: 'pointer', color: '#5a6a8a', fontSize: '0.82rem', fontFamily: '"Georgia", serif' }}>
+            <RefreshCw size={14} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} /> Atualizar
           </button>
         </div>
 
-        {/* Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
-          <SummaryCard
-            icon={Clock} label="Comissão Pendente"
-            value={`R$ ${totalPending.toFixed(2)}`}
-            sub="Aguardando entrega dos pedidos"
-            accent="#f59e0b" delay={0}
-          />
-          <SummaryCard
-            icon={Wallet} label="Comissão Disponível"
-            value={`R$ ${totalAvailable.toFixed(2)}`}
-            sub="Pronta para recebimento"
-            accent="#8b5cf6" delay={80}
-          />
-          <SummaryCard
-            icon={CheckCircle} label="Comissão Paga"
-            value={`R$ ${totalPaid.toFixed(2)}`}
-            sub="Total já recebido"
-            accent="#16a34a" delay={160}
-          />
+          <SummaryCard icon={Clock}       label="Comissão Pendente"   value={`R$ ${totalPending.toFixed(2)}`}   sub="Aguardando entrega dos pedidos" accent="#f59e0b" delay={0} />
+          <SummaryCard icon={Wallet}      label="Comissão Disponível" value={`R$ ${totalAvailable.toFixed(2)}`} sub="Pronta para recebimento"         accent="#8b5cf6" delay={80} />
+          <SummaryCard icon={CheckCircle} label="Comissão Paga"       value={`R$ ${totalPaid.toFixed(2)}`}      sub="Total já recebido"               accent="#16a34a" delay={160} />
         </div>
 
-        {/* Info sobre como funciona */}
-        <div style={{
-          background: 'linear-gradient(135deg, #eff6ff, #f0fdf4)',
-          border: '1px solid #bfdbfe',
-          borderRadius: 12,
-          padding: '14px 18px',
-          marginBottom: 22,
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 10,
-        }}>
+        <div style={{ background: 'linear-gradient(135deg, #eff6ff, #f0fdf4)', border: '1px solid #bfdbfe', borderRadius: 12, padding: '14px 18px', marginBottom: 22, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <div style={{ fontSize: '1rem', marginTop: 1 }}>ℹ️</div>
           <div>
             <p style={{ fontWeight: 600, color: '#1e40af', fontSize: '0.82rem', margin: '0 0 3px' }}>Como funciona?</p>
-            <p style={{ color: '#3b82f6', fontSize: '0.78rem', margin: 0, lineHeight: 1.5 }}>
-              Comissões ficam <strong>pendentes</strong> até a entrega do pedido. Após a entrega, ficam <strong>disponíveis</strong> e serão pagas pelo administrador via PIX ou transferência.
-            </p>
+            <p style={{ color: '#3b82f6', fontSize: '0.78rem', margin: 0, lineHeight: 1.5 }}>Comissões ficam <strong>pendentes</strong> até a entrega do pedido. Após a entrega, ficam <strong>disponíveis</strong> e serão pagas pelo administrador via PIX ou transferência.</p>
           </div>
         </div>
 
-        {/* Filtro por status */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
           <Filter size={15} style={{ color: '#9aaac0' }} />
-          <span style={{ fontSize: '0.78rem', color: '#9aaac0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Filtrar por:
-          </span>
-          {[
-            { value: '', label: 'Todos' },
-            { value: 'pending',   label: 'Pendente' },
-            { value: 'available', label: 'Disponível' },
-            { value: 'paid',      label: 'Pago' },
-            { value: 'canceled',  label: 'Cancelado' },
-          ].map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => setFilterStatus(opt.value)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 20,
-                border: filterStatus === opt.value ? 'none' : '1px solid #e8edf4',
-                background: filterStatus === opt.value ? '#1a2744' : '#fff',
-                color: filterStatus === opt.value ? '#fff' : '#5a6a8a',
-                fontSize: '0.78rem',
-                fontWeight: filterStatus === opt.value ? 700 : 400,
-                cursor: 'pointer',
-                fontFamily: '"Georgia", serif',
-                transition: 'all 0.15s',
-              }}
-            >{opt.label}</button>
+          <span style={{ fontSize: '0.78rem', color: '#9aaac0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Filtrar por:</span>
+          {[{ value: '', label: 'Todos' }, { value: 'pending', label: 'Pendente' }, { value: 'available', label: 'Disponível' }, { value: 'paid', label: 'Pago' }, { value: 'canceled', label: 'Cancelado' }].map(opt => (
+            <button key={opt.value} onClick={() => setFilterStatus(opt.value)} style={{ padding: '6px 14px', borderRadius: 20, border: filterStatus === opt.value ? 'none' : '1px solid #e8edf4', background: filterStatus === opt.value ? '#1a2744' : '#fff', color: filterStatus === opt.value ? '#fff' : '#5a6a8a', fontSize: '0.78rem', fontWeight: filterStatus === opt.value ? 700 : 400, cursor: 'pointer', fontFamily: '"Georgia", serif', transition: 'all 0.15s' }}>{opt.label}</button>
           ))}
-          {filterStatus && (
-            <button onClick={() => setFilterStatus('')} style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              padding: '6px 10px', border: '1px solid #fecaca',
-              borderRadius: 20, background: '#fff5f5',
-              cursor: 'pointer', color: '#ef4444', fontSize: '0.75rem',
-              fontFamily: '"Georgia", serif',
-            }}>
-              <X size={11} /> Limpar
-            </button>
-          )}
+          {filterStatus && <button onClick={() => setFilterStatus('')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', border: '1px solid #fecaca', borderRadius: 20, background: '#fff5f5', cursor: 'pointer', color: '#ef4444', fontSize: '0.75rem', fontFamily: '"Georgia", serif' }}><X size={11} /> Limpar</button>}
         </div>
 
-        {/* Tabela por período */}
-        <div style={{
-          background: '#fff', borderRadius: 16,
-          border: '1px solid #e8edf4',
-          boxShadow: '0 2px 12px rgba(26,39,68,0.05)',
-          overflow: 'hidden',
-        }}>
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8edf4', boxShadow: '0 2px 12px rgba(26,39,68,0.05)', overflow: 'hidden' }}>
           {groups.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9aaac0' }}>
               <Coins size={32} style={{ marginBottom: 12, opacity: 0.4 }} />
-              <p style={{ fontSize: '0.9rem', margin: 0 }}>
-                {commissions.length === 0
-                  ? 'Nenhuma comissão ainda. Comece a vender!'
-                  : 'Nenhuma comissão com esse filtro.'
-                }
-              </p>
+              <p style={{ fontSize: '0.9rem', margin: 0 }}>{commissions.length === 0 ? 'Nenhuma comissão ainda. Comece a vender!' : 'Nenhuma comissão com esse filtro.'}</p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -382,42 +185,21 @@ export function ApoiadorComissoes() {
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '2px solid #f0f4f8' }}>
                     {['Período', 'Total Gerado', 'Pago?', 'Detalhes'].map(h => (
-                      <th key={h} style={{
-                        padding: '12px 16px', textAlign: 'left',
-                        color: '#7a8aaa', fontWeight: 600,
-                        fontSize: '0.72rem', letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
-                      }}>{h}</th>
+                      <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#7a8aaa', fontWeight: 600, fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody>
-                  {groups.map(group => (
-                    <PeriodRow key={group.key} group={group} />
-                  ))}
-                </tbody>
+                <tbody>{groups.map(group => <PeriodRow key={group.key} group={group} />)}</tbody>
               </table>
             </div>
           )}
-
           {groups.length > 0 && (
-            <div style={{
-              padding: '12px 16px', borderTop: '1px solid #f0f4f8',
-              display: 'flex', justifyContent: 'space-between',
-              flexWrap: 'wrap', gap: 8,
-            }}>
-              <span style={{ fontSize: '0.78rem', color: '#9aaac0' }}>
-                <strong style={{ color: '#1a2744' }}>{groups.length}</strong> período{groups.length !== 1 ? 's' : ''}
-              </span>
-              <span style={{ fontSize: '0.78rem', color: '#9aaac0' }}>
-                Total acumulado: <strong style={{ color: '#1a2744' }}>
-                  R$ {commissions.reduce((a, c) => a + (c.commission_amount || 0), 0).toFixed(2)}
-                </strong>
-              </span>
+            <div style={{ padding: '12px 16px', borderTop: '1px solid #f0f4f8', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <span style={{ fontSize: '0.78rem', color: '#9aaac0' }}><strong style={{ color: '#1a2744' }}>{groups.length}</strong> período{groups.length !== 1 ? 's' : ''}</span>
+              <span style={{ fontSize: '0.78rem', color: '#9aaac0' }}>Total acumulado: <strong style={{ color: '#1a2744' }}>R$ {commissions.reduce((a, c) => a + (c.commission_amount || 0), 0).toFixed(2)}</strong></span>
             </div>
           )}
         </div>
-
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </ApoiadorLayout>
