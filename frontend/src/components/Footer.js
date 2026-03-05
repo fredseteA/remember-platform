@@ -147,10 +147,10 @@ const Footer = ({ startColor = '#eef8fb' }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 md:gap-8 mb-12 md:mb-16">
 
           {/* Col 1+2 — Logo + social */}
-          <div className="sm:col-span-2 lg:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-1">
             <img src="/logo-transparent.png" alt="Remember QRCode"
-              style={{ height: 64, width: 'auto', marginBottom: 14 }} />
-            <p style={{ color: '#3a5070', fontSize: '0.85rem', lineHeight: 1.7, fontFamily: '"Georgia", serif', maxWidth: 240, marginBottom: 22 }}>
+              style={{ height: 56, width: 'auto', marginBottom: 12 }} />
+            <p style={{ color: '#3a5070', fontSize: '0.82rem', lineHeight: 1.65, fontFamily: '"Georgia", serif', maxWidth: 180, marginBottom: 20 }}>
               Preservando memórias e homenageando vidas com amor e respeito.
             </p>
             <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#2a3d5e', marginBottom: 12 }}>
