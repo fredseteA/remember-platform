@@ -42,7 +42,6 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
   const code = partner.supporter_code || partner.code;
   const referralLink = `${FRONTEND_URL}/?apoio=${code}`;
 
-  const now = new Date();
   const monthSales = partner.total_sales_month || 0;
   const LEVELS = [
     { min: 0,  max: 9,        rate: 10, label: 'Iniciante', color: '#64748b' },
@@ -58,7 +57,6 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-[#16202e] border border-[#2d3a52] rounded-xl w-full max-w-lg my-8">
-        {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-[#2d3a52]">
           <div>
             <div className="flex items-center gap-2 mb-0.5">
@@ -71,15 +69,13 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
             <X size={18} />
           </button>
         </div>
-
         <div className="p-5 space-y-4">
-          {/* Cards simulados */}
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: 'Vendido no Mês',      value: fmt(partner.total_sold_month || 0),         color: '#10b981' },
-              { label: 'Comissão do Mês',     value: fmt(partner.commission_month || 0),          color: '#f59e0b' },
-              { label: 'Comissão Disponível', value: fmt(partner.commission_available || 0),      color: '#8b5cf6' },
-              { label: 'Percentual Atual',    value: `${level.rate}%`,                            color: level.color },
+              { label: 'Vendido no Mês',      value: fmt(partner.total_sold_month || 0),    color: '#10b981' },
+              { label: 'Comissão do Mês',     value: fmt(partner.commission_month || 0),     color: '#f59e0b' },
+              { label: 'Comissão Disponível', value: fmt(partner.commission_available || 0), color: '#8b5cf6' },
+              { label: 'Percentual Atual',    value: `${level.rate}%`,                       color: level.color },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-[#0b121b] border border-[#2d3a52] rounded-xl p-4">
                 <p className="text-xs text-[#94a3b8] uppercase tracking-wide mb-2">{label}</p>
@@ -87,8 +83,6 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
               </div>
             ))}
           </div>
-
-          {/* Progresso de nível */}
           <div className="bg-[#0b121b] border border-[#2d3a52] rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -108,8 +102,6 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
               {nextLevel && <span>Faltam <strong style={{ color: nextLevel.color }}>{nextLevel.min - monthSales}</strong> para {nextLevel.rate}%</span>}
             </div>
           </div>
-
-          {/* Código e link */}
           <div className="bg-[#0b121b] border border-[#2d3a52] rounded-xl p-4 space-y-3">
             <div>
               <p className="text-xs text-[#94a3b8] mb-1">Código</p>
@@ -120,7 +112,6 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
               <p className="text-xs font-mono text-[#94a3b8] break-all">{referralLink}</p>
             </div>
           </div>
-
           <p className="text-xs text-[#94a3b8]/60 text-center">
             ⚠️ Esta é apenas uma simulação. Dados reais no painel do apoiador.
           </p>
@@ -130,12 +121,12 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
   );
 };
 
-// ─── Modal de relatório individual (EXISTENTE — sem alterações) ───────────────
+// ─── Modal de relatório individual ───────────────────────────────────────────
 const ReportModal = ({ partner, token, onClose }) => {
-  const [sales, setSales]   = useState([]);
+  const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ start: '', end: '' });
-  
+
   const fetchSales = async () => {
     setLoading(true);
     try {
@@ -151,16 +142,15 @@ const ReportModal = ({ partner, token, onClose }) => {
   useEffect(() => { fetchSales(); }, []);
 
   const STATUS_LABEL = {
-    pending:   { label: 'Pendente',    color: '#f59e0b' },
-    available: { label: 'Disponível',  color: '#3b82f6' },
-    paid:      { label: 'Pago',        color: '#10b981' },
-    canceled:  { label: 'Cancelado',   color: '#ef4444' },
+    pending:   { label: 'Pendente',   color: '#f59e0b' },
+    available: { label: 'Disponível', color: '#3b82f6' },
+    paid:      { label: 'Pago',       color: '#10b981' },
+    canceled:  { label: 'Cancelado',  color: '#ef4444' },
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-[#16202e] border border-[#2d3a52] rounded-xl w-full max-w-3xl my-8">
-        {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-[#2d3a52]">
           <div>
             <h2 className="text-lg font-semibold text-white">Relatório — {partner.name}</h2>
@@ -170,8 +160,6 @@ const ReportModal = ({ partner, token, onClose }) => {
             <X size={18} />
           </button>
         </div>
-
-        {/* Filtros */}
         <div className="p-5 border-b border-[#2d3a52] flex flex-wrap gap-3 items-end">
           <div>
             <p className="text-xs text-[#94a3b8] mb-1">De</p>
@@ -196,8 +184,6 @@ const ReportModal = ({ partner, token, onClose }) => {
             </button>
           )}
         </div>
-
-        {/* Tabela */}
         <div className="p-5">
           {loading ? (
             <div className="space-y-3">
@@ -245,27 +231,23 @@ const ReportModal = ({ partner, token, onClose }) => {
   );
 };
 
-// ─── Card de parceiro expandido (ETAPA 7) ────────────────────────────────────
+// ─── Card de parceiro ────────────────────────────────────────────────────────
 const PartnerCard = ({
   partner, copiedCode, onCopy, onEdit, onToggle, onReport, onViewAs, onCreateAccess, token
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const code = partner.supporter_code || partner.code;
-
-  // Meta mensal padrão = 10 vendas (pode vir do partner se implementado)
-  const metaMensal = partner.monthly_goal || 10;
-  const vendasMes  = partner.total_sales_month || 0;
-  const totalAcum  = partner.total_sales_all   || 0;
-  const totalSoldMonth = partner.total_sold_month || 0;
+  const code           = partner.supporter_code || partner.code;
+  const metaMensal     = partner.monthly_goal  || 10;
+  const vendasMes      = partner.total_sales_month || 0;
+  const totalAcum      = partner.total_sales_all   || 0;
+  const totalSoldMonth = partner.total_sold_month  || 0;
 
   return (
     <div
       className="bg-[#16202e] border border-[#2d3a52] rounded-xl transition-all hover:border-[#3b82f6]/30"
       data-testid={`partner-card-${partner.id}`}
     >
-      {/* ── Topo do card ── */}
       <div className="p-5">
-        {/* Cabeçalho */}
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-white">{partner.name}</h3>
@@ -278,7 +260,6 @@ const PartnerCard = ({
           </span>
         </div>
 
-        {/* Código */}
         <div className="bg-[#0b121b] rounded-lg px-4 py-3 mb-4">
           <p className="text-xs text-[#94a3b8] mb-1">Código do Apoiador</p>
           <div className="flex items-center justify-between">
@@ -288,19 +269,17 @@ const PartnerCard = ({
               data-testid={`copy-code-${partner.id}`}>
               {copiedCode === code
                 ? <Check size={16} className="text-green-500" />
-                : <Copy size={16} className="text-[#94a3b8]" />
-              }
+                : <Copy size={16} className="text-[#94a3b8]" />}
             </button>
           </div>
         </div>
 
-        {/* Comissões detalhadas */}
         <div className="grid grid-cols-2 gap-2 mb-4">
           {[
-            { label: 'Pendente',    value: partner.commission_pending,   color: '#f59e0b' },
-            { label: 'Disponível',  value: partner.commission_available, color: '#3b82f6' },
-            { label: 'Pago',        value: partner.commission_paid,      color: '#10b981' },
-            { label: 'Vendas Mês',  value: vendasMes,                    color: '#94a3b8', isCurrency: false },
+            { label: 'Pendente',   value: partner.commission_pending,   color: '#f59e0b' },
+            { label: 'Disponível', value: partner.commission_available, color: '#3b82f6' },
+            { label: 'Pago',       value: partner.commission_paid,      color: '#10b981' },
+            { label: 'Vendas Mês', value: vendasMes,                    color: '#94a3b8', isCurrency: false },
           ].map(({ label, value, color, isCurrency = true }) => (
             <div key={label} className="bg-[#0b121b] rounded-lg px-3 py-2">
               <p className="text-xs text-[#94a3b8]">{label}</p>
@@ -311,27 +290,19 @@ const PartnerCard = ({
           ))}
         </div>
 
-        {/* Comissão % */}
         <div className="flex items-center justify-between mb-4 px-1">
           <p className="text-xs text-[#94a3b8]">Taxa de comissão</p>
           <p className="text-sm font-semibold text-white">{(partner.commission_rate * 100).toFixed(0)}%</p>
         </div>
 
-        {/* ── NOVO: Meta mensal + progresso ── */}
         <div className="bg-[#0b121b] rounded-lg px-4 py-3 mb-4 space-y-3">
-          <ProgressBar
-            value={vendasMes}
-            max={metaMensal}
-            color="#3b82f6"
-            label="Progresso da meta mensal"
-          />
+          <ProgressBar value={vendasMes} max={metaMensal} color="#3b82f6" label="Progresso da meta mensal" />
           <div className="flex justify-between text-xs text-[#94a3b8] pt-1">
             <span>Total vendido mês: <strong className="text-white">{fmt(totalSoldMonth)}</strong></span>
             <span>Total acumulado: <strong className="text-white">{totalAcum} vendas</strong></span>
           </div>
         </div>
 
-        {/* Ações */}
         <div className="flex gap-2">
           <button onClick={() => onEdit(partner)}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#2d3a52] text-white rounded-lg text-sm hover:bg-[#374763] transition-colors"
@@ -354,7 +325,6 @@ const PartnerCard = ({
             data-testid={`report-partner-${partner.id}`}>
             <FileText size={14} />
           </button>
-          {/* NOVO: Visualizar como apoiador */}
           <button onClick={() => onViewAs(partner)}
             className="px-3 py-2 bg-[#8b5cf6]/10 text-[#8b5cf6] rounded-lg text-sm hover:bg-[#8b5cf6]/20 transition-colors"
             title="Visualizar como Apoiador"
@@ -363,13 +333,13 @@ const PartnerCard = ({
           </button>
           <button onClick={() => onCreateAccess(partner)}
             className="px-3 py-2 bg-green-500/10 text-green-400 rounded-lg text-sm hover:bg-green-500/20 transition-colors"
-            title="Criar Acesso Apoiador">
+            title="Criar Acesso Apoiador"
+            data-testid={`access-partner-${partner.id}`}>
             <UserCheck size={14} />
           </button>
         </div>
       </div>
 
-      {/* ── NOVO: Expandir histórico detalhado ── */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-center gap-2 py-2.5 border-t border-[#2d3a52] text-xs text-[#94a3b8] hover:text-white hover:bg-[#2d3a52]/30 transition-colors rounded-b-xl"
@@ -378,17 +348,14 @@ const PartnerCard = ({
         {expanded ? 'Ocultar histórico' : 'Ver histórico detalhado'}
       </button>
 
-      {/* Histórico expandido */}
-      {expanded && (
-        <PartnerHistory partnerId={partner.id} token={token} />
-      )}
+      {expanded && <PartnerHistory partnerId={partner.id} token={token} />}
     </div>
   );
 };
 
 // ─── Histórico detalhado do parceiro (lazy) ───────────────────────────────────
 const PartnerHistory = ({ partnerId, token }) => {
-  const [sales, setSales]   = useState([]);
+  const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -415,9 +382,7 @@ const PartnerHistory = ({ partnerId, token }) => {
 
   return (
     <div className="border-t border-[#2d3a52] px-5 py-4">
-      <p className="text-xs font-semibold text-[#94a3b8] uppercase tracking-wider mb-3">
-        Últimas vendas
-      </p>
+      <p className="text-xs font-semibold text-[#94a3b8] uppercase tracking-wider mb-3">Últimas vendas</p>
       {loading ? (
         <div className="space-y-2">
           {[1,2,3].map(i => <div key={i} className="h-8 bg-[#0b121b] rounded animate-pulse" />)}
@@ -459,18 +424,17 @@ const AdminPartners = () => {
   const [editingPartner, setEditingPartner] = useState(null);
   const [copiedCode, setCopiedCode]         = useState(null);
   const [reportPartner, setReportPartner]   = useState(null);
-  const [viewAsPartner, setViewAsPartner]   = useState(null); // NOVO
+  const [viewAsPartner, setViewAsPartner]   = useState(null);
   const [createAccessPartner, setCreateAccessPartner] = useState(null);
-  const [accessForm, setAccessForm] = useState({ email: '', password: '' });
+  const [accessForm, setAccessForm]         = useState({ email: '', password: '' });
   const [creatingAccess, setCreatingAccess] = useState(false);
-
 
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '',
     supporter_code: '',
     commission_rate: 0.10,
-    monthly_goal: 10,         // NOVO
-    firebase_uid: '',         // NOVO — vincular ao usuário
+    monthly_goal: 10,
+    firebase_uid: '',
   });
   const [codeError, setCodeError] = useState('');
 
@@ -501,7 +465,6 @@ const AdminPartners = () => {
       const err = validateCode(formData.supporter_code);
       if (err) { setCodeError(err); return; }
     }
-    // Validação do Firebase UID (se preenchido)
     if (formData.firebase_uid) {
       const uid = formData.firebase_uid.trim();
       if (uid.length < 20 || uid.length > 128) {
@@ -512,7 +475,6 @@ const AdminPartners = () => {
         toast.error('Firebase UID inválido. Apenas letras e números.');
         return;
       }
-      // Verifica unicidade localmente antes de enviar
       const duplicate = partners.find(p =>
         p.firebase_uid === uid && p.id !== editingPartner?.id
       );
@@ -550,26 +512,28 @@ const AdminPartners = () => {
         toast.error(msg);
       }
     }
-    const handleCreateAccess = async (e) => {
-      e.preventDefault();
-      setCreatingAccess(true);
-      try {
-        await axios.post(`${API}/admin/apoiador/create-user`, {
-          email: accessForm.email,
-          password: accessForm.password,
-          name: createAccessPartner.name,
-          partner_id: createAccessPartner.id,
-        }, { headers: { Authorization: `Bearer ${token}` } });
-        toast.success(`Acesso criado! Login: ${accessForm.email}`);
-        setCreateAccessPartner(null);
-        setAccessForm({ email: '', password: '' });
-        fetchPartners();
-      } catch (err) {
-        toast.error(err.response?.data?.detail || 'Erro ao criar acesso.');
-      } finally {
-        setCreatingAccess(false);
-      }
-    };
+  };
+
+  // ← CORRIGIDO: fora do handleSubmit
+  const handleCreateAccess = async (e) => {
+    e.preventDefault();
+    setCreatingAccess(true);
+    try {
+      await axios.post(`${API}/admin/apoiador/create-user`, {
+        email: accessForm.email,
+        password: accessForm.password,
+        name: createAccessPartner.name,
+        partner_id: createAccessPartner.id,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success(`Acesso criado! Login: ${accessForm.email}`);
+      setCreateAccessPartner(null);
+      setAccessForm({ email: '', password: '' });
+      fetchPartners();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Erro ao criar acesso.');
+    } finally {
+      setCreatingAccess(false);
+    }
   };
 
   const toggleStatus = async (partner) => {
@@ -683,6 +647,7 @@ const AdminPartners = () => {
           </div>
         </div>
       )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -702,10 +667,10 @@ const AdminPartners = () => {
       {/* Stats resumo */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { icon: Users,        color: '#3b82f6', label: 'Total Parceiros',      value: partners.length },
-          { icon: Clock,        color: '#f59e0b', label: 'Comissão Pendente',    value: fmt(totalPending) },
-          { icon: CheckCircle2, color: '#3b82f6', label: 'Comissão Disponível',  value: fmt(totalAvailable) },
-          { icon: Banknote,     color: '#10b981', label: 'Comissão Paga',        value: fmt(totalPaid) },
+          { icon: Users,        color: '#3b82f6', label: 'Total Parceiros',     value: partners.length },
+          { icon: Clock,        color: '#f59e0b', label: 'Comissão Pendente',   value: fmt(totalPending) },
+          { icon: CheckCircle2, color: '#3b82f6', label: 'Comissão Disponível', value: fmt(totalAvailable) },
+          { icon: Banknote,     color: '#10b981', label: 'Comissão Paga',       value: fmt(totalPaid) },
         ].map(({ icon: Icon, color, label, value }) => (
           <div key={label} className="bg-[#16202e] border border-[#2d3a52] rounded-xl p-5">
             <div className="flex items-center gap-3">
@@ -760,9 +725,7 @@ const AdminPartners = () => {
                 <X size={18} />
               </button>
             </div>
-
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
-              {/* Nome */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Nome</label>
                 <input type="text" required value={formData.name}
@@ -770,8 +733,6 @@ const AdminPartners = () => {
                   className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none"
                   data-testid="partner-name-input" />
               </div>
-
-              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Email</label>
                 <input type="email" required value={formData.email}
@@ -779,8 +740,6 @@ const AdminPartners = () => {
                   className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none"
                   data-testid="partner-email-input" />
               </div>
-
-              {/* Telefone */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Telefone</label>
                 <input type="tel" value={formData.phone}
@@ -788,8 +747,6 @@ const AdminPartners = () => {
                   className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none"
                   data-testid="partner-phone-input" />
               </div>
-
-              {/* Código — apenas na criação */}
               {!editingPartner && (
                 <div>
                   <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">
@@ -815,8 +772,6 @@ const AdminPartners = () => {
                   </p>
                 </div>
               )}
-
-              {/* Comissão */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Taxa de Comissão</label>
                 <select value={formData.commission_rate}
@@ -829,20 +784,14 @@ const AdminPartners = () => {
                   <option value={0.20}>20%</option>
                 </select>
               </div>
-
-              {/* NOVO: Meta mensal */}
               <div>
-                <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">
-                  Meta mensal de vendas
-                </label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">Meta mensal de vendas</label>
                 <input type="number" min={1} max={999} value={formData.monthly_goal}
                   onChange={e => setFormData(f => ({ ...f, monthly_goal: parseInt(e.target.value) || 10 }))}
                   className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none"
                   data-testid="partner-goal-input" />
                 <p className="text-[#94a3b8]/60 text-xs mt-1">Número de vendas para a barra de progresso.</p>
               </div>
-
-              {/* NOVO: Firebase UID */}
               <div>
                 <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">
                   Firebase UID do usuário
@@ -857,15 +806,12 @@ const AdminPartners = () => {
                   Encontre no Firebase Console → Authentication → UID do usuário.
                 </p>
                 {!formData.firebase_uid && (
-                  <p className="text-amber-400/70 text-xs mt-1">
-                    ⚠️ Sem UID, o apoiador não acessará o painel.
-                  </p>
+                  <p className="text-amber-400/70 text-xs mt-1">⚠️ Sem UID, o apoiador não acessará o painel.</p>
                 )}
                 {formData.firebase_uid && formData.firebase_uid.length >= 20 && (
                   <p className="text-green-400/70 text-xs mt-1">✓ UID válido</p>
                 )}
               </div>
-
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeModal}
                   className="flex-1 px-4 py-2.5 bg-[#2d3a52] text-white rounded-lg font-medium hover:bg-[#374763] transition-colors">
