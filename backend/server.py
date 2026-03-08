@@ -1197,6 +1197,18 @@ async def get_memorial_by_slug(slug: str):
     memorial_data = deserialize_datetime(memorial_data, ["created_at", "updated_at"])
     return memorial_data
 
+@api_router.post("/admin/migrate/slugs")
+async def migrate_slugs(user: dict = Depends(verify_admin)):
+    docs = db.collection("memorials").stream()
+    updated = 0
+    for doc in docs:
+        data = doc.to_dict()
+        if not data.get("slug"):
+            full_name = data.get("person_data", {}).get("full_name", "memorial")
+            slug = generate_unique_slug(full_name)
+            db.collection("memorials").document(doc.id).update({"slug": slug})
+            updated += 1
+    return {"updated": updated}
 
 @api_router.get("/memorials/{memorial_id}", response_model=Memorial)
 async def get_memorial(memorial_id: str):
