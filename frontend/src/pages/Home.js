@@ -802,8 +802,17 @@ function PanelContent({ step, onScrollToPlans }) {
           {step.description}
         </p>
 
-        <button className="howit-cta-btn" onClick={onScrollToPlans}>
-          Ver planos
+        <button
+          className="howit-cta-btn"
+          onClick={() => {
+            if (step.ctaLink.startsWith('/#')) {
+              onScrollToPlans();
+            } else {
+              navigate(step.ctaLink);
+            }
+          }}
+        >
+          {step.cta}
         </button>
       </div>
 
