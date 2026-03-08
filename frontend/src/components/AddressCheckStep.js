@@ -37,7 +37,7 @@ export default function AddressCheckStep({ authToken, apiBase, onAddressReady, o
     setError("");
     try {
       const res = await fetch(`${apiBase}/auth/me/address`, {
-        headers: { Authorization: `Bearer ${authToken}` },
+        headers: { Authorization: `Bearer ${typeof authToken === 'function' ? await authToken() : authToken}` },
       });
       if (!res.ok) throw new Error("Erro ao buscar endereço.");
       const data = await res.json();
@@ -64,7 +64,7 @@ export default function AddressCheckStep({ authToken, apiBase, onAddressReady, o
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${typeof authToken === 'function' ? await authToken() : authToken}`,
         },
         body: JSON.stringify(addressData),
       });
