@@ -808,7 +808,7 @@ function PanelContent({ step, onScrollToPlans }) {
             if (step.ctaLink.startsWith('/#')) {
               onScrollToPlans();
             } else {
-              window.location.href = step.ctaLink;
+              navigate(step.ctaLink);
             }
           }}
         >
