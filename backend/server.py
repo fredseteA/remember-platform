@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, BackgroundTasks, Request, WebSocket
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, BackgroundTasks, Request, WebSocket
 from fastapi import status as http_status  # ✅ FIX 1: import de status sem conflito
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.cors import CORSMiddleware
@@ -7,6 +7,10 @@ from typing import Optional, List, Any, Literal
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pathlib import Path
+from flask import request, jsonify
+from firebase_admin import firestore
+from datetime import datetime, timezone
+import uuid
 import re
 import unicodedata
 import os
@@ -1249,6 +1253,127 @@ async def update_memorial(
     memorial_ref.update(updates_dict)
     return {"message": "Memorial updated successfully"}
 
+# ── POST /api/memorials/<memorial_id>/condolences ─────────────────────────
+@app.route('/api/memorials/<memorial_id>/condolences', methods=['POST'])
+def create_condolence(memorial_id):
+    """
+    Qualquer visitante pode enviar uma condolência.
+    Não requer autenticação.
+    """
+    try:
+        # Valida se o memorial existe
+        mem_ref = db.collection('memorials').document(memorial_id)
+        if not mem_ref.get().exists:
+            return jsonify({'error': 'Memorial não encontrado'}), 404
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Dados inválidos'}), 400
+
+        message   = (data.get('message') or '').strip()
+        anonymous = bool(data.get('anonymous', False))
+        sender_name = None if anonymous else (data.get('sender_name') or '').strip() or None
+        relation    = (data.get('relation') or '').strip() or None
+
+        # Validações
+        if not message or len(message) < 10:
+            return jsonify({'error': 'Mensagem muito curta (mínimo 10 caracteres)'}), 400
+        if len(message) > 1000:
+            return jsonify({'error': 'Mensagem muito longa (máximo 1000 caracteres)'}), 400
+        if not anonymous and not sender_name:
+            return jsonify({'error': 'Informe seu nome ou envie como anônimo'}), 400
+
+        valid_relations = {'familia', 'amigo', 'colega', 'vizinho', 'outro', None}
+        if relation not in valid_relations:
+            relation = None
+
+        condolence_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc)
+
+        doc = {
+            'id':          condolence_id,
+            'memorial_id': memorial_id,
+            'message':     message,
+            'sender_name': sender_name,
+            'relation':    relation,
+            'anonymous':   anonymous,
+            'created_at':  now,
+        }
+
+        db.collection('condolences').document(condolence_id).set(doc)
+
+        return jsonify({
+            'id':          condolence_id,
+            'message':     message,
+            'sender_name': sender_name,
+            'relation':    relation,
+            'anonymous':   anonymous,
+            'created_at':  now.isoformat(),
+        }), 201
+
+    except Exception as e:
+        print(f'Error creating condolence: {e}')
+        return jsonify({'error': 'Erro interno'}), 500
+
+# ── GET /api/memorials/<memorial_id>/condolences ──────────────────────────
+@app.route('/api/memorials/<memorial_id>/condolences', methods=['GET'])
+def get_condolences(memorial_id):
+    """
+    Retorna todas as condolências de um memorial,
+    ordenadas da mais recente para a mais antiga.
+    Não requer autenticação.
+    """
+    try:
+        mem_ref = db.collection('memorials').document(memorial_id)
+        if not mem_ref.get().exists:
+            return jsonify({'error': 'Memorial não encontrado'}), 404
+
+        docs = (
+            db.collection('condolences')
+            .where('memorial_id', '==', memorial_id)
+            .order_by('created_at', direction=firestore.Query.DESCENDING)
+            .stream()
+        )
+
+        result = []
+        for doc in docs:
+            d = doc.to_dict()
+            result.append({
+                'id':          d.get('id', doc.id),
+                'message':     d.get('message', ''),
+                'sender_name': d.get('sender_name'),
+                'relation':    d.get('relation'),
+                'anonymous':   d.get('anonymous', False),
+                'created_at':  d['created_at'].isoformat() if hasattr(d.get('created_at'), 'isoformat') else str(d.get('created_at', '')),
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print(f'Error fetching condolences: {e}')
+        return jsonify({'error': 'Erro interno'}), 500
+
+# ── DELETE /api/condolences/<condolence_id>  (admin only) ─────────────────
+@app.route('/api/condolences/<condolence_id>', methods=['DELETE'])
+def delete_condolence(condolence_id):
+    """
+    Remove uma condolência. Apenas admin pode executar.
+    """
+    try:
+        user = verify_admin(request)   # reutiliza helper existente no server.py
+        if not user:
+            return jsonify({'error': 'Não autorizado'}), 403
+
+        ref = db.collection('condolences').document(condolence_id)
+        if not ref.get().exists:
+            return jsonify({'error': 'Condolência não encontrada'}), 404
+
+        ref.delete()
+        return jsonify({'message': 'Condolência removida'}), 200
+
+    except Exception as e:
+        print(f'Error deleting condolence: {e}')
+        return jsonify({'error': 'Erro interno'}), 500
 
 # ========== PAYMENT ENDPOINTS ==========
 
