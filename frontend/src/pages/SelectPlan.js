@@ -3,47 +3,12 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Check, Loader2, Tag, X, CheckCircle2, Lock, ShieldCheck } from 'lucide-react';
+import { Check, Loader2, Tag, X, CheckCircle2 } from 'lucide-react';
 import AddressCheckStep from '../components/AddressCheckStep';
+import SecurityBadge from '../components/SecurityBadge';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-
-// ── Selo Mercado Pago — abaixo de cada botão ─────────────────────────────────
-const MercadoPagoBadge = () => (
-  <div style={{
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-    marginTop: 12,
-  }}>
-    <Lock size={11} style={{ color: 'rgba(58,80,112,0.45)', flexShrink: 0 }} />
-    <span style={{
-      fontFamily: '"Georgia", serif',
-      fontSize: '0.68rem',
-      color: 'rgba(58,80,112,0.5)',
-      letterSpacing: '0.04em',
-    }}>
-      Pagamento seguro via
-    </span>
-    <img
-      src="/mercadopago-logo.webp"
-      alt="Mercado Pago"
-      style={{ height: 14, width: 'auto', opacity: 0.65 }}
-      onError={(e) => {
-        e.target.style.display = 'none';
-        e.target.nextSibling.style.display = 'inline';
-      }}
-    />
-    <span style={{
-      display: 'none',
-      fontFamily: '"Georgia", serif',
-      fontSize: '0.68rem',
-      fontWeight: 700,
-      color: 'rgba(58,80,112,0.55)',
-    }}>
-      Mercado Pago
-    </span>
-  </div>
-);
 
 const SelectPlan = () => {
   const { id } = useParams();
@@ -408,46 +373,14 @@ const SelectPlan = () => {
                     </button>
                   )}
 
-                  {/* ── Opção 1: Selo abaixo de cada botão ── */}
-                  <MercadoPagoBadge />
+                  <SecurityBadge variant="minimal" />
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* ── Opção 2: Faixa de segurança abaixo dos cards ── */}
-        <div style={{
-          maxWidth: 820, margin: '28px auto 0',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexWrap: 'wrap', gap: 20,
-          padding: '14px 24px',
-          borderRadius: 16,
-          background: 'rgba(255,255,255,0.45)',
-          border: '1px solid rgba(255,255,255,0.7)',
-          animation: 'revealSP 0.75s cubic-bezier(.22,1,.36,1) 0.3s both',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <ShieldCheck size={14} style={{ color: '#15803d', flexShrink: 0 }} />
-            <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.7rem', color: '#3a5070' }}>Ambiente seguro</span>
-          </div>
-          <div style={{ width: 1, height: 12, background: 'rgba(26,39,68,0.12)' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Lock size={12} style={{ color: '#3a5070', flexShrink: 0 }} />
-            <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.7rem', color: '#3a5070' }}>SSL 256-bit</span>
-          </div>
-          <div style={{ width: 1, height: 12, background: 'rgba(26,39,68,0.12)' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.7rem', color: '#3a5070' }}>Pagamento por</span>
-            <img
-              src="/mercadopago-logo.webp"
-              alt="Mercado Pago"
-              style={{ height: 15, width: 'auto', opacity: 0.65 }}
-              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'inline'; }}
-            />
-            <span style={{ display: 'none', fontFamily: '"Georgia", serif', fontSize: '0.7rem', fontWeight: 700, color: '#2a3d5e' }}>Mercado Pago</span>
-          </div>
-        </div>
+        <SecurityBadge variant="bar" />
 
       </div>
     </div>

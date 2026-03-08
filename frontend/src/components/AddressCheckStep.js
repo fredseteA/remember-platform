@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import AddressForm, { isAddressComplete } from "./AddressForm";
+import SecurityBadge from "./SecurityBadge";
 
 export default function AddressCheckStep({ authToken, apiBase, onAddressReady, onBack }) {
   const [phase, setPhase]               = useState("loading");
@@ -54,31 +55,6 @@ export default function AddressCheckStep({ authToken, apiBase, onAddressReady, o
 
   const confirmExistingAddress = () => { onAddressReady(savedAddress); };
 
-  // ── Selo Mercado Pago ────────────────────────────────────────────────────────
-  const SecurityBadge = () => (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexWrap: 'wrap', gap: 10,
-      padding: '10px 16px',
-      borderRadius: 10,
-      background: 'rgba(240,249,255,0.8)',
-      border: '1px solid rgba(90,168,224,0.2)',
-      marginTop: 4,
-    }}>
-      <span style={{ fontSize: 13 }}>🔒</span>
-      <span style={{ fontSize: 12, color: '#4b5563' }}>
-        Você será redirecionado para o pagamento seguro via
-      </span>
-      <img
-        src="/mercadopago-logo.webp"
-        alt="Mercado Pago"
-        style={{ height: 14, width: 'auto', opacity: 0.7 }}
-        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'inline'; }}
-      />
-      <span style={{ display: 'none', fontSize: 12, fontWeight: 700, color: '#374151' }}>Mercado Pago</span>
-    </div>
-  );
-
   if (phase === "loading") {
     return (
       <div style={styles.centered}>
@@ -123,8 +99,7 @@ export default function AddressCheckStep({ authToken, apiBase, onAddressReady, o
 
         {error && <p style={styles.errorMsg}>{error}</p>}
 
-        {/* ── Opção 3: Selo antes dos botões de ação ── */}
-        <SecurityBadge />
+        <SecurityBadge variant="card" />
 
         <div style={styles.actions}>
           {onBack && (
@@ -163,8 +138,7 @@ export default function AddressCheckStep({ authToken, apiBase, onAddressReady, o
 
       {error && <p style={styles.errorMsg}>{error}</p>}
 
-      {/* ── Opção 3: Selo antes do formulário (fase de preenchimento) ── */}
-      <SecurityBadge />
+      <SecurityBadge variant="card" />
 
       <AddressForm
         initialData={editing ? savedAddress : null}
