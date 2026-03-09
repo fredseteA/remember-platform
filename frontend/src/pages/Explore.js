@@ -16,29 +16,27 @@ const MemorialCard = ({ memorial, index }) => (
       className="exp-card group relative rounded-3xl overflow-hidden h-full flex flex-col"
       style={{
         background: 'rgba(255,255,255,0.58)',
-        // backdrop-filter removido dos cards — mantido só no hero para performance
         border: '1px solid rgba(255,255,255,0.82)',
         boxShadow: '0 6px 28px rgba(26,39,68,0.07)',
-        // delay máximo de 0.3s independente do index
         animation: `revealCard 0.5s cubic-bezier(.22,1,.36,1) ${Math.min(index * 0.06, 0.3)}s both`,
       }}
     >
       {/* Image */}
-      <div className="relative overflow-hidden" style={{ height: '240px' }}>
+      <div className="exp-card-img-wrap relative overflow-hidden">
         {memorial.person_data.photo_url ? (
           <img
             src={memorial.person_data.photo_url}
             alt={memorial.person_data.full_name}
             className="exp-card-img w-full h-full object-cover"
-            loading="lazy"         // ← lazy load
-            decoding="async"       // ← não bloqueia o thread principal
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <div
             className="w-full h-full flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #b8e0f5 0%, #7bbde8 100%)' }}
           >
-            <Heart className="h-12 w-12" style={{ color: 'rgba(255,255,255,0.6)' }} />
+            <Heart className="exp-card-heart" style={{ color: 'rgba(255,255,255,0.6)' }} />
           </div>
         )}
         {/* Gradient overlay */}
@@ -48,10 +46,9 @@ const MemorialCard = ({ memorial, index }) => (
         />
         {/* Index number */}
         <div
-          className="absolute top-4 right-5 select-none"
+          className="exp-card-index absolute top-3 right-4 select-none"
           style={{
             fontFamily: '"Georgia", serif',
-            fontSize: '2rem',
             fontWeight: 700,
             color: 'rgba(255,255,255,0.25)',
             lineHeight: 1,
@@ -62,10 +59,9 @@ const MemorialCard = ({ memorial, index }) => (
       </div>
 
       {/* Content */}
-      <div className="p-6 flex flex-col flex-1">
-        <h3 style={{
+      <div className="exp-card-content flex flex-col flex-1">
+        <h3 className="exp-card-name" style={{
           fontFamily: '"Georgia", serif',
-          fontSize: 'clamp(1.1rem, 2vw, 1.35rem)',
           fontWeight: 700,
           color: '#1a2744',
           marginBottom: '4px',
@@ -74,23 +70,20 @@ const MemorialCard = ({ memorial, index }) => (
           {memorial.person_data.full_name}
         </h3>
 
-        <p style={{
-          fontSize: '0.68rem',
+        <p className="exp-card-city" style={{
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
           color: '#5aa8e0',
           fontFamily: '"Georgia", serif',
-          marginBottom: '14px',
         }}>
           {memorial.person_data.birth_city}, {memorial.person_data.birth_state}
         </p>
 
         {memorial.content?.main_phrase && (
           <p
-            className="mt-auto"
+            className="exp-card-phrase mt-auto"
             style={{
               fontFamily: '"Georgia", serif',
-              fontSize: '0.92rem',
               fontStyle: 'italic',
               color: '#3a5070',
               lineHeight: 1.65,
@@ -106,11 +99,10 @@ const MemorialCard = ({ memorial, index }) => (
 
         {/* CTA */}
         <div
-          className="flex items-center gap-2 mt-5 pt-5"
+          className="exp-card-cta flex items-center gap-2"
           style={{ borderTop: '1px solid rgba(26,39,68,0.08)' }}
         >
-          <span style={{
-            fontSize: '0.68rem',
+          <span className="exp-card-cta-label" style={{
             letterSpacing: '0.16em',
             textTransform: 'uppercase',
             color: '#2a3d5e',
@@ -121,7 +113,7 @@ const MemorialCard = ({ memorial, index }) => (
           </span>
           <div style={{ height: 1, flex: 1, background: 'rgba(26,39,68,0.1)' }} />
           <div
-            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+            className="exp-card-arrow w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
             style={{
               background: 'rgba(90,168,224,0.12)',
               border: '1px solid rgba(90,168,224,0.25)',
@@ -159,7 +151,6 @@ const Explore = () => {
 
   const handleLoadMore = useCallback(() => {
     setLoadingMore(true);
-    // setTimeout evita travar a UI ao renderizar mais cards de uma vez
     setTimeout(() => {
       setVisible(v => v + PAGE_SIZE);
       setLoadingMore(false);
@@ -178,9 +169,9 @@ const Explore = () => {
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <Skeleton className="h-12 w-64 mx-auto mb-8" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-96" />
+              <Skeleton key={i} className="h-64 md:h-96" />
             ))}
           </div>
         </div>
@@ -230,6 +221,72 @@ const Explore = () => {
           transition: transform 0.6s cubic-bezier(.22,1,.36,1);
           will-change: transform;
         }
+
+        /* ── Desktop defaults ── */
+        .exp-card-img-wrap  { height: 240px; }
+        .exp-card-heart     { width: 48px; height: 48px; }
+        .exp-card-index     { font-size: 2rem; }
+        .exp-card-content   { padding: 24px; }
+        .exp-card-name      { font-size: clamp(1.1rem, 2vw, 1.35rem); margin-bottom: 4px; }
+        .exp-card-city      { font-size: 0.68rem; margin-bottom: 14px; }
+        .exp-card-phrase    { font-size: 0.92rem; }
+        .exp-card-cta       { margin-top: 20px; padding-top: 20px; }
+        .exp-card-cta-label { font-size: 0.68rem; }
+
+        /* ── Mobile: 2 cards por linha, cards compactos ── */
+        @media (max-width: 767px) {
+          /* Grid 2 colunas */
+          .exp-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+          }
+
+          /* Bordas menores */
+          .exp-card { border-radius: 16px !important; }
+
+          /* Imagem menor */
+          .exp-card-img-wrap { height: 130px; }
+
+          /* Ícone coração menor */
+          .exp-card-heart { width: 28px !important; height: 28px !important; }
+
+          /* Número menor */
+          .exp-card-index { font-size: 1.1rem; top: 8px; right: 10px; }
+
+          /* Conteúdo compacto */
+          .exp-card-content { padding: 10px 12px 12px; }
+
+          /* Nome menor */
+          .exp-card-name { font-size: 0.78rem !important; margin-bottom: 2px; }
+
+          /* Cidade menor */
+          .exp-card-city { font-size: 0.55rem; margin-bottom: 6px; }
+
+          /* Frase — ocultar em mobile para economizar espaço */
+          .exp-card-phrase { display: none !important; }
+
+          /* CTA compacto */
+          .exp-card-cta       { margin-top: 8px; padding-top: 8px; }
+          .exp-card-cta-label { font-size: 0.55rem; }
+          .exp-card-arrow     { width: 18px !important; height: 18px !important; }
+
+          /* Hero compacto */
+          .exp-hero-section { padding-top: 100px !important; padding-bottom: 32px !important; }
+          .exp-hero-title   { font-size: clamp(1.8rem, 8vw, 2.6rem) !important; margin-bottom: 12px !important; }
+          .exp-hero-sub     { font-size: 0.82rem !important; }
+          .exp-hero-tag     { margin-bottom: 14px !important; }
+
+          /* Load more compacto */
+          .exp-load-more { padding: 11px 28px !important; font-size: 0.72rem !important; }
+        }
+
+        /* ── Smartphones pequenos (< 375px) ── */
+        @media (max-width: 374px) {
+          .exp-card-img-wrap  { height: 110px; }
+          .exp-card-content   { padding: 8px 10px 10px; }
+          .exp-card-name      { font-size: 0.72rem !important; }
+          .exp-grid           { gap: 8px !important; }
+        }
       `}</style>
 
       {/* ── Nuvem esquerda ── */}
@@ -251,12 +308,12 @@ const Explore = () => {
       </div>
 
       {/* ── HERO ── */}
-      <section className="relative pt-36 md:pt-48 pb-20 md:pb-28 overflow-hidden z-10">
+      <section className="exp-hero-section relative pt-36 md:pt-48 pb-20 md:pb-28 overflow-hidden z-10">
         <div
           className="relative z-10 max-w-4xl mx-auto px-6 sm:px-10"
           style={{ animation: 'revealHero 0.75s cubic-bezier(.22,1,.36,1) both' }}
         >
-          <div className="flex items-center gap-3 mb-6">
+          <div className="exp-hero-tag flex items-center gap-3 mb-6">
             <div style={{ height: 1, width: 36, background: 'rgba(42,61,94,0.3)' }} />
             <span style={{
               textTransform: 'uppercase', letterSpacing: '0.26em',
@@ -267,7 +324,7 @@ const Explore = () => {
             </span>
           </div>
 
-          <h1 style={{
+          <h1 className="exp-hero-title" style={{
             fontFamily: '"Georgia", serif',
             fontSize: 'clamp(2.4rem, 7vw, 5rem)',
             fontWeight: 700, color: '#1a2744',
@@ -279,7 +336,7 @@ const Explore = () => {
             </span>
           </h1>
 
-          <p style={{
+          <p className="exp-hero-sub" style={{
             color: '#3a5070',
             fontSize: 'clamp(0.9rem, 1.8vw, 1.1rem)',
             lineHeight: 1.72, maxWidth: '480px',
@@ -292,7 +349,7 @@ const Explore = () => {
 
       {/* ── CONTEÚDO ── */}
       <section className="relative z-10 pb-28 md:pb-36">
-        <div className="max-w-6xl mx-auto px-6 sm:px-10 md:px-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-16">
 
           {allMemorials.length === 0 ? (
             <div
@@ -327,7 +384,7 @@ const Explore = () => {
           ) : (
             <>
               <div
-                className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-7"
+                className="exp-grid grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-7"
                 data-testid="memorials-grid"
               >
                 {memorials.map((memorial, index) => (
@@ -337,8 +394,9 @@ const Explore = () => {
 
               {/* ── Load More ── */}
               {hasMore && (
-                <div className="flex justify-center mt-14">
+                <div className="flex justify-center mt-10 md:mt-14">
                   <button
+                    className="exp-load-more"
                     onClick={handleLoadMore}
                     disabled={loadingMore}
                     style={{
