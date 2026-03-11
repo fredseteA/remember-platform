@@ -188,16 +188,15 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
     const cw      = qrCanvas.width;
 
     // Detecta tamanho do módulo
-    let mod = 1;
-    for (let x = 0; x < cw; x++) {
-      if (pixels[(0 * cw + x) * 4] < 128) { mod = x; break; }
-    }
-    if (mod < 1) mod = Math.round(cw / 33);
-
-    const cols    = Math.round(cw / mod);
-    const rows    = cols;
+    // tamanho do QR
+    const modules = 33; // QR gerado normalmente fica nessa faixa
+    const cellPx = qrCanvas.width / modules;
+    
+    const cols = modules;
+    const rows = modules;
+    
     const svgSize = 500;
-    const cell    = svgSize / cols;
+    const cell = svgSize / modules;
 
     const nameSafe = name.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const urlSafe  = memorialUrl.replace(/&/g, '&amp;');
@@ -229,8 +228,8 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
         const dist     = Math.sqrt((moduleCX - logoCX) ** 2 + (moduleCY - logoCY) ** 2);
         if (dist < logoRadius) continue;
 
-        const px  = Math.floor((col + 0.5) * mod);
-        const py  = Math.floor((row + 0.5) * mod);
+        const px = Math.floor((col + 0.5) * cellPx);
+        const py = Math.floor((row + 0.5) * cellPx);
         const idx = (py * cw + px) * 4;
         if (pixels[idx] < 128) {
           rects += `<rect x="${(col*cell).toFixed(2)}" y="${(qrOffY+row*cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}" fill="#1a2744"/>`;
