@@ -113,8 +113,8 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
     logo.crossOrigin = 'anonymous';
     const finalize   = () => {
       if (logo.complete && logo.naturalWidth > 0) {
-        const logoSize = qrSize * 0.28;
-        const padding  = logoSize * 0.18;
+        const logoSize = qrSize * 0.17;
+        const padding  = logoSize * 0.10;
         const lcx      = qrX + qrSize / 2;
         const lcy      = qrY + qrSize / 2;
         const bgR      = logoSize / 2 + padding;
@@ -245,8 +245,8 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
     const qrOffY    = topMargin + labelFs * 1.4 + nameFs * 1.5 + gap;
 
     // ── Calcula zona de exclusão da logo (mesma lógica do canvas) ──────────
-    const logoSize   = svgSize * 0.28;           // qrSize * 0.28, mas qrSize === svgSize aqui
-    const logoPad    = logoSize * 0.18;
+    const logoSize   = svgSize * 0.17;           // qrSize * 0.28, mas qrSize === svgSize aqui
+    const logoPad    = logoSize * 0.10;
     const logoRadius = logoSize / 2 + logoPad;   // raio do círculo branco
     const logoCX     = cx;
     const logoCY     = qrOffY + svgSize / 2;
