@@ -179,63 +179,126 @@ export default function QRCodeModal({ slug, name, onClose, highRes = false, admi
 
   // ─── Download SVG vetorizado ──────────────────────────────────────────────
   const handleDownloadSvg = () => {
-    const qrCanvas = qrContainerRef.current?.querySelector('canvas');
-    if (!qrCanvas) return;
 
-    const ctx     = qrCanvas.getContext('2d');
-    const imgData = ctx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
-    const pixels  = imgData.data;
-    const cw      = qrCanvas.width;
-
-    // Detecta tamanho do módulo
-    // tamanho do QR
-    const modules = 33; // QR gerado normalmente fica nessa faixa
-    const cellPx = qrCanvas.width / modules;
-    
-    const cols = modules;
-    const rows = modules;
-    
-    const svgSize = 500;
-    const cell = svgSize / modules;
-
-    const nameSafe = name.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const urlSafe  = memorialUrl.replace(/&/g, '&amp;');
-
-    const topMargin = svgSize * 0.06;
-    const labelFs   = svgSize * 0.035;
-    const nameFs    = svgSize * 0.058;
-    const urlFs     = svgSize * 0.025;
-    const gap       = svgSize * 0.03;
-    const totalH    = topMargin + labelFs * 1.4 + nameFs * 1.5 + gap + svgSize + gap + urlFs + svgSize * 0.05;
-    const cx        = svgSize / 2;
-    const qrOffY    = topMargin + labelFs * 1.4 + nameFs * 1.5 + gap;
-
-    // ── Logo REDUZIDA (12% ao invés de 17%) ──────────
-    const logoSize   = svgSize * 0.12;
-    const logoPad    = logoSize * 0.15;
-    const logoRadius = logoSize / 2 + logoPad;
-    const logoCX     = cx;
-    const logoCY     = qrOffY + svgSize / 2;
-
-    // Módulos do QR — preserva os finder patterns originais
-    let rects = '';
-
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        // ── Exclui APENAS módulos dentro do círculo da logo ──────────────────────
-        const moduleCX = col * cell + cell / 2;
-        const moduleCY = qrOffY + row * cell + cell / 2;
-        const dist     = Math.sqrt((moduleCX - logoCX) ** 2 + (moduleCY - logoCY) ** 2);
-        if (dist < logoRadius) continue;
-
-        const px = Math.floor((col + 0.5) * cellPx);
-        const py = Math.floor((row + 0.5) * cellPx);
-        const idx = (py * cw + px) * 4;
-        if (pixels[idx] < 128) {
-          rects += `<rect x="${(col*cell).toFixed(2)}" y="${(qrOffY+row*cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}" fill="#1a2744"/>`;
+    const generate = () => {
+  
+      const QR = window.qrcode;
+  
+      const qr = QR(0, 'H');
+      qr.addData(memorialUrl);
+      qr.make();
+  
+      const modules = qr.getModuleCount();
+  
+      const svgSize = 500;
+      const cell = Math.floor(svgSize / modules);
+  
+      const cx = svgSize / 2;
+  
+      const topMargin = svgSize * 0.06;
+      const labelFs   = svgSize * 0.035;
+      const nameFs    = svgSize * 0.058;
+      const urlFs     = svgSize * 0.025;
+      const gap       = svgSize * 0.03;
+  
+      const qrOffY = topMargin + labelFs * 1.4 + nameFs * 1.5 + gap;
+  
+      const logoSize = svgSize * 0.12;
+      const logoPad  = logoSize * 0.15;
+  
+      const logoRadius = logoSize / 2 + logoPad;
+  
+      const logoCX = cx;
+      const logoCY = qrOffY + svgSize / 2;
+  
+      let rects = '';
+  
+      for (let r = 0; r < modules; r++) {
+        for (let c = 0; c < modules; c++) {
+  
+          if (!qr.isDark(r, c)) continue;
+  
+          const x = c * cell;
+          const y = qrOffY + r * cell;
+  
+          const mx = x + cell / 2;
+          const my = y + cell / 2;
+  
+          const dist = Math.sqrt((mx - logoCX) ** 2 + (my - logoCY) ** 2);
+          if (dist < logoRadius) continue;
+  
+          rects += `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" fill="#1a2744"/>`;
         }
       }
+  
+      const nameSafe = name.replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+  
+      const urlSafe = memorialUrl.replace(/&/g, '&amp;');
+  
+      const totalH = qrOffY + svgSize + gap + urlFs + svgSize * 0.05;
+  
+      const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+      <svg xmlns="http://www.w3.org/2000/svg"
+      width="${svgSize}"
+      height="${totalH}"
+      viewBox="0 0 ${svgSize} ${totalH}">
+      
+      <rect width="100%" height="100%" fill="#ffffff"/>
+      
+      <text x="${cx}" y="${topMargin + labelFs}"
+      font-family="Georgia,serif"
+      font-size="${labelFs}"
+      fill="#9ca3af"
+      text-anchor="middle">
+      Em memória de
+      </text>
+      
+      <text x="${cx}" y="${topMargin + labelFs * 1.4 + nameFs}"
+      font-family="Georgia,serif"
+      font-size="${nameFs}"
+      font-weight="bold"
+      fill="#1a2744"
+      text-anchor="middle">
+      ${nameSafe}
+      </text>
+      
+      ${rects}
+      
+      <circle cx="${logoCX}" cy="${logoCY}" r="${logoRadius}" fill="#ffffff"/>
+      
+      <text x="${cx}"
+      y="${qrOffY + svgSize + gap + urlFs}"
+      font-family="monospace"
+      font-size="${urlFs}"
+      fill="#6b7280"
+      text-anchor="middle">
+      ${urlSafe}
+      </text>
+      
+      </svg>`;
+  
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+  
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `placa-${slug}-vetorizado.svg`;
+      a.click();
+  
+      URL.revokeObjectURL(url);
+    };
+  
+    if (window.qrcode) {
+      generate();
+    } else {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      s.onload = generate;
+      document.head.appendChild(s);
     }
+  };
 
     // ── Logo: tenta embedar como base64, fallback para círculo+texto ───────
     const buildSvgAndSave = (logoBase64) => {
