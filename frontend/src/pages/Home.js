@@ -1399,18 +1399,27 @@ const Home = () => {
               Mantenha as histórias de quem você ama vivas, acessível a qualquer momento, de qualquer lugar.
             </p>
 
-            {/* ── Hero CTA + SecurityBadge minimal ── */}
+            {/* ── Hero CTAs ── */}
             <div className="anim-fade-up-3" style={{ display: 'flex', flexDirection: 'column', alignItems: 'inherit' }}>
-              <Link to="/create-memorial">
-                <Button
-                  size="lg"
-                  className="rounded-full px-10 py-5 font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                  data-testid="hero-cta-button"
-                  style={{ fontSize: 'clamp(0.82rem, 3.5vw, 1rem)', background: '#1a2744', color: 'white', letterSpacing: '0.05em' }}
-                >
-                  Criar memorial gratuito
-                </Button>
-              </Link>
+              <div className="hero-cta-group">
+                {/* Botão principal */}
+                <Link to="/create-memorial">
+                  <Button
+                    size="lg"
+                    className="rounded-full px-10 py-5 font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                    data-testid="hero-cta-button"
+                    style={{ fontSize: 'clamp(0.82rem, 3.5vw, 1rem)', background: '#1a2744', color: 'white', letterSpacing: '0.05em' }}
+                  >
+                    Criar memorial gratuito
+                  </Button>
+                </Link>
+ 
+                {/* Botão secundário */}
+                <Link to="/why-preserve-memories" className="hero-btn-secondary" data-testid="hero-secondary-button">
+                  Por que preservar memórias?
+                </Link>
+              </div>
+ 
               {/* Badge com margem top menor e alinhada ao botão */}
               <div style={{ marginTop: 14 }}>
                 <SecurityBadge variant="minimal" />
