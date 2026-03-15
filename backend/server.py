@@ -381,6 +381,45 @@ class CreatePartnerWithAccessRequest(BaseModel):
     commission_rate: float = 0.10
     monthly_goal: int = 10
 
+# ========== PRODUCT COST CONFIG MODELS ==========
+
+class ProductCostConfig(BaseModel):
+    # Preço de venda
+    preco_produto: float = 149.0
+ 
+    # Custos do produto físico
+    custo_placa: float = 15.0
+    custo_caixa: float = 4.0
+    custo_palha: float = 1.5
+    custo_papel_seda: float = 0.5
+    custo_fitilho: float = 0.5
+ 
+    # Logística
+    frete_medio: float = 20.0
+ 
+    # Gateway de pagamento (Mercado Pago: ~4.99% + R$0.40)
+    taxa_percentual_gateway: float = 0.0499
+    taxa_fixa_gateway: float = 0.40
+ 
+    # Afiliados
+    desconto_percentual_afiliado: float = 0.05   # 5% de desconto ao cliente
+    comissao_percentual_afiliado: float = 0.10   # 10% de comissão ao afiliado
+ 
+    updated_at: Optional[str] = None
+ 
+class UpdateProductCostRequest(BaseModel):
+    preco_produto: Optional[float] = None
+    custo_placa: Optional[float] = None
+    custo_caixa: Optional[float] = None
+    custo_palha: Optional[float] = None
+    custo_papel_seda: Optional[float] = None
+    custo_fitilho: Optional[float] = None
+    frete_medio: Optional[float] = None
+    taxa_percentual_gateway: Optional[float] = None
+    taxa_fixa_gateway: Optional[float] = None
+    desconto_percentual_afiliado: Optional[float] = None
+    comissao_percentual_afiliado: Optional[float] = None
+
 # ========== FIREBASE AUTH VERIFICATION ==========
 
 async def verify_firebase_token(
@@ -638,6 +677,83 @@ async def send_supporter_sale_email(partner_data: dict, payment_data: dict, calc
     except Exception as e:
         logger.error(f"❌ Erro ao enviar email ao apoiador: {str(e)}")
 
+# ========== PRODUCT COST CONFIG FUNCTIONS ==========
+
+def get_product_cost_config() -> ProductCostConfig:
+    """
+    Lê a configuração de custos do Firestore.
+    Se não existir, retorna os valores padrão sem salvar.
+    """
+    doc = db.collection("settings").document("product_costs").get()
+    if doc.exists:
+        data = doc.to_dict()
+        return ProductCostConfig(**data)
+    return ProductCostConfig()
+ 
+def calculate_cost_total(cfg: ProductCostConfig) -> float:
+    """Soma todos os custos físicos do produto."""
+    return (
+        cfg.custo_placa
+        + cfg.custo_caixa
+        + cfg.custo_palha
+        + cfg.custo_papel_seda
+        + cfg.custo_fitilho
+    )
+ 
+def calculate_gateway_fee(valor: float, cfg: ProductCostConfig) -> float:
+    """Taxa do gateway sobre um determinado valor."""
+    return (valor * cfg.taxa_percentual_gateway) + cfg.taxa_fixa_gateway
+
+def calculate_profit_no_affiliate(cfg: ProductCostConfig) -> dict:
+    """
+    Calcula lucro estimado para uma venda SEM afiliado.
+ 
+    lucro = preco_produto - custo_produto_total - frete_medio - taxa_gateway
+    """
+    custo_total = calculate_cost_total(cfg)
+    taxa        = calculate_gateway_fee(cfg.preco_produto, cfg)
+    lucro       = cfg.preco_produto - custo_total - cfg.frete_medio - taxa
+    margem      = lucro / cfg.preco_produto if cfg.preco_produto > 0 else 0
+ 
+    return {
+        "preco_produto":    round(cfg.preco_produto, 2),
+        "custo_produto":    round(custo_total, 2),
+        "frete":            round(cfg.frete_medio, 2),
+        "taxa_gateway":     round(taxa, 2),
+        "comissao":         0.0,
+        "desconto":         0.0,
+        "lucro":            round(lucro, 2),
+        "margem_pct":       round(margem * 100, 1),
+    }
+
+def calculate_profit_with_affiliate(cfg: ProductCostConfig) -> dict:
+    """
+    Calcula lucro estimado para uma venda COM afiliado.
+ 
+    1. Aplica desconto ao cliente
+    2. Calcula taxa gateway sobre valor com desconto
+    3. Calcula comissão sobre valor com desconto
+    4. lucro = valor_com_desconto - custo_total - frete - taxa - comissao
+    """
+    custo_total        = calculate_cost_total(cfg)
+    preco_com_desconto = cfg.preco_produto * (1 - cfg.desconto_percentual_afiliado)
+    desconto_valor     = cfg.preco_produto - preco_com_desconto
+    taxa               = calculate_gateway_fee(preco_com_desconto, cfg)
+    comissao           = preco_com_desconto * cfg.comissao_percentual_afiliado
+    lucro              = preco_com_desconto - custo_total - cfg.frete_medio - taxa - comissao
+    margem             = lucro / cfg.preco_produto if cfg.preco_produto > 0 else 0
+ 
+    return {
+        "preco_produto":    round(cfg.preco_produto, 2),
+        "desconto":         round(desconto_valor, 2),
+        "preco_com_desconto": round(preco_com_desconto, 2),
+        "custo_produto":    round(custo_total, 2),
+        "frete":            round(cfg.frete_medio, 2),
+        "taxa_gateway":     round(taxa, 2),
+        "comissao":         round(comissao, 2),
+        "lucro":            round(lucro, 2),
+        "margem_pct":       round(margem * 100, 1),
+    }
 
 # ========== ADMIN HELPERS ==========
 
@@ -2200,6 +2316,50 @@ async def update_tracking(
 
     return {"message": "Código de rastreio adicionado", "tracking_code": tracking_data.tracking_code}
 
+@api_router.get("/admin/settings/costs")
+async def get_cost_settings(user: dict = Depends(verify_admin)):
+    """Retorna a configuração atual de custos do produto."""
+    cfg = get_product_cost_config()
+    custo_total = calculate_cost_total(cfg)
+    lucro_sem   = calculate_profit_no_affiliate(cfg)
+    lucro_com   = calculate_profit_with_affiliate(cfg)
+ 
+    return {
+        "config":         cfg.model_dump(),
+        "custo_total":    round(custo_total, 2),
+        "lucro_sem_afiliado": lucro_sem,
+        "lucro_com_afiliado": lucro_com,
+    }
+
+@api_router.put("/admin/settings/costs")
+async def update_cost_settings(
+    updates: UpdateProductCostRequest,
+    user: dict = Depends(verify_admin)
+):
+    """Salva configuração de custos no Firestore."""
+    # Carrega config atual para fazer merge
+    cfg = get_product_cost_config()
+    cfg_dict = cfg.model_dump()
+ 
+    # Aplica apenas os campos enviados (ignora None)
+    updates_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
+    cfg_dict.update(updates_dict)
+    cfg_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+ 
+    db.collection("settings").document("product_costs").set(cfg_dict)
+ 
+    # Recalcula e retorna já atualizado
+    new_cfg   = ProductCostConfig(**cfg_dict)
+    lucro_sem = calculate_profit_no_affiliate(new_cfg)
+    lucro_com = calculate_profit_with_affiliate(new_cfg)
+ 
+    return {
+        "message":            "Configurações salvas com sucesso!",
+        "config":             new_cfg.model_dump(),
+        "custo_total":        round(calculate_cost_total(new_cfg), 2),
+        "lucro_sem_afiliado": lucro_sem,
+        "lucro_com_afiliado": lucro_com,
+    }
 
 # ========== ADMIN - PRODUCTION QUEUE ==========
 
@@ -3003,6 +3163,19 @@ async def get_finance_summary(
         (total_with_code / total_orders * 100) if total_orders > 0 else 0.0, 1
     )
 
+    cfg = get_product_cost_config()
+    total_estimated_profit = 0.0
+    for p in filtered_payments:
+        valor_pago = p.get("final_amount") or p.get("amount", 0)
+        custo_prod = calculate_cost_total(cfg)
+        taxa = calculate_gateway_fee(valor_pago, cfg)
+        comissao = p.get("commission_amount", 0) or 0
+        lucro_venda = valor_pago - custo_prod - cfg.frete_medio - taxa - comissao
+        total_estimated_profit += lucro_venda
+
+    lucro_sem_afiliado = calculate_profit_no_affiliate(cfg)
+    lucro_com_afiliado = calculate_profit_with_affiliate(cfg)
+
     return {
         "total_revenue":          total_revenue,
         "total_orders":           total_orders,
@@ -3014,9 +3187,10 @@ async def get_finance_summary(
         "available_commissions":  round(available_commissions, 2),
         "total_commissions_paid": round(total_commissions_paid, 2),
         "sales_with_code_pct":    sales_with_code_pct,
-        "estimated_profit":       round(
-            total_revenue - total_commissions_paid - pending_commissions - available_commissions, 2
-        ),
+        "estimated_profit": round(total_estimated_profit, 2),
+        "lucro_por_venda_sem_afiliado": lucro_sem_afiliado,
+        "lucro_por_venda_com_afiliado": lucro_com_afiliado,
+        "custo_produto_total": round(calculate_cost_total(cfg), 2),
         "payments": filtered_payments[:100],
     }
 
