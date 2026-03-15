@@ -3,10 +3,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import AdminCostSettings from './AdminCostSettings';
 import {
   DollarSign, Download, TrendingUp, Calendar,
-  Filter, PieChart as PieChartIcon, Clock,
-  CheckCircle2, Banknote, ChevronDown, ChevronUp
+  Filter, Clock, CheckCircle2, Banknote,
+  ChevronDown, ChevronUp, Package, ArrowUpRight
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar,
@@ -32,14 +33,14 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-// ─── Painel de comissões disponíveis por parceiro ─────────────────────────────
+// ─── Painel de comissões disponíveis ─────────────────────────────────────────
 const CommissionPanel = ({ token }) => {
-  const [items, setItems]   = useState([]);
+  const [items, setItems]     = useState([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen]     = useState(false);
-  const [paying, setPaying] = useState(null);
+  const [open, setOpen]       = useState(false);
+  const [paying, setPaying]   = useState(null);
 
-  const fetch = async () => {
+  const fetchItems = async () => {
     setLoading(true);
     try {
       const res = await axios.get(`${API}/admin/commissions/available`, {
@@ -50,7 +51,7 @@ const CommissionPanel = ({ token }) => {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetchItems(); }, []);
 
   const markPaid = async (commissionId, partnerName) => {
     if (!window.confirm(`Marcar comissão de ${partnerName} como paga?`)) return;
@@ -60,7 +61,7 @@ const CommissionPanel = ({ token }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success('Comissão marcada como paga!');
-      fetch();
+      fetchItems();
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Erro ao marcar como pago');
     } finally { setPaying(null); }
@@ -90,7 +91,7 @@ const CommissionPanel = ({ token }) => {
         <div className="border-t border-[#2d3a52]">
           {loading ? (
             <div className="p-5 space-y-3">
-              {[1,2].map(i => <div key={i} className="h-12 bg-[#0b121b] rounded-lg animate-pulse" />)}
+              {[1, 2].map(i => <div key={i} className="h-12 bg-[#0b121b] rounded-lg animate-pulse" />)}
             </div>
           ) : items.length === 0 ? (
             <p className="p-5 text-[#94a3b8] text-sm text-center">Nenhuma comissão disponível no momento.</p>
@@ -125,11 +126,106 @@ const CommissionPanel = ({ token }) => {
   );
 };
 
+// ─── Card de lucro por venda ──────────────────────────────────────────────────
+const ProfitPerSaleCard = ({ semAfiliado, comAfiliado }) => {
+  if (!semAfiliado && !comAfiliado) return null;
+
+  return (
+    <div className="bg-[#16202e] border border-[#2d3a52] rounded-xl p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <ArrowUpRight size={18} className="text-[#10b981]" />
+        <h3 className="text-lg font-semibold text-white">Lucro Estimado por Venda</h3>
+        <span className="text-xs text-[#64748b] ml-1">baseado nos custos configurados</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Sem afiliado */}
+        {semAfiliado && (
+          <div className="rounded-xl p-4 bg-[#10b981]/5 border border-[#10b981]/20">
+            <p className="text-xs font-bold uppercase tracking-wider text-[#10b981] mb-3">Sem afiliado</p>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Receita</span>
+                <span className="text-white">{fmt(semAfiliado.preco_produto)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Custo produto</span>
+                <span className="text-[#ef4444]">- {fmt(semAfiliado.custo_produto)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Frete</span>
+                <span className="text-[#ef4444]">- {fmt(semAfiliado.frete)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Taxa gateway</span>
+                <span className="text-[#ef4444]">- {fmt(semAfiliado.taxa_gateway)}</span>
+              </div>
+              <div className="border-t border-[#2d3a52] pt-2 flex justify-between font-bold">
+                <span className="text-white">Lucro</span>
+                <span className="text-[#10b981] text-base">{fmt(semAfiliado.lucro)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#64748b] text-xs">Margem</span>
+                <span className="text-[#10b981] text-xs font-semibold">{semAfiliado.margem_pct}%</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Com afiliado */}
+        {comAfiliado && (
+          <div className="rounded-xl p-4 bg-[#f59e0b]/5 border border-[#f59e0b]/20">
+            <p className="text-xs font-bold uppercase tracking-wider text-[#f59e0b] mb-3">Com afiliado</p>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Preço original</span>
+                <span className="text-white">{fmt(comAfiliado.preco_produto)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Desconto cliente</span>
+                <span className="text-[#f59e0b]">- {fmt(comAfiliado.desconto)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Valor recebido</span>
+                <span className="text-white">{fmt(comAfiliado.preco_com_desconto)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Custo produto</span>
+                <span className="text-[#ef4444]">- {fmt(comAfiliado.custo_produto)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Frete</span>
+                <span className="text-[#ef4444]">- {fmt(comAfiliado.frete)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Taxa gateway</span>
+                <span className="text-[#ef4444]">- {fmt(comAfiliado.taxa_gateway)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#94a3b8]">Comissão afiliado</span>
+                <span className="text-[#f59e0b]">- {fmt(comAfiliado.comissao)}</span>
+              </div>
+              <div className="border-t border-[#2d3a52] pt-2 flex justify-between font-bold">
+                <span className="text-white">Lucro</span>
+                <span className="text-[#f59e0b] text-base">{fmt(comAfiliado.lucro)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#64748b] text-xs">Margem</span>
+                <span className="text-[#f59e0b] text-xs font-semibold">{comAfiliado.margem_pct}%</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── Página principal ─────────────────────────────────────────────────────────
 const AdminFinance = () => {
   const { token } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [data, setData]       = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [data, setData]         = useState(null);
   const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
 
   useEffect(() => { fetchFinanceData(); }, [token]);
@@ -163,10 +259,13 @@ const AdminFinance = () => {
           ['Receita Total', d.summary.total_revenue],
           ['Total de Pedidos', d.summary.total_orders],
           ['Ticket Médio', d.summary.avg_ticket],
+          ['Custo Total Produto', d.summary.custo_produto_total ?? ''],
+          ['Lucro s/ Afiliado (por venda)', d.summary.lucro_sem_afiliado ?? ''],
+          ['Lucro c/ Afiliado (por venda)', d.summary.lucro_com_afiliado ?? ''],
           ['Comissões Pendentes', d.summary.pending_commissions],
           ['Comissões Disponíveis', d.summary.available_commissions],
           ['Comissões Pagas', d.summary.total_commissions_paid],
-          ['Lucro Estimado', d.summary.estimated_profit],
+          ['Lucro Estimado Total', d.summary.estimated_profit],
         ]), 'Resumo');
 
       XLSX.utils.book_append_sheet(wb,
@@ -198,25 +297,29 @@ const AdminFinance = () => {
     } catch { toast.error('Erro ao exportar relatório'); }
   };
 
-  const typeChartData = data ? Object.entries(data.revenue_by_type).map(([k, v]) => ({
-    name: k === 'digital' ? 'Digital' : k === 'plaque' || k === 'qrcode_plaque' ? 'Placa QR' : k === 'complete' ? 'Completo' : k,
-    value: v
-  })) : [];
+  const typeChartData = data
+    ? Object.entries(data.revenue_by_type).map(([k, v]) => ({
+        name: k === 'digital' ? 'Digital' : k === 'plaque' || k === 'qrcode_plaque' ? 'Placa QR' : k === 'complete' ? 'Completo' : k,
+        value: v
+      }))
+    : [];
 
-  const monthChartData = data ? Object.entries(data.revenue_by_month)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-6)
-    .map(([month, revenue]) => ({
-      month: month.split('-')[1] + '/' + month.split('-')[0].slice(2),
-      revenue
-    })) : [];
+  const monthChartData = data
+    ? Object.entries(data.revenue_by_month)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-6)
+        .map(([month, revenue]) => ({
+          month: month.split('-')[1] + '/' + month.split('-')[0].slice(2),
+          revenue
+        }))
+    : [];
 
   if (loading) {
     return (
       <div className="space-y-6" data-testid="finance-loading">
         <div className="h-10 w-48 bg-[#16202e] rounded-lg animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-[#16202e] rounded-xl animate-pulse" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-28 bg-[#16202e] rounded-xl animate-pulse" />)}
         </div>
       </div>
     );
@@ -231,11 +334,12 @@ const AdminFinance = () => {
           <p className="text-xs font-semibold uppercase tracking-wider text-[#3b82f6] mb-1">Gestão</p>
           <h1 className="text-3xl font-bold text-white tracking-tight">Financeiro</h1>
         </div>
-        <button onClick={exportToExcel}
+        <button
+          onClick={exportToExcel}
           className="flex items-center gap-2 px-4 py-2.5 bg-[#10b981] text-white rounded-lg font-medium hover:bg-[#10b981]/90 transition-colors"
-          data-testid="export-excel-btn">
-          <Download size={18} />
-          Exportar Excel
+          data-testid="export-excel-btn"
+        >
+          <Download size={18} /> Exportar Excel
         </button>
       </div>
 
@@ -272,13 +376,13 @@ const AdminFinance = () => {
         </div>
       </div>
 
-      {/* Métricas principais — 4 cards na primeira linha */}
+      {/* Métricas principais — 4 cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: DollarSign,   color: '#10b981', label: 'Receita Total',         value: fmt(data.total_revenue) },
-          { icon: TrendingUp,   color: '#3b82f6', label: 'Ticket Médio',          value: fmt(data.avg_ticket) },
-          { icon: DollarSign,   color: '#8b5cf6', label: 'Lucro Estimado',        value: fmt(data.estimated_profit) },
-          { icon: TrendingUp,   color: '#f59e0b', label: '% Vendas c/ Código',    value: `${(data.sales_with_code_pct ?? 0).toFixed(1)}%` },
+          { icon: DollarSign, color: '#10b981', label: 'Receita Total',       value: fmt(data.total_revenue) },
+          { icon: TrendingUp, color: '#3b82f6', label: 'Ticket Médio',        value: fmt(data.avg_ticket) },
+          { icon: DollarSign, color: '#8b5cf6', label: 'Lucro Estimado Total', value: fmt(data.estimated_profit) },
+          { icon: TrendingUp, color: '#f59e0b', label: '% Vendas c/ Código',  value: `${(data.sales_with_code_pct ?? 0).toFixed(1)}%` },
         ].map(({ icon: Icon, color, label, value }) => (
           <div key={label} className="bg-[#16202e] border border-[#2d3a52] rounded-xl p-5">
             <div className="flex items-center gap-3">
@@ -293,6 +397,22 @@ const AdminFinance = () => {
           </div>
         ))}
       </div>
+
+      {/* Custo total do produto (card extra se disponível) */}
+      {data.custo_produto_total != null && (
+        <div className="bg-[#16202e] border border-[#2d3a52] rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#ef4444]/10 border border-[#ef4444]/20">
+              <Package style={{ color: '#ef4444' }} size={22} />
+            </div>
+            <div>
+              <p className="text-xs text-[#94a3b8] uppercase tracking-wide">Custo total do produto (físico)</p>
+              <p className="text-2xl font-bold text-white">{fmt(data.custo_produto_total)}</p>
+              <p className="text-xs text-[#64748b]">placa + caixa + palha + papel + fitilho</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Comissões — 3 cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -315,8 +435,17 @@ const AdminFinance = () => {
         ))}
       </div>
 
+      {/* Card de lucro por venda (novo) */}
+      <ProfitPerSaleCard
+        semAfiliado={data.lucro_por_venda_sem_afiliado}
+        comAfiliado={data.lucro_por_venda_com_afiliado}
+      />
+
       {/* Painel de pagamento de comissões */}
       <CommissionPanel token={token} />
+
+      {/* Configurações de custo (novo) */}
+      <AdminCostSettings />
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -328,13 +457,13 @@ const AdminFinance = () => {
                 <AreaChart data={monthChartData}>
                   <defs>
                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
                   <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={v => `R$${v/1000}k`} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={v => `R$${v / 1000}k`} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
                 </AreaChart>
