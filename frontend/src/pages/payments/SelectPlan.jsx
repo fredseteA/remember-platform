@@ -260,12 +260,12 @@ const SelectPlan = () => {
           </p>
         </div>
 
-        {/* Código apoiador */}
+        {/* Código affiliate */}
         <div style={{ maxWidth: 440, margin: '0 auto clamp(36px, 6vw, 56px)', animation: 'revealSP 0.75s cubic-bezier(.22,1,.36,1) 0.08s both' }}>
           {!codeValid ? (
             <>
               <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#2a3d5e', marginBottom: 10, textAlign: 'center' }}>
-                Tem um código de apoiador?
+                Tem um código de affiliate?
               </p>
               <div className="code-input-wrap">
                 <input className="code-input" placeholder="Ex: JOAO2024" value={codeInput}

@@ -57,7 +57,7 @@ export default function TermsAndConditionsPage() {
           Os valores dos planos são os vigentes no momento da contratação. O pagamento é processado por gateways certificados e seguros. Após a confirmação do pagamento, o pedido entra em processamento imediatamente.
         </P>
         <P>
-          Não realizamos parcelamento fora das condições disponibilizadas pelo gateway de pagamento. Promoções e descontos (incluindo os gerados por códigos de apoiadores) não são cumulativos.
+          Não realizamos parcelamento fora das condições disponibilizadas pelo gateway de pagamento. Promoções e descontos (incluindo os gerados por códigos de affiliatees) não são cumulativos.
         </P>
 
         <Divider />
@@ -76,9 +76,9 @@ export default function TermsAndConditionsPage() {
         </P>
 
         <Divider />
-        <H2>8. Programa de apoiadores</H2>
+        <H2>8. Programa de affiliatees</H2>
         <P>
-          Funerárias, cemitérios e outros parceiros podem participar do programa de apoiadores mediante adesão formal. O parceiro recebe um código exclusivo que gera desconto para clientes e comissão progressiva (10%, 15% ou 20%) sobre as vendas realizadas com o código.
+          Funerárias, cemitérios e outros parceiros podem participar do programa de affiliatees mediante adesão formal. O parceiro recebe um código exclusivo que gera desconto para clientes e comissão progressiva (10%, 15% ou 20%) sobre as vendas realizadas com o código.
         </P>
         <P>
           As comissões são calculadas mensalmente e pagas conforme acordado no contrato de parceria. A Remember QRCode reserva-se o direito de encerrar parcerias que violem os princípios éticos da plataforma.

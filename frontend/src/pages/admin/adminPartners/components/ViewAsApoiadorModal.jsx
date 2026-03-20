@@ -2,7 +2,7 @@ import { Eye, X } from 'lucide-react';
 import { fmt } from '../utils';
 import { FRONTEND_URL } from '@/config';
 
-const ViewAsApoiadorModal = ({ partner, onClose }) => {
+const ViewAsaffiliateModal = ({ partner, onClose }) => {
   const code = partner.supporter_code || partner.code;
   const referralLink = `${FRONTEND_URL}/?apoio=${code}`;
   const monthSales = partner.total_sales_month || 0;
@@ -24,7 +24,7 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <Eye size={16} className="text-[#3b82f6]" />
-              <h2 className="text-base font-semibold text-white">Visualizar como Apoiador</h2>
+              <h2 className="text-base font-semibold text-white">Visualizar como affiliate</h2>
             </div>
             <p className="text-xs text-[#94a3b8]">Simulação do painel de <span className="text-white font-medium">{partner.name}</span></p>
           </div>
@@ -74,7 +74,7 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
             </div>
           </div>
           <p className="text-xs text-[#94a3b8]/60 text-center">
-            ⚠️ Esta é apenas uma simulação. Dados reais no painel do apoiador.
+            ⚠️ Esta é apenas uma simulação. Dados reais no painel do affiliate.
           </p>
         </div>
       </div>
@@ -82,4 +82,4 @@ const ViewAsApoiadorModal = ({ partner, onClose }) => {
   );
 };
 
-export default ViewAsApoiadorModal;
+export default ViewAsaffiliateModal;

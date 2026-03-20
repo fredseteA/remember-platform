@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { API } from '@/config';
 
-export default function ApoiadorRoute({ children }) {
+export default function affiliateRoute({ children }) {
   const { user, getToken } = useAuth(); 
   const [status, setStatus] = useState('loading');
 
@@ -28,13 +28,13 @@ export default function ApoiadorRoute({ children }) {
         });
 
         const role = res.data?.role || 'user';
-        if (role === 'apoiador' || role === 'admin') {
+        if (role === 'affiliate' || role === 'admin') {
           setStatus('allowed');
         } else {
           setStatus('denied');
         }
       } catch (e) {
-        console.error('ApoiadorRoute erro:', e?.response?.data || e.message);
+        console.error('affiliateRoute erro:', e?.response?.data || e.message);
         setStatus('denied');
       }
     })();

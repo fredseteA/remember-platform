@@ -19,7 +19,7 @@ const resources = {
         support: 'Suporte',
         admin: 'Admin',
         logout: 'Sair',
-        supporterPanel: 'Painel do Apoiador',
+        supporterPanel: 'Painel do affiliate',
         myAccountSection: 'Minha conta',
         closeMenu: 'Fechar menu',
         openMenu: 'Abrir menu',

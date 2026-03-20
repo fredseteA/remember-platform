@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import ApoiadorLayout from './layouts/AffiliateLayout';
+import affiliateLayout from './layouts/AffiliateLayout';
 import axios from 'axios';
 import { Coins, RefreshCw, Clock, Wallet, CheckCircle, ChevronDown, Filter, X } from 'lucide-react';
 import { API } from '@/config';
@@ -73,7 +73,7 @@ export default function AffiliateCommissions() {
   const fetchData = useCallback(async () => {
     try {
       const token = await getToken(); 
-      const res = await axios.get(`${API}/apoiador/commissions`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`${API}/affiliate/commissions`, { headers: { Authorization: `Bearer ${token}` } });
       setCommissions(res.data?.commissions || []);
     } catch (e) {
       console.error('Comissões erro:', e?.response?.data || e.message);
@@ -91,7 +91,7 @@ export default function AffiliateCommissions() {
   const groups = useMemo(() => groupByMonth(filtered), [filtered]);
 
   if (loading) return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
         <div style={{ textAlign: 'center', color: '#7a8aaa' }}>
           <RefreshCw size={26} style={{ animation: 'spin 1s linear infinite' }} />
@@ -99,20 +99,20 @@ export default function AffiliateCommissions() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 
   if (error) return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, textAlign: 'center', border: '1px solid #fecaca' }}>
         <p style={{ color: '#ef4444', marginBottom: 16 }}>{error}</p>
         <button onClick={handleRefresh} style={{ padding: '10px 24px', background: '#1a2744', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: '"Georgia", serif' }}>Tentar novamente</button>
       </div>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 
   return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -179,6 +179,6 @@ export default function AffiliateCommissions() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 }

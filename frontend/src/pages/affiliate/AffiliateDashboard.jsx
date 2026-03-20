@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import ApoiadorLayout from './layouts/AffiliateLayout';
+import affiliateLayout from './layouts/AffiliateLayout';
 import axios from 'axios';
 import {
   LayoutDashboard, TrendingUp, Coins, Wallet, Percent, Star, ArrowUpRight, RefreshCw,
@@ -114,9 +114,9 @@ export default function AffiliateDashboard() {
     try {
       const token = await getToken(); 
       const headers = { Authorization: `Bearer ${token}` };
-      const partnerRes = await axios.get(`${API}/apoiador/me`, { headers });
+      const partnerRes = await axios.get(`${API}/affiliate/me`, { headers });
       setPartner(partnerRes.data);
-      const salesRes = await axios.get(`${API}/apoiador/sales`, { headers });
+      const salesRes = await axios.get(`${API}/affiliate/sales`, { headers });
       setSales(salesRes.data?.sales || []);
     } catch (e) {
       console.error('Dashboard erro:', e?.response?.data || e.message);
@@ -144,7 +144,7 @@ export default function AffiliateDashboard() {
   const availableCommission = sales.reduce((acc, s) => acc + (s.commission_status === 'available' ? (s.commission_amount || 0) : 0), 0);
 
   if (loading) return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
         <div style={{ textAlign: 'center', color: '#7a8aaa' }}>
           <RefreshCw size={28} style={{ animation: 'spin 1s linear infinite', marginBottom: 12 }} />
@@ -152,27 +152,27 @@ export default function AffiliateDashboard() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 
   if (error) return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, textAlign: 'center', border: '1px solid #fecaca' }}>
         <p style={{ color: '#ef4444', marginBottom: 16 }}>{error}</p>
         <button onClick={handleRefresh} style={{ padding: '10px 24px', background: '#1a2744', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: '"Georgia", serif', fontSize: '0.88rem' }}>Tentar novamente</button>
       </div>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 
   return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <LayoutDashboard size={22} style={{ color: '#5aa8e0' }} />
               <h1 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.3rem, 3vw, 1.7rem)', fontWeight: 700, color: '#1a2744', margin: 0 }}>
-                Olá, {partner?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'Apoiador'} 👋
+                Olá, {partner?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'affiliate'} 👋
               </h1>
             </div>
             <p style={{ color: '#5a6a8a', fontSize: '0.86rem', margin: 0 }}>
@@ -209,6 +209,6 @@ export default function AffiliateDashboard() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 }

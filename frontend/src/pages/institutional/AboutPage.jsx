@@ -180,7 +180,7 @@ export default function AboutPage() {
         <Divider />
         <H2>Parceria com funerárias e cemitérios</H2>
         <P>
-          Contamos com um programa de apoiadores voltado a funerárias e cemitérios. Parceiros recebem um código exclusivo que oferece desconto aos clientes e gera comissão progressiva sobre as vendas realizadas. Entre em contato para saber mais.
+          Contamos com um programa de affiliatees voltado a funerárias e cemitérios. Parceiros recebem um código exclusivo que oferece desconto aos clientes e gera comissão progressiva sobre as vendas realizadas. Entre em contato para saber mais.
         </P>
 
         <div style={{ marginTop: '36px', textAlign: 'center' }}>

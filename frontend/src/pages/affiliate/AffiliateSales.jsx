@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import ApoiadorLayout from './layouts/AffiliateLayout';
+import affiliateLayout from './layouts/AffiliateLayout';
 import axios from 'axios';
 import { ShoppingBag, RefreshCw, Filter, ChevronDown, TrendingUp, Coins, Search, X } from 'lucide-react';
 import { API } from '@/config';
@@ -44,7 +44,7 @@ export default function AffiliateSales() {
   const fetchData = useCallback(async () => {
     try {
       const token = await getToken(); 
-      const res = await axios.get(`${API}/apoiador/sales`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`${API}/affiliate/sales`, { headers: { Authorization: `Bearer ${token}` } });
       setSales(res.data?.sales || []);
     } catch (e) {
       console.error('Vendas erro:', e?.response?.data || e.message);
@@ -76,7 +76,7 @@ export default function AffiliateSales() {
   const clearFilters = () => { setFilterMonth(''); setFilterStatus(''); setFilterPlan(''); setSearch(''); };
 
   if (loading) return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
         <div style={{ textAlign: 'center', color: '#7a8aaa' }}>
           <RefreshCw size={26} style={{ animation: 'spin 1s linear infinite' }} />
@@ -84,20 +84,20 @@ export default function AffiliateSales() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 
   if (error) return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, textAlign: 'center', border: '1px solid #fecaca' }}>
         <p style={{ color: '#ef4444', marginBottom: 16 }}>{error}</p>
         <button onClick={handleRefresh} style={{ padding: '10px 24px', background: '#1a2744', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: '"Georgia", serif' }}>Tentar novamente</button>
       </div>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 
   return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -198,6 +198,6 @@ export default function AffiliateSales() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } } select:focus { outline: none; border-color: #5aa8e0 !important; } input:focus { border-color: #5aa8e0 !important; }`}</style>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 }

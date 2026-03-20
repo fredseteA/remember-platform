@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import ApoiadorLayout from './layouts/AffiliateLayout';
+import affiliateLayout from './layouts/AffiliateLayout';
 import axios from 'axios';
 import { QrCode, Copy, Check, RefreshCw, Link2, BarChart2, Download, Share2 } from 'lucide-react';
 import { API, FRONTEND_URL} from '@/config';
@@ -69,8 +69,8 @@ export default function AffiliateMyCode() {
       const token = await getToken(); 
       const headers = { Authorization: `Bearer ${token}` };
       const [partnerRes, salesRes] = await Promise.all([
-        axios.get(`${API}/apoiador/me`, { headers }),
-        axios.get(`${API}/apoiador/sales`, { headers }),
+        axios.get(`${API}/affiliate/me`, { headers }),
+        axios.get(`${API}/affiliate/sales`, { headers }),
       ]);
       setPartner(partnerRes.data);
       setSales(salesRes.data?.sales || []);
@@ -104,7 +104,7 @@ export default function AffiliateMyCode() {
   };
 
   if (loading) return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
         <div style={{ textAlign: 'center', color: '#7a8aaa' }}>
           <RefreshCw size={26} style={{ animation: 'spin 1s linear infinite' }} />
@@ -112,20 +112,20 @@ export default function AffiliateMyCode() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 
   if (error) return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, textAlign: 'center', border: '1px solid #fecaca' }}>
         <p style={{ color: '#ef4444', marginBottom: 16 }}>{error}</p>
         <button onClick={handleRefresh} style={{ padding: '10px 24px', background: '#1a2744', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: '"Georgia", serif' }}>Tentar novamente</button>
       </div>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 
   return (
-    <ApoiadorLayout>
+    <affiliateLayout>
       <div style={{ maxWidth: 780, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -144,7 +144,7 @@ export default function AffiliateMyCode() {
         <div style={{ background: 'linear-gradient(135deg, #0f1f3d 0%, #1a3461 100%)', borderRadius: 20, padding: 'clamp(24px, 5vw, 40px)', marginBottom: 20, position: 'relative', overflow: 'hidden', opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}>
           <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(90,168,224,0.08)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', bottom: -60, left: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(90,168,224,0.05)', pointerEvents: 'none' }} />
-          <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 12 }}>Seu código de apoiador</p>
+          <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 12 }}>Seu código de affiliate</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
             <div style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, padding: '16px 28px', flex: 1, minWidth: 140 }}>
               <p style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.8rem, 5vw, 2.8rem)', fontWeight: 700, color: '#5aa8e0', margin: 0, letterSpacing: '0.08em', wordBreak: 'break-all' }}>{code}</p>
@@ -187,9 +187,9 @@ export default function AffiliateMyCode() {
               <div ref={qrRef} style={{ opacity: qrReady ? 1 : 0, transition: 'opacity 0.3s' }} />
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <p style={{ color: '#5a6a8a', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 20 }}>Este QR Code leva diretamente ao site com seu código de apoiador já aplicado. Ideal para cartões, posts, panfletos e stories.</p>
+              <p style={{ color: '#5a6a8a', fontSize: '0.85rem', lineHeight: 1.6, marginBottom: 20 }}>Este QR Code leva diretamente ao site com seu código de affiliate já aplicado. Ideal para cartões, posts, panfletos e stories.</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button onClick={() => downloadQR(qrRef, `qrcode-apoiador-${code}.png`)} disabled={!qrReady} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px', background: qrReady ? '#1a2744' : '#e8edf4', color: qrReady ? '#fff' : '#9aaac0', border: 'none', borderRadius: 10, cursor: qrReady ? 'pointer' : 'not-allowed', fontSize: '0.83rem', fontFamily: '"Georgia", serif', width: 'fit-content' }} onMouseEnter={e => { if (qrReady) e.currentTarget.style.opacity = '0.85'; }} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+                <button onClick={() => downloadQR(qrRef, `qrcode-affiliate-${code}.png`)} disabled={!qrReady} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px', background: qrReady ? '#1a2744' : '#e8edf4', color: qrReady ? '#fff' : '#9aaac0', border: 'none', borderRadius: 10, cursor: qrReady ? 'pointer' : 'not-allowed', fontSize: '0.83rem', fontFamily: '"Georgia", serif', width: 'fit-content' }} onMouseEnter={e => { if (qrReady) e.currentTarget.style.opacity = '0.85'; }} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                   <Download size={14} /> Baixar QR Code (PNG)
                 </button>
                 <CopyButton text={referralLink} label="Copiar link do QR" />
@@ -226,6 +226,6 @@ export default function AffiliateMyCode() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </ApoiadorLayout>
+    </affiliateLayout>
   );
 }

@@ -14,10 +14,10 @@ import {
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { path: '/apoiador',           label: 'Dashboard',  icon: LayoutDashboard },
-  { path: '/apoiador/vendas',    label: 'Vendas',      icon: ShoppingBag     },
-  { path: '/apoiador/comissoes', label: 'Comissões',   icon: Coins           },
-  { path: '/apoiador/meu-codigo',label: 'Meu Código',  icon: QrCode          },
+  { path: '/affiliate',           label: 'Dashboard',  icon: LayoutDashboard },
+  { path: '/affiliate/vendas',    label: 'Vendas',      icon: ShoppingBag     },
+  { path: '/affiliate/comissoes', label: 'Comissões',   icon: Coins           },
+  { path: '/affiliate/meu-codigo',label: 'Meu Código',  icon: QrCode          },
 ];
 
 export default function AffiliateLayout({ children }) {
@@ -32,7 +32,7 @@ export default function AffiliateLayout({ children }) {
   };
 
   // Nome de exibição — tenta displayName, depois name do Firestore, depois email
-  const displayName = user?.displayName || user?.name || user?.email || 'Apoiador';
+  const displayName = user?.displayName || user?.name || user?.email || 'affiliate';
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f0f4f8', fontFamily: '"Georgia", serif' }}>
@@ -73,7 +73,7 @@ export default function AffiliateLayout({ children }) {
             </span>
           </div>
           <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', marginTop: 4, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            Painel do Apoiador
+            Painel do affiliate
           </p>
         </div>
 

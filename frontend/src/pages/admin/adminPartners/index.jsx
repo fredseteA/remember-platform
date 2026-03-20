@@ -7,7 +7,7 @@ import {
   Clock, CheckCircle2, Banknote
 } from 'lucide-react';
 import { API } from '@/config.js';
-import { PartnerCard, ReportModal, ViewAsApoiadorModal   }from './components/index';
+import { PartnerCard, ReportModal, ViewAsaffiliateModal   }from './components/index';
 import { fmt } from '../utils';
 
 
@@ -164,7 +164,7 @@ const AdminPartners = () => {
         <ReportModal partner={reportPartner} token={token} onClose={() => setReportPartner(null)} />
       )}
       {viewAsPartner && (
-        <ViewAsApoiadorModal partner={viewAsPartner} onClose={() => setViewAsPartner(null)} />
+        <ViewAsaffiliateModal partner={viewAsPartner} onClose={() => setViewAsPartner(null)} />
       )}
 
       {/* Header */}
@@ -284,7 +284,7 @@ const AdminPartners = () => {
                     className="w-full px-4 py-2.5 bg-[#0b121b] border border-[#2d3a52] rounded-lg text-white focus:border-[#3b82f6] outline-none"
                   />
                   <p className="text-[#94a3b8]/60 text-xs mt-1">
-                    O apoiador usará este email e senha para acessar o painel.
+                    O affiliate usará este email e senha para acessar o painel.
                   </p>
                 </div>
               )}
@@ -302,7 +302,7 @@ const AdminPartners = () => {
               {!editingPartner && (
                 <div>
                   <label className="block text-sm font-medium text-[#94a3b8] mb-1.5">
-                    Código do Apoiador
+                    Código do affiliate
                     <span className="text-xs text-[#94a3b8]/60 ml-2">(único, definido por você)</span>
                   </label>
                   <input type="text" required

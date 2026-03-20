@@ -112,7 +112,7 @@ const PartnerCard = ({partner, copiedCode, onCopy, onEdit, onToggle, onReport, o
         </div>
 
         <div className="bg-[#0b121b] rounded-lg px-4 py-3 mb-4">
-          <p className="text-xs text-[#94a3b8] mb-1">Código do Apoiador</p>
+          <p className="text-xs text-[#94a3b8] mb-1">Código do affiliate</p>
           <div className="flex items-center justify-between">
             <span className="font-mono text-lg text-[#3b82f6]">{code}</span>
             <button onClick={() => onCopy(code)}
@@ -178,7 +178,7 @@ const PartnerCard = ({partner, copiedCode, onCopy, onEdit, onToggle, onReport, o
           </button>
           <button onClick={() => onViewAs(partner)}
             className="px-3 py-2 bg-[#8b5cf6]/10 text-[#8b5cf6] rounded-lg text-sm hover:bg-[#8b5cf6]/20 transition-colors"
-            title="Visualizar como Apoiador"
+            title="Visualizar como affiliate"
             data-testid={`viewas-partner-${partner.id}`}>
             <Eye size={14} />
           </button>

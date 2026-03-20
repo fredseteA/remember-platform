@@ -280,7 +280,7 @@ const AdminFinance = () => {
       if (d.transactions?.length > 0) {
         XLSX.utils.book_append_sheet(wb,
           XLSX.utils.aoa_to_sheet([
-            ['ID', 'Valor Original', 'Desconto', 'Valor Final', 'Tipo', 'Email', 'Código Apoiador', 'Comissão', 'Status Comissão', 'Data', 'Status'],
+            ['ID', 'Valor Original', 'Desconto', 'Valor Final', 'Tipo', 'Email', 'Código affiliate', 'Comissão', 'Status Comissão', 'Data', 'Status'],
             ...d.transactions.map(tx => [
               tx.id, tx.original_amount, tx.discount_amount, tx.final_amount,
               tx.plan_type, tx.user_email, tx.supporter_code || '',

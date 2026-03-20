@@ -196,10 +196,10 @@ const Header = () => {
                         <><DropdownMenuSeparator />
                         <DropdownMenuItem asChild><Link to="/admin" data-testid="nav-admin">{t('nav.admin')}</Link></DropdownMenuItem></>
                       )}
-                      {user.role === 'apoiador' && (
+                      {user.role === 'affiliate' && (
                         <><DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                          <Link to="/apoiador" data-testid="nav-apoiador">{t('nav.supporterPanel')}</Link>
+                          <Link to="/affiliate" data-testid="nav-affiliate">{t('nav.supporterPanel')}</Link>
                         </DropdownMenuItem></>
                       )}
                       <DropdownMenuSeparator />
@@ -250,7 +250,7 @@ const Header = () => {
                 <Link to="/my-purchases" className="mobile-nav-secondary" onClick={closeMobile}>{t('nav.myPurchases')}</Link>
                 <button className="mobile-nav-secondary" onClick={() => { openWhatsApp(); closeMobile(); }}>{t('nav.support')}</button>
                 {user.is_admin && <Link to="/admin" className="mobile-nav-secondary" onClick={closeMobile}>{t('nav.admin')}</Link>}
-                {user.role === 'apoiador' && <Link to="/apoiador" className="mobile-nav-secondary" onClick={closeMobile}>{t('nav.supporterPanel')}</Link>}
+                {user.role === 'affiliate' && <Link to="/affiliate" className="mobile-nav-secondary" onClick={closeMobile}>{t('nav.supporterPanel')}</Link>}
                 <button onClick={() => { handleLogout(); closeMobile(); }}
                   style={{ marginTop: 24, width: '100%', borderRadius: '999px', padding: '13px 0',
                     background: 'rgba(26,39,68,0.08)', border: '1.5px solid rgba(26,39,68,0.15)', color: '#1a2744',
