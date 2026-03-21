@@ -1,50 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
-function PhotoPlaceholder({ label, icon, size = "normal", className = "", style = {} }) {
-  const isLarge = size === "large";
-  return (
-    <div
-      className={className}
-      style={{
-        position: 'relative', borderRadius: isLarge ? '28px' : '20px', overflow: 'hidden',
-        background: 'linear-gradient(135deg, rgba(200,232,245,0.6) 0%, rgba(168,216,240,0.5) 40%, rgba(123,189,232,0.4) 100%)',
-        border: '1.5px dashed rgba(90,168,224,0.45)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        gap: isLarge ? '16px' : '10px', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-        boxShadow: isLarge
-          ? '0 24px 72px rgba(26,39,68,0.12), inset 0 1px 0 rgba(255,255,255,0.7)'
-          : '0 8px 28px rgba(26,39,68,0.08), inset 0 1px 0 rgba(255,255,255,0.6)',
-        ...style,
-      }}
-    >
-      <div style={{ position: 'absolute', inset: '12px', borderRadius: isLarge ? '20px' : '14px', border: '1px solid rgba(255,255,255,0.55)', pointerEvents: 'none' }} />
-      <div style={{
-        width: isLarge ? 64 : 44, height: isLarge ? 64 : 44, borderRadius: '50%',
-        background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(8px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 4px 16px rgba(26,39,68,0.1)', flexShrink: 0,
-      }}>
-        {icon || (
-          <svg width={isLarge ? 28 : 20} height={isLarge ? 28 : 20} viewBox="0 0 24 24" fill="none" stroke="#3a7fb5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
-        )}
-      </div>
-      <div style={{ textAlign: 'center', padding: '0 16px' }}>
-        <p style={{ fontFamily: '"Georgia", serif', fontSize: isLarge ? '0.92rem' : '0.78rem', fontWeight: 600, color: '#2a4d70', letterSpacing: '0.03em', lineHeight: 1.4, margin: 0 }}>
-          {label}
-        </p>
-        <p style={{ fontSize: isLarge ? '0.72rem' : '0.65rem', color: 'rgba(58,80,112,0.65)', marginTop: '4px', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
-          {isLarge ? 'Foto do produto real em breve' : 'Inserir foto aqui'}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 const ProductShowcaseSection = () => {
-const sectionRef = useRef(null);
+  const sectionRef = useRef(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -75,18 +32,9 @@ const sectionRef = useRef(null);
   ];
 
   const secondaryCards = [
-    {
-      label: 'Detalhe do acabamento',
-      icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a7fb5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>),
-    },
-    {
-      label: 'Como ele chega embalado',
-      icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a7fb5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>),
-    },
-    {
-      label: 'Exemplo de homenagem pronta',
-      icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a7fb5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>),
-    },
+    { label: 'Detalhe do acabamento',       src: '/products/detail-finish.png'    },
+    { label: 'Como ele chega embalado',     src: '/products/packaging-closed.png' },
+    { label: 'Exemplo de homenagem pronta', src: '/products/packaging-open.png'   },
   ];
 
   return (
@@ -127,20 +75,6 @@ const sectionRef = useRef(null);
           from { opacity: 0; transform: scale(0.93) translateY(20px); filter: blur(4px); }
           to   { opacity: 1; transform: scale(1)    translateY(0);    filter: blur(0); }
         }
-        @keyframes placeholderShimmer {
-          0%   { background-position: -600px 0; }
-          100% { background-position:  600px 0; }
-        }
-        .prod-placeholder-shimmer::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.22) 45%, rgba(255,255,255,0.38) 50%, rgba(255,255,255,0.22) 55%, transparent 100%);
-          background-size: 600px 100%;
-          animation: placeholderShimmer 3s ease-in-out infinite;
-          border-radius: inherit;
-          pointer-events: none;
-        }
         @keyframes gentlePulse {
           0%,100% { box-shadow: 0 24px 72px rgba(26,39,68,0.12), 0 0 0 0 rgba(90,168,224,0); }
           50%     { box-shadow: 0 32px 80px rgba(26,39,68,0.16), 0 0 0 12px rgba(90,168,224,0.06); }
@@ -151,7 +85,7 @@ const sectionRef = useRef(null);
         }
         .prod-secondary-card:hover {
           transform: translateY(-6px) scale(1.025);
-          box-shadow: 0 20px 52px rgba(26,39,68,0.14), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+          box-shadow: 0 20px 52px rgba(26,39,68,0.14) !important;
         }
         .prod-benefit-card {
           transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease, background 0.35s ease;
@@ -170,42 +104,24 @@ const sectionRef = useRef(null);
           color: white !important;
           box-shadow: 0 10px 32px rgba(26,39,68,0.22) !important;
         }
-
-        /* ── MOBILE ── */
         @media (max-width: 767px) {
           .prod-cloud-left  { width: 110px !important; left: -12px !important; opacity: 0.6 !important; }
           .prod-cloud-right { display: none !important; }
-
-          /* Imagem principal menor */
           .prod-main-img    { height: clamp(180px, 52vw, 260px) !important; }
-
-          /* Grid secundário: 3 colunas compactas lado a lado */
           .prod-secondary-grid {
             grid-template-columns: repeat(3, 1fr) !important;
             gap: 8px !important;
             margin-bottom: 24px !important;
           }
-          /* Altura dos cards secundários menor */
-          .prod-secondary-img {
-            height: clamp(80px, 24vw, 120px) !important;
-          }
-
-          /* Benefits: grid 1 col em vez de flex wrap */
+          .prod-secondary-img { height: clamp(80px, 24vw, 120px) !important; }
           .prod-benefits-row {
             display: grid !important;
             grid-template-columns: 1fr !important;
             gap: 10px !important;
             margin-bottom: 28px !important;
           }
-          .prod-benefit-card {
-            max-width: 100% !important;
-            flex: none !important;
-            padding: 12px 14px !important;
-          }
-          /* Ícone menor */
-          .prod-benefit-icon {
-            width: 34px !important; height: 34px !important;
-          }
+          .prod-benefit-card { max-width: 100% !important; flex: none !important; padding: 12px 14px !important; }
+          .prod-benefit-icon { width: 34px !important; height: 34px !important; }
         }
       `}</style>
 
@@ -243,11 +159,18 @@ const sectionRef = useRef(null);
         {/* Imagem principal */}
         <div style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodScaleIn 0.9s cubic-bezier(.22,1,.36,1) 0.15s both' : 'none', marginBottom: 'clamp(20px, 4vw, 48px)', display: 'flex', justifyContent: 'center' }}>
           <div style={{ position: 'relative', borderRadius: '32px', padding: '10px', background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(168,216,240,0.5) 100%)', boxShadow: '0 0 0 1px rgba(255,255,255,0.9), 0 0 48px rgba(90,168,224,0.2)', width: '100%', maxWidth: '680px' }}>
-            <PhotoPlaceholder
-              label="Foto do produto final"
-              size="large"
-              className="prod-placeholder-shimmer prod-main-img"
-              style={{ width: '100%', height: 'clamp(260px, 38vw, 420px)', animation: visible ? 'gentlePulse 4s ease-in-out 1s infinite' : 'none' }}
+            <img
+              src="/products/main-product.png"
+              alt="Produto principal"
+              className="prod-main-img"
+              style={{
+                width: '100%',
+                height: 'clamp(260px, 38vw, 420px)',
+                objectFit: 'cover',
+                borderRadius: '22px',
+                display: 'block',
+                animation: visible ? 'gentlePulse 4s ease-in-out 1s infinite' : 'none',
+              }}
             />
             <div style={{ position: 'absolute', bottom: '24px', right: '24px', background: 'rgba(26,39,68,0.88)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '14px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 24px rgba(26,39,68,0.25)' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#5aa8e0', boxShadow: '0 0 8px rgba(90,168,224,0.8)' }} />
@@ -262,7 +185,7 @@ const sectionRef = useRef(null);
           </div>
         </div>
 
-        {/* Cards secundários — 3 colunas em mobile e desktop */}
+        {/* Cards secundários */}
         <div
           className="prod-secondary-grid"
           style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'clamp(12px, 2vw, 22px)', marginBottom: 'clamp(28px, 5vw, 56px)' }}
@@ -270,20 +193,27 @@ const sectionRef = useRef(null);
           {secondaryCards.map((card, i) => (
             <div
               key={card.label}
-              className="prod-secondary-card prod-placeholder-shimmer"
+              className="prod-secondary-card"
               style={{ opacity: visible ? 1 : 0, animation: visible ? `prodFadeUp 0.7s cubic-bezier(.22,1,.36,1) ${0.35 + i * 0.12}s both` : 'none' }}
             >
-              <PhotoPlaceholder
-                label={card.label}
-                icon={card.icon}
+              <img
+                src={card.src}
+                alt={card.label}
                 className="prod-secondary-img"
-                style={{ width: '100%', height: 'clamp(150px, 22vw, 210px)', boxShadow: '0 8px 28px rgba(26,39,68,0.09), inset 0 1px 0 rgba(255,255,255,0.7)' }}
+                style={{
+                  width: '100%',
+                  height: 'clamp(150px, 22vw, 210px)',
+                  objectFit: 'cover',
+                  borderRadius: '18px',
+                  display: 'block',
+                  boxShadow: '0 8px 28px rgba(26,39,68,0.09)',
+                }}
               />
             </div>
           ))}
         </div>
 
-        {/* Benefits — grid 1 col no mobile, flex no desktop */}
+        {/* Benefits */}
         <div
           className="prod-benefits-row"
           style={{ display: 'flex', gap: 'clamp(10px, 2vw, 20px)', justifyContent: 'center', marginBottom: 'clamp(32px, 6vw, 64px)', flexWrap: 'wrap', opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.7s cubic-bezier(.22,1,.36,1) 0.65s both' : 'none' }}
@@ -304,9 +234,10 @@ const sectionRef = useRef(null);
             </div>
           ))}
         </div>
+
       </div>
     </section>
   );
-}
+};
 
 export default ProductShowcaseSection;
