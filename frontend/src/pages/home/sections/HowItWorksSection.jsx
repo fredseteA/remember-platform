@@ -1,45 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-{/*import { useTranslation } from 'react-i18next';*/}
+import { useTranslation } from 'react-i18next';
 
-// ── STEPS ───────────────────────────────────────────────────────
-const STEPS = [
-  {
-    num: "01",
-    label: "Crie o memorial",
-    title: "Crie o memorial",
-    subtitle: "Como preencher?",
-    description: "Preencha as informações da homenagem: dados pessoais, uma frase especial, biografia, fotos e até um áudio. Tudo de forma simples e carinhosa.",
-    cta: "Começar agora",
-    ctaLink: "/create-memorial",
-    testId: "step-1",
-    image: "/step1.png"
-  },
-  {
-    num: "02",
-    label: "Veja o resultado",
-    title: "Veja o resultado",
-    subtitle: "Como fica o memorial?",
-    description: "O memorial é exibido pronto na tela para você ver como ficou. Ele fica salvo no seu perfil, pronto para ser publicado quando você decidir.",
-    cta: "Ver exemplo",
-    ctaLink: "/explore",
-    testId: "step-2",
-    image: "/step2.png"
-  },
-  {
-    num: "03",
-    label: "Escolha um plano",
-    title: "Escolha um plano",
-    subtitle: "Como publicar?",
-    description: "Se gostar do resultado, escolha um plano para publicar o memorial online e/ou receber a placa física com QR Code para o túmulo.",
-    cta: "Ver planos",
-    ctaLink: "/#plans",
-    testId: "step-3",
-    image: "/step3.png"
-  },
-];
 
-function PanelContent({ step, onScrollToPlans }) {
+
+function PanelContent({ step, onScrollToPlans, t }) {
   const [imgLoaded, setImgLoaded] = useState(false);
  
   const isScrollLink = step.ctaLink.startsWith('/#');
@@ -69,7 +34,7 @@ function PanelContent({ step, onScrollToPlans }) {
             {parseInt(step.num)}
           </div>
           <span style={{ fontSize: "0.58rem", letterSpacing: "0.22em", color: "#5aa8e0", fontWeight: 700, textTransform: "uppercase" }}>
-            Passo {step.num}
+            {t('howItWorks.step')} {step.num}
           </span>
         </div>
  
@@ -128,8 +93,14 @@ const HowItWorksSection = () => {
   const [transitioning, setTransitioning] = useState(false);
   const sectionRef                        = useRef(null);
   const timerRef                          = useRef(null);
-  {/*const { t } = useTranslation();*/}
+  const { t }                             = useTranslation();
   
+  const STEPS = t('howItWorks.steps', { returnObjects: true }).map((s, i) => ({
+    ...s,
+    ctaLink: ['/create-memorial', '/explore', '/#plans'][i],
+    testId: `step-${i + 1}`,
+    image: `/step${i + 1}.png`,
+  }));
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -367,14 +338,13 @@ const HowItWorksSection = () => {
         {/* Cabeçalho */}
         <div className="text-center mb-8 md:mb-12">
           <p style={{ textTransform: "uppercase", letterSpacing: "0.22em", fontSize: "0.68rem", fontWeight: 700, color: "#2a3d5e", marginBottom: "12px" }}>
-            Como Funciona
+            {t('howItWorks.eyebrow')}
           </p>
-          <h2 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.3rem, 5vw, 2.6rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.2, marginBottom: "12px" }}>
-            Em apenas 3 passos simples,
-            <br className="hidden md:block" /> crie uma homenagem eterna.
+          <h2 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.3rem, 5vw, 2.6rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.2, marginBottom: "12px", whiteSpace: 'pre-line' }}>
+            {t('howItWorks.title')}
           </h2>
           <p style={{ color: "#3a5070", fontSize: "clamp(0.85rem, 3vw, 1rem)", lineHeight: 1.65, maxWidth: "420px", margin: "0 auto" }}>
-            Do início ao memorial publicado, tudo pensado para ser simples, bonito e significativo.
+            {t('howItWorks.description')}
           </p>
         </div>
 
@@ -414,11 +384,11 @@ const HowItWorksSection = () => {
         <div className="howit-panel-wrap">
           {previous && transitioning && (
             <div className="howit-panel is-leaving" data-testid={previous.testId} aria-hidden="true">
-              <PanelContent step={previous} onScrollToPlans={scrollToPlans} />
+              <PanelContent step={previous} onScrollToPlans={scrollToPlans} t={t}/>
             </div>
           )}
           <div className={`howit-panel ${transitioning ? "is-entering" : "is-idle"}`} data-testid={current.testId}>
-            <PanelContent step={current} onScrollToPlans={scrollToPlans} />
+            <PanelContent step={current} onScrollToPlans={scrollToPlans} t={t} />
           </div>
         </div>
 
@@ -431,7 +401,7 @@ const HowItWorksSection = () => {
             color: "#2a3d5e", fontSize: "0.82rem", fontFamily: '"Georgia", serif',
             boxShadow: "0 3px 14px rgba(26,39,68,0.07)",
           }}>
-            ✨ Criar o memorial é gratuito · Você só paga se quiser publicar
+            {t('howItWorks.footer')}
           </p>
         </div>
       </div>

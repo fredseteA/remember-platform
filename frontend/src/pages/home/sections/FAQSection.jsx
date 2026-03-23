@@ -1,30 +1,9 @@
 import { useState } from 'react';
-
+import { useTranslation } from 'react-i18next';
 
 const FAQSection = () => {
-const faqs = [
-    {
-      q: "Como funciona o QR Code?",
-      a: "O QR Code é gravado em uma placa de aço inox durável. Quando escaneado com um smartphone, ele direciona automaticamente para o memorial digital da pessoa homenageada.",
-    },
-    {
-      q: "O memorial fica disponível para sempre?",
-      a: "Sim! Após a criação e pagamento, seu memorial fica hospedado permanentemente em nossa plataforma, acessível 24/7 de qualquer lugar do mundo.",
-    },
-    {
-      q: "Posso editar o memorial depois de criado?",
-      a: "Sim! Após adquirir um plano, você pode editar seu documento gratuitamente e a qualquer momento. Basta acessar a página 'Meus Memoriais' e clicar no botão de edição disponível no card do memorial.",
-    },
-    {
-      q: "Quanto tempo demora a entrega da placa?",
-      a: "A produção e envio levam de 7 a 15 dias úteis. Você receberá código de rastreamento assim que o pedido for despachado.",
-    },
-    {
-      q: "A placa resiste às condições do tempo?",
-      a: "Sim! Nossa placa é feita em aço inox de alta qualidade, resistente à chuva, sol e variações de temperatura, garantindo durabilidade por muitos anos.",
-    },
-  ];
-
+  const { t } = useTranslation();
+  const faqs = t('faq.items', { returnObjects: true });
   const [open, setOpen] = useState(null);
 
   return (
@@ -77,13 +56,13 @@ const faqs = [
         <div className="flex flex-col md:flex-row gap-10 md:gap-16 items-start">
           <div className="md:w-72 lg:w-80 flex-shrink-0">
             <p style={{ textTransform: "uppercase", letterSpacing: "0.22em", fontSize: "0.68rem", fontWeight: 700, color: "#2a3d5e", marginBottom: "14px" }}>
-              FAQ
+              {t('faq.eyebrow')}
             </p>
             <h2 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.8rem, 6vw, 3rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.18, marginBottom: "16px" }}>
-              Todas as respostas.
+              {t('faq.title')}
             </h2>
             <p style={{ color: "#3a5070", fontSize: "clamp(0.85rem, 3vw, 1rem)", lineHeight: 1.65, fontFamily: '"Georgia", serif' }}>
-              Tem uma dúvida? A resposta está aqui.
+              {t('faq.description')}
             </p>
           </div>
 

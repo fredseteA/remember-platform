@@ -1,7 +1,10 @@
+import { useTranslation } from 'react-i18next';
+
 const TrustBadgesSection = () => {
+  const { t } = useTranslation();
   return (
     <section
-    className="trust-section relative py-8 md:py-10 overflow-hidden"
+    className="trust-section relative py-3 md:py-4 overflow-hidden"
     style={{
       background: "linear-gradient(180deg, #8ecce8 0%, #7bbde8 100%)",
       marginTop: 0,
@@ -10,7 +13,11 @@ const TrustBadgesSection = () => {
     >
       <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
         <div className="trust-badges flex flex-wrap justify-center items-center gap-5 sm:gap-8 md:gap-12">
-          {[{ label: "Site Seguro" }, { label: "Compra pelo Mercado Pago" }, { label: "Entrega Rastreável" }].map(({ label }) => (
+          {[
+            { label: t('trust.secure') },
+            { label: t('trust.payment') },
+            { label: t('trust.delivery') },
+          ].map(({ label }) => (
             <div
               key={label}
               style={{

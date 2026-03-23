@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const ProductShowcaseSection = () => {
+  const { t } = useTranslation();
   const sectionRef = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -16,25 +18,25 @@ const ProductShowcaseSection = () => {
   const benefits = [
     {
       icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>),
-      title: 'Produzido com cuidado e respeito',
-      desc: 'Cada peça é feita com atenção ao detalhe e ao que ela representa.',
+      title: t('showcase.benefit1Title'),
+      desc: t('showcase.benefit1Desc'),
     },
     {
       icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>),
-      title: 'Material de alta qualidade',
-      desc: 'Aço inox resistente ao tempo, preservando a memória por décadas.',
+      title: t('showcase.benefit2Title'),
+      desc: t('showcase.benefit2Desc'),
     },
     {
       icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>),
-      title: 'Uma lembrança eterna para a família',
-      desc: 'Um ponto de encontro físico para homenagear e lembrar quem partiu.',
+      title: t('showcase.benefit3Title'),
+      desc: t('showcase.benefit3Desc'),
     },
   ];
 
   const secondaryCards = [
-    { label: 'Detalhe do acabamento',       src: '/products/detail-finish.png'    },
-    { label: 'Como ele chega embalado',     src: '/products/packaging-closed.png' },
-    { label: 'Exemplo de homenagem pronta', src: '/products/packaging-open.png'   },
+    { label: t('showcase.secondaryCard1'), src: '/products/detail-finish.png'    },
+    { label: t('showcase.secondaryCard2'), src: '/products/packaging-closed.png' },
+    { label: t('showcase.secondaryCard3'), src: '/products/packaging-open.png'   },
   ];
 
   return (
@@ -144,15 +146,13 @@ const ProductShowcaseSection = () => {
         {/* Cabeçalho */}
         <div className="text-center mb-10 md:mb-20" style={{ opacity: visible ? 1 : 0, animation: visible ? 'prodFadeIn 0.75s cubic-bezier(.22,1,.36,1) both' : 'none' }}>
           <p style={{ textTransform: 'uppercase', letterSpacing: '0.24em', fontSize: '0.66rem', fontWeight: 700, color: '#2a3d5e', marginBottom: '14px' }}>
-            Produto físico
+            {t('showcase.eyebrow')}
           </p>
-          <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.5rem, 5.5vw, 2.9rem)', fontWeight: 700, color: '#1a2744', lineHeight: 1.2, marginBottom: '16px' }}>
-            Veja como sua homenagem
-            <br className="hidden md:block" /> ganha vida
+          <h2 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.5rem, 5.5vw, 2.9rem)', fontWeight: 700, color: '#1a2744', lineHeight: 1.2, marginBottom: '16px', whiteSpace: 'pre-line'   }}>
+            {t('showcase.title')}
           </h2>
           <p style={{ color: '#3a5070', fontSize: 'clamp(0.88rem, 3.5vw, 1.05rem)', lineHeight: 1.72, maxWidth: '520px', margin: '0 auto', fontFamily: '"Georgia", serif' }}>
-            Após contar a história do seu ente querido, criamos uma homenagem
-            física única — feita com cuidado para eternizar memórias.
+            {t('showcase.description')}
           </p>
         </div>
 

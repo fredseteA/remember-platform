@@ -234,7 +234,7 @@ const CreateMemorial = () => {
         <div style={{ maxWidth:640, margin:'0 auto', padding:'0 20px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
             <div style={{ height:1, width:28, background:'rgba(42,61,94,0.3)', flexShrink:0 }}/>
-            <span style={{ textTransform:'uppercase', letterSpacing:'0.22em', fontSize:'0.62rem', fontWeight:700, color:'#2a3d5e' }}>Uma homenagem eterna</span>
+            <span style={{ textTransform:'uppercase', letterSpacing:'0.22em', fontSize:'0.62rem', fontWeight:700, color:'#2a3d5e' }}>{t('memorial.heroEyebrow')}</span>
           </div>
           <h1 style={{ fontFamily:'"Georgia",serif', fontSize:'clamp(1.7rem,7vw,3.8rem)', fontWeight:700, color:'#1a2744', lineHeight:1.1, marginBottom:'clamp(20px,4vw,36px)' }}>
             {t('memorial.createTitle')}
@@ -247,7 +247,7 @@ const CreateMemorial = () => {
                     {num < step ? '✓' : num}
                   </div>
                   <span style={{ fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:num===step?'#1a2744':num<step?'#5aa8e0':'rgba(58,80,112,0.4)', whiteSpace:'nowrap' }}>
-                    {num===1?'Dados':num===2?'Conteúdo':'Responsável'}
+                    {num===1?t('memorial.step1Label'):num===2?t('memorial.step2Label'):t('memorial.step3Label')}
                   </span>
                 </div>
                 {num < 3 && <div style={{ height:1.5, width:'clamp(40px,8vw,80px)', marginBottom:22, background:num<step?'#5aa8e0':'rgba(26,39,68,0.1)', transition:'background 0.5s ease', flexShrink:0 }}/>}
@@ -265,7 +265,7 @@ const CreateMemorial = () => {
             <div style={{ padding:'clamp(20px,4vw,28px) clamp(20px,5vw,36px) clamp(16px,3vw,24px)', borderBottom:'1px solid rgba(26,39,68,0.07)', display:'flex', alignItems:'center', gap:14 }}>
               <div style={{ width:4, height:36, borderRadius:99, background:'linear-gradient(180deg,#5aa8e0 0%,#2a3d5e 100%)', flexShrink:0 }}/>
               <div>
-                <span style={{ display:'block', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.22em', textTransform:'uppercase', color:'#5aa8e0', marginBottom:3 }}>Etapa {step} de 3</span>
+                <span style={{ display:'block', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.22em', textTransform:'uppercase', color:'#5aa8e0', marginBottom:3 }}>{t('memorial.stepLabel', { step })}</span>
                 <h2 style={{ fontFamily:'"Georgia",serif', fontSize:'clamp(1rem,3vw,1.25rem)', fontWeight:700, color:'#1a2744', lineHeight:1.2 }}>
                   {step===1&&t('memorial.step1')}{step===2&&t('memorial.step2')}{step===3&&t('memorial.step3')}
                 </h2>
@@ -283,15 +283,15 @@ const CreateMemorial = () => {
                   </div>
                   <div>
                     <label className="cm-label" htmlFor="relationship">{t('memorial.relationship')} *</label>
-                    <input id="relationship" className="cm-input" placeholder="Ex: Pai, Mãe, Avô, Amigo..." value={personData.relationship} onChange={e => setPersonData({...personData, relationship:e.target.value})} data-testid="input-relationship"/>
+                    <input id="relationship" className="cm-input" placeholder={t('memorial.relationshipPlaceholder')} value={personData.relationship} onChange={e => setPersonData({...personData, relationship:e.target.value})} data-testid="input-relationship"/>
                   </div>
                   <div className="cm-grid-2">
                     <div>
-                      <label className="cm-label" htmlFor="birth_date">Data de Nascimento</label>
+                      <label className="cm-label" htmlFor="birth_date">{t('memorial.birthDate')}</label>
                       <input id="birth_date" type="date" className="cm-input" value={personData.birth_date} onChange={e => setPersonData({...personData, birth_date:e.target.value})} data-testid="input-birth-date"/>
                     </div>
                     <div>
-                      <label className="cm-label" htmlFor="death_date">Data de Falecimento</label>
+                      <label className="cm-label" htmlFor="death_date">{t('memorial.deathDate')}</label>
                       <input id="death_date" type="date" className="cm-input" value={personData.death_date} onChange={e => setPersonData({...personData, death_date:e.target.value})} data-testid="input-death-date"/>
                     </div>
                   </div>
@@ -323,15 +323,15 @@ const CreateMemorial = () => {
                         <div className="cm-photo-ring"><img src={personData.photo_url} alt="Foto do memorial"/></div>
                         <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:8, flex:1 }}>
                           <p style={{ fontFamily:'"Georgia",serif', fontSize:'0.75rem', color:'#3a5070', margin:'0 0 4px', lineHeight:1.4 }}>
-                            <span style={{ color:'#3a9e6e', fontWeight:700 }}>✓</span> Foto recortada e pronta
+                            <span style={{ color:'#3a9e6e', fontWeight:700 }}>✓</span><span style={{ color:'#3a9e6e', fontWeight:700 }}>✓</span> {t('memorial.photoReady')}
                           </p>
                           <label htmlFor="photo" className="cm-photo-tag">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Trocar foto
+                            {t('memorial.photoChange')}
                           </label>
                           <button className="cm-photo-tag cm-photo-tag-danger" onClick={() => setPersonData(prev => ({...prev, photo_url:null}))}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                            Remover
+                            {t('memorial.photoRemove')}
                           </button>
                         </div>
                       </div>
@@ -340,15 +340,15 @@ const CreateMemorial = () => {
                         {loading ? (
                           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
                             <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid rgba(90,168,224,0.2)', borderTop:'3px solid #5aa8e0', animation:'spin 0.8s linear infinite' }}/>
-                            <span style={{ color:'#3a5070', fontSize:'0.85rem', fontFamily:'"Georgia",serif' }}>Processando...</span>
+                            <span style={{ color:'#3a5070', fontSize:'0.85rem', fontFamily:'"Georgia",serif' }}>{t('memorial.processing')}</span>
                           </div>
                         ) : (
                           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
                             <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(90,168,224,0.1)', border:'1.5px dashed rgba(90,168,224,0.4)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                               <Upload size={20} style={{ color:'#5aa8e0' }}/>
                             </div>
-                            <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif' }}>Toque para enviar uma foto</span>
-                            <span style={{ color:'rgba(58,80,112,0.45)', fontSize:'0.72rem', fontFamily:'"Georgia",serif' }}>Você poderá recortar após selecionar</span>
+                            <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif' }}>{t('memorial.photoTap')}</span>
+                            <span style={{ color:'rgba(58,80,112,0.45)', fontSize:'0.72rem', fontFamily:'"Georgia",serif' }}>{t('memorial.photoCrop')}</span>
                             <span style={{ color:'rgba(58,80,112,0.35)', fontSize:'0.68rem' }}>JPG · PNG · WEBP</span>
                           </div>
                         )}
@@ -367,21 +367,21 @@ const CreateMemorial = () => {
                 <div style={{ display:'flex', flexDirection:'column', gap:18 }} data-testid="step-2">
                   <div>
                     <label className="cm-label" htmlFor="main_phrase">{t('memorial.mainPhrase')} *</label>
-                    <input id="main_phrase" className="cm-input" placeholder="Uma frase especial para homenagear..." value={content.main_phrase} onChange={e => setContent({...content, main_phrase:e.target.value})} data-testid="input-main-phrase"/>
+                    <input id="main_phrase" className="cm-input" placeholder={t('memorial.mainPhrasePlaceholder')} value={content.main_phrase} onChange={e => setContent({...content, main_phrase:e.target.value})} data-testid="input-main-phrase"/>
                   </div>
                   <div>
                     <label className="cm-label" htmlFor="biography">{t('memorial.biography')} *</label>
-                    <textarea id="biography" className="cm-textarea" rows={6} placeholder="Conte a história de vida, momentos especiais, características marcantes..." value={content.biography} onChange={e => setContent({...content, biography:e.target.value})} data-testid="input-biography"/>
+                    <textarea id="biography" className="cm-textarea" rows={6} placeholder={t('memorial.biographyPlaceholder')} value={content.biography} onChange={e => setContent({...content, biography:e.target.value})} data-testid="input-biography"/>
                   </div>
                   <div>
-                    <label className="cm-label">{t('memorial.gallery')} (até 10 fotos)</label>
+                    <label className="cm-label">{t('memorial.gallery')} ({t('memorial.galleryCount' )})</label>
                     <input type="file" id="gallery" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" data-testid="input-gallery"/>
                     <label htmlFor="gallery" className="cm-upload-zone" style={{ padding:'22px', textAlign:'center' }}>
                       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
                         <div style={{ width:44, height:44, borderRadius:12, background:'rgba(90,168,224,0.12)', border:'1px solid rgba(90,168,224,0.25)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                           <Upload size={18} style={{ color:'#5aa8e0' }}/>
                         </div>
-                        <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif' }}>Toque para adicionar fotos ({content.gallery_urls.length}/10)</span>
+                        <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif' }}>{t('memorial.galleryTap', { count: content.gallery_urls.length })}</span>
                       </div>
                     </label>
                     {content.gallery_urls.length > 0 && (
@@ -393,7 +393,7 @@ const CreateMemorial = () => {
                     )}
                   </div>
                   <div>
-                    <label className="cm-label">{t('memorial.audio')} (opcional)</label>
+                    <label className="cm-label">{t('memorial.audio')} ({t('memorial.audioDetail')})</label>
                     <input type="file" id="audio" accept="audio/*" onChange={handleAudioUpload} className="hidden" data-testid="input-audio"/>
                     <label htmlFor="audio" className="cm-upload-zone" style={{ padding:'22px', textAlign:'center' }}>
                       {content.audio_url ? (
@@ -403,7 +403,7 @@ const CreateMemorial = () => {
                           <div style={{ width:44, height:44, borderRadius:12, background:'rgba(90,168,224,0.12)', border:'1px solid rgba(90,168,224,0.25)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                             <Upload size={18} style={{ color:'#5aa8e0' }}/>
                           </div>
-                          <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif' }}>Toque para enviar um áudio</span>
+                          <span style={{ color:'#3a5070', fontSize:'0.9rem', fontFamily:'"Georgia",serif' }}>{t('memorial.audioTap')}</span>
                         </div>
                       )}
                     </label>
@@ -417,7 +417,7 @@ const CreateMemorial = () => {
                   <div style={{ padding:'14px 16px', borderRadius:14, background:'rgba(90,168,224,0.08)', border:'1px solid rgba(90,168,224,0.2)', display:'flex', alignItems:'flex-start', gap:10 }}>
                     <div style={{ width:6, height:6, borderRadius:'50%', background:'#5aa8e0', flexShrink:0, marginTop:7 }}/>
                     <p style={{ color:'#3a5070', fontSize:'0.85rem', fontFamily:'"Georgia",serif', lineHeight:1.6, margin:0 }}>
-                      Suas informações são tratadas com total privacidade e usadas apenas para contato sobre o memorial.
+                      {t('memorial.privacyNote')}
                     </p>
                   </div>
                   <div>
@@ -452,7 +452,7 @@ const CreateMemorial = () => {
                     {loading ? (
                       <>
                         <div style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', borderTop:'2px solid white', animation:'spin 0.7s linear infinite' }}/>
-                        Salvando...
+                        {t('memorial.saving')}
                       </>
                     ) : t('memorial.finish')}
                   </button>
