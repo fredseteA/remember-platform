@@ -165,7 +165,6 @@ const MyMemorials = () => {
 
   // ─── Excluir memorial ───────────────────────────────────────────────────────
   const handleDelete = async () => {
-    const {t} = useTranslation;
     if (!deleteModal) return;
     setDeleting(true);
     try {

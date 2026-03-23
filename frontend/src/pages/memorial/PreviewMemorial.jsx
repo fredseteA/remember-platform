@@ -38,6 +38,7 @@ function PreviewSkeleton() {
 }
 
 function PreviewNotFound() {
+  const {t} = useTranslation();
   return (
     <div
       data-testid="memorial-not-found"

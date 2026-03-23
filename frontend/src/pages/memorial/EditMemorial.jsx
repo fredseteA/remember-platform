@@ -64,7 +64,7 @@ const EditMemorial = () => {
       }
     };
     fetch();
-  }, [id, token]);
+  }, [id, token, navigate]);
 
   const uploadFile = async (file, path) => {
     const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);

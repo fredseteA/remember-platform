@@ -5,9 +5,11 @@ import { Heart, ArrowLeft } from 'lucide-react';
 import MemorialLayout from '../../components/memorial/MemorialLayout';
 import { API } from '@/config';
 import { useTranslation } from 'react-i18next';
+import { t } from 'i18next';
 
 // ── Skeleton shimmer ─────────────────────────────────────────────────────────
 function MemorialSkeleton() {
+  const {t} = useTranslation();
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-start overflow-hidden"
