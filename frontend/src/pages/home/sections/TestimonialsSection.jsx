@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-/*import { useTranslation } from 'react-i18next';*/
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { Star, MessageSquarePlus, User} from 'lucide-react';
 import ReviewForm from '@/components/memorial/ReviewForm.jsx';
@@ -33,7 +33,7 @@ const defaultReviews = [
 ];
 
 // ── ReviewCard ──────────────────────────────────────────────────────────────
-function ReviewCard({ review, featured = false }) {
+function ReviewCard({ review, featured = false, t }) {
   return (
     <div style={{
       borderRadius: "22px",
@@ -98,7 +98,7 @@ function ReviewCard({ review, featured = false }) {
             {review.user_name}
           </p>
           <p style={{ fontSize: "0.68rem", color: "#5aa8e0", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600 }}>
-            Cliente
+            {t ? t('testimonials.client') : 'Cliente'}
           </p>
         </div>
       </div>
@@ -108,7 +108,7 @@ function ReviewCard({ review, featured = false }) {
 
 const TestimonialsSection = () => {
   const { user } = useAuth();                                    
-  {/*const { t } = useTranslation();*/}
+  const { t } = useTranslation();
   const [active, setActive] = useState(0);
   const [animDir, setAnimDir] = useState('next');
   const [animating, setAnimating] = useState(false);
@@ -258,11 +258,11 @@ const TestimonialsSection = () => {
 
         <div className="text-center mb-10 md:mb-14">
           <p style={{ textTransform: "uppercase", letterSpacing: "0.22em", fontSize: "0.68rem", fontWeight: 700, color: "rgba(42,61,94,0.55)", marginBottom: "12px" }}>
-            Avaliações
+            {t('testimonials.eyebrow')}
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <h2 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.3rem, 5vw, 2.6rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.2 }}>
-              O que nossos clientes dizem
+              {t('testimonials.title')}
             </h2>
             {user && (
               <button
@@ -278,7 +278,7 @@ const TestimonialsSection = () => {
                 }}
               >
                 <MessageSquarePlus size={14} />
-                {showReviewForm ? 'Fechar' : 'Avaliar'}
+                {showReviewForm ? t('testimonials.close') : t('testimonials.review')}
               </button>
             )}
           </div>
@@ -298,7 +298,7 @@ const TestimonialsSection = () => {
           <>
             <div className="hidden md:flex items-center justify-center gap-6 mb-10" style={{ minHeight: 280 }}>
               <div style={{ flex: "0 0 300px", maxWidth: 300, opacity: 0.38, transform: "scale(0.9)", pointerEvents: "none", userSelect: "none" }}>
-                <ReviewCard review={list[(active - 1 + list.length) % list.length]} featured={false} />
+                <ReviewCard review={list[(active - 1 + list.length) % list.length]} featured={false} t={t} />
               </div>
               <div
                 key={active}
@@ -308,10 +308,10 @@ const TestimonialsSection = () => {
                 }
                 style={{ flex: "0 0 400px", maxWidth: 400, zIndex: 2 }}
               >
-                <ReviewCard review={list[active]} featured />
+                <ReviewCard review={list[active]} featured t={t}/>
               </div>
               <div style={{ flex: "0 0 300px", maxWidth: 300, opacity: 0.38, transform: "scale(0.9)", pointerEvents: "none", userSelect: "none" }}>
-                <ReviewCard review={list[(active + 1) % list.length]} featured={false} />
+                <ReviewCard review={list[(active + 1) % list.length]} featured={false} t={t}/>
               </div>
             </div>
 
@@ -323,12 +323,12 @@ const TestimonialsSection = () => {
                   : (animDir === 'next' ? 'testi-enter-next' : 'testi-enter-prev')
                 }
               >
-                <ReviewCard review={list[active]} featured />
+                <ReviewCard review={list[active]} featured t={t}/>
               </div>
             </div>
 
             <div className="flex items-center justify-center gap-4">
-              <button className="testi-arrow" onClick={prev} aria-label="Anterior">
+              <button className="testi-arrow" onClick={prev} aria-label={t('testimonials.prev')}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a2744" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6"/>
                 </svg>
@@ -336,10 +336,10 @@ const TestimonialsSection = () => {
               <div className="flex items-center gap-2">
                 {list.map((_, i) => (
                   <button key={i} className={`testi-dot${active === i ? ' testi-dot-active' : ''}`}
-                    onClick={() => goTo(i, i > active ? 'next' : 'prev')} aria-label={`Avaliação ${i + 1}`} />
+                    onClick={() => goTo(i, i > active ? 'next' : 'prev')} aria-label={t('testimonials.review_n', { n: i + 1 })} />
                 ))}
               </div>
-              <button className="testi-arrow" onClick={next} aria-label="Próximo">
+              <button className="testi-arrow" onClick={next} aria-label={t('testimonials.next')}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a2744" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>

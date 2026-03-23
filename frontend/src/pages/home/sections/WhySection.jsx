@@ -1,7 +1,9 @@
 import { Link} from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const WhySection = () => {
 
+  const { t } = useTranslation();
   return (
     <section
         className="why-section relative py-16 md:py-24 overflow-hidden"
@@ -23,16 +25,18 @@ const WhySection = () => {
         </div>
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center" style={{ animation: "revealWhy 0.8s cubic-bezier(.22,1,.36,1) both" }}>
-          <p style={{ textTransform: "uppercase", letterSpacing: "0.22em", fontSize: "0.68rem", fontWeight: 700, color: "#2a3d5e", marginBottom: "16px" }}>Por que nos escolher</p>
-          <h2 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.6rem, 6.5vw, 3.2rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.18, marginBottom: "20px" }}>
-            Por que a<br className="hidden md:block" /> Remember QRCode.
+          <p style={{ textTransform: "uppercase", letterSpacing: "0.22em", fontSize: "0.68rem", fontWeight: 700, color: "#2a3d5e", marginBottom: "16px" }}>
+            {t('why.eyebrow')}
+          </p>
+          <h2 style={{ fontFamily: '"Georgia", serif', fontSize: "clamp(1.6rem, 6.5vw, 3.2rem)", fontWeight: 700, color: "#1a2744", lineHeight: 1.18, marginBottom: "20px", whiteSpace: "pre-line" }}>
+            {t('why.title')}
           </h2>
           <p style={{ color: "#3a5070", fontSize: "clamp(0.88rem, 3.5vw, 1.1rem)", lineHeight: 1.72, maxWidth: "520px", margin: "0 auto 36px", fontFamily: '"Georgia", serif' }}>
-            Escolha quem entende a importância de preservar memórias. Oferecemos uma tecnologia única de QR Codes personalizados, que conecta o presente ao passado de forma significativa.
+            {t('why.description')}
           </p>
           <Link to="./about">
             <button className="why-btn" style={{ borderRadius: "999px", padding: "13px 34px", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: "1.5px solid rgba(26,39,68,0.2)", color: "#1a2744", fontFamily: '"Georgia", serif', fontSize: "clamp(0.82rem, 3.5vw, 0.95rem)", fontWeight: 700, letterSpacing: "0.05em", cursor: "pointer", boxShadow: "0 4px 18px rgba(26,39,68,0.08)" }}>
-              Sobre a Remember QRCode
+              {t('why.cta')}
             </button>
           </Link>
         </div>

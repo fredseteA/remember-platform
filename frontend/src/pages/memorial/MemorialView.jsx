@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Heart, ArrowLeft } from 'lucide-react';
 import MemorialLayout from '../../components/memorial/MemorialLayout';
 import { API } from '@/config';
+import { useTranslation } from 'react-i18next';
 
 // ── Skeleton shimmer ─────────────────────────────────────────────────────────
 function MemorialSkeleton() {
@@ -87,7 +88,7 @@ function MemorialSkeleton() {
         color: 'rgba(26,39,68,0.55)', letterSpacing: '0.08em',
         animation: 'skFadeIn 0.8s 0.3s both',
       }}>
-        Carregando memorial…
+        {t('memorial.loading')}
       </p>
     </div>
   );
@@ -142,13 +143,13 @@ function MemorialNotFound() {
           fontFamily: '"Georgia", serif', fontSize: 'clamp(1.2rem, 4vw, 1.7rem)',
           fontWeight: 700, color: '#1a2744', lineHeight: 1.25, marginBottom: 12,
         }}>
-          Memorial não encontrado
+          {t('memorial.notFound')}
         </h2>
         <p style={{
           fontFamily: '"Georgia", serif', fontSize: 'clamp(0.85rem, 3vw, 0.95rem)',
           color: '#3a5070', lineHeight: 1.68, marginBottom: 32,
         }}>
-          Este memorial pode ter sido removido ou o link está incorreto. Verifique o endereço e tente novamente.
+          {t('memorial.notFoundDesc')}
         </p>
         <Link to="/explore">
           <button style={{
@@ -160,7 +161,7 @@ function MemorialNotFound() {
             transition: 'all 0.25s ease', boxShadow: '0 4px 16px rgba(26,39,68,0.2)',
           }}>
             <ArrowLeft size={15} />
-            Explorar memoriais
+            {t('memorial.exploreBtn')}
           </button>
         </Link>
       </div>
@@ -174,14 +175,13 @@ const MemorialView = () => {
   const navigate = useNavigate();
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
-  // Detecta se veio do histórico interno do site (para mostrar botão de voltar)
   const canGoBack = window.history.length > 1;
 
   useEffect(() => {
   const fetchMemorial = async () => {
     try {
-      // Tenta buscar por slug primeiro, fallback para UUID
       let response;
       try {
         response = await axios.get(`${API}/memorials/by-slug/${id}`);
@@ -242,7 +242,7 @@ const MemorialView = () => {
           }}
         >
           <ArrowLeft size={15} style={{ flexShrink: 0 }} />
-          Voltar
+          {t('memorial.back')}
         </button>
       )}
 

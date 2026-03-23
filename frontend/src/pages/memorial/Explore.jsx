@@ -4,20 +4,18 @@ import axios from 'axios';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Heart } from 'lucide-react';
 import { API } from '@/config';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 12;
 
-// ── Card extraído como componente memoizado para evitar re-renders ────────────
 const MemorialCard = ({ memorial, index }) => (
   <Link key={memorial.id} to={`/memorial/${memorial.slug || memorial.id}`} data-testid={`memorial-card-${memorial.id}`}>
     <div
       className="exp-card group relative rounded-3xl overflow-hidden h-full flex flex-col"
       style={{
         background: 'rgba(255,255,255,0.58)',
-        // backdrop-filter removido dos cards — mantido só no hero para performance
         border: '1px solid rgba(255,255,255,0.82)',
         boxShadow: '0 6px 28px rgba(26,39,68,0.07)',
-        // delay máximo de 0.3s independente do index
         animation: `revealCard 0.5s cubic-bezier(.22,1,.36,1) ${Math.min(index * 0.06, 0.3)}s both`,
       }}
     >
@@ -28,8 +26,8 @@ const MemorialCard = ({ memorial, index }) => (
             src={memorial.person_data.photo_url}
             alt={memorial.person_data.full_name}
             className="exp-card-img w-full h-full object-cover"
-            loading="lazy"         // ← lazy load
-            decoding="async"       // ← não bloqueia o thread principal
+            loading="lazy"         
+            decoding="async"       
           />
         ) : (
           <div
@@ -140,6 +138,7 @@ const Explore = () => {
   const [visible, setVisible]           = useState(PAGE_SIZE);
   const [loading, setLoading]           = useState(true);
   const [loadingMore, setLoadingMore]   = useState(false);
+  const { t }                           = useTranslation();
 
   useEffect(() => {
     const fetchMemorials = async () => {
@@ -157,7 +156,6 @@ const Explore = () => {
 
   const handleLoadMore = useCallback(() => {
     setLoadingMore(true);
-    // setTimeout evita travar a UI ao renderizar mais cards de uma vez
     setTimeout(() => {
       setVisible(v => v + PAGE_SIZE);
       setLoadingMore(false);
@@ -261,7 +259,7 @@ const Explore = () => {
               fontSize: '0.65rem', fontWeight: 700, color: '#2a3d5e',
               fontFamily: '"Georgia", serif',
             }}>
-              Histórias que vivem
+              {t('explore.eyebrow')} 
             </span>
           </div>
 
@@ -270,11 +268,9 @@ const Explore = () => {
             fontSize: 'clamp(2.4rem, 7vw, 5rem)',
             fontWeight: 700, color: '#1a2744',
             lineHeight: 1.08, marginBottom: '20px',
+            whiteSpace: 'pre-line',
           }}>
-            Explorar<br />
-            <span style={{ fontWeight: 400, fontStyle: 'italic', color: '#3a6080' }}>
-              Memoriais
-            </span>
+            {t('explore.title')}   
           </h1>
 
           <p style={{
@@ -283,7 +279,7 @@ const Explore = () => {
             lineHeight: 1.72, maxWidth: '480px',
             fontFamily: '"Georgia", serif',
           }}>
-            Homenagens eternas que preservam memórias e histórias de vidas especiais.
+            {t('explore.titleItalic')}
           </p>
         </div>
       </section>
@@ -405,7 +401,7 @@ const Explore = () => {
                       opacity: loadingMore ? 0.6 : 1,
                     }}
                   >
-                    {loadingMore ? 'Carregando...' : `Ver mais (${allMemorials.length - visible} restantes)`}
+                    {loadingMore ? t('explore.loading') : t('explore.loadMore', { count: allMemorials.length - visible })}
                   </button>
                 </div>
               )}

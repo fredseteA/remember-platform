@@ -7,11 +7,13 @@ import { Check, Loader2, Tag, X, CheckCircle2 } from 'lucide-react';
 import AddressCheckStep from '../../components/address/AddressCheckStep';
 import SecurityBadge from '../../components/shared/SecurityBadge';
 import { API } from '@/config';
+import { useTranslation } from 'react-i18next';
 
 const SelectPlan = () => {
   const { id } = useParams();
   const { user, getToken } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [memorial, setMemorial] = useState(null);
@@ -26,6 +28,11 @@ const SelectPlan = () => {
   const [deliveryAddress, setDeliveryAddress] = useState(null);
   const [showAddressStep, setShowAddressStep] = useState(false);
   const [pendingPlan, setPendingPlan]         = useState(null);
+
+  const plans = t('selectPlan.plans', { returnObjects: true }).map((p, i) => ({
+    ...p,
+    highlighted: i === 1,
+  }));
 
   useEffect(() => {
     const fetchMemorial = async () => {
@@ -87,36 +94,6 @@ const SelectPlan = () => {
     setDiscountInfo(null);
   };
 
-  const plans = [
-    {
-      id: 'digital',
-      name: 'Plano Digital',
-      price: 29.90,
-      features: [
-        'Memorial digital completo',
-        'Galeria de até 10 fotos',
-        'Áudio de homenagem',
-        'QR Code digital',
-        'Publicação instantânea',
-        'Hospedagem eterna'
-      ]
-    },
-    {
-      id: 'plaque',
-      name: 'Plano Placa QR Code',
-      price: 149.90,
-      features: [
-        'Tudo do Plano Digital',
-        'Placa física em aço inox',
-        'QR Code gravado permanente',
-        'Envio para todo Brasil',
-        'Suporte prioritário',
-        'Rastreamento de entrega'
-      ],
-      highlighted: true
-    }
-  ];
-
   const getFinalPrice = (originalPrice) => {
     if (!codeValid || !discountInfo) return originalPrice;
     const disc = originalPrice * (discountInfo.discount_percentage / 100);
@@ -171,11 +148,7 @@ const SelectPlan = () => {
 
   if (showAddressStep && pendingPlan) {
     return (
-      <div style={{
-        background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 35%, #eef8fb 70%, #eef8fb 100%)',
-        minHeight: '100vh', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', padding: '100px 20px 60px',
-      }}>
+      <div style={{ background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 35%, #eef8fb 70%, #eef8fb 100%)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '100px 20px 60px' }}>
         <div style={{ width: '100%', maxWidth: 560 }}>
           <AddressCheckStep
             authToken={getToken}
@@ -196,12 +169,7 @@ const SelectPlan = () => {
     <div
       className="overflow-x-hidden"
       data-testid="select-plan-page"
-      style={{
-        background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 35%, #eef8fb 70%, #eef8fb 100%)',
-        fontFamily: '"Georgia", serif',
-        minHeight: '100vh',
-        position: 'relative',
-      }}
+      style={{ background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 35%, #eef8fb 70%, #eef8fb 100%)', fontFamily: '"Georgia", serif', minHeight: '100vh', position: 'relative' }}
     >
       <style>{`
         @keyframes floatSP1 { 0%,100%{transform:translateY(0) translateX(0);} 45%{transform:translateY(-14px) translateX(8px);} }
@@ -228,35 +196,29 @@ const SelectPlan = () => {
         .code-btn:disabled { opacity:0.5; cursor:not-allowed; }
       `}</style>
 
-      <div className="absolute top-[-10px] left-[-50px] w-44 md:w-72 opacity-55 pointer-events-none select-none"
-        style={{ animation: 'floatSP1 11s ease-in-out infinite' }}>
+      <div className="absolute top-[-10px] left-[-50px] w-44 md:w-72 opacity-55 pointer-events-none select-none" style={{ animation: 'floatSP1 11s ease-in-out infinite' }}>
         <img src="/clouds/cloud1.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
-      <div className="absolute top-[4%] right-[-40px] w-36 md:w-60 opacity-40 pointer-events-none select-none hidden md:block"
-        style={{ animation: 'floatSP2 8s ease-in-out infinite' }}>
+      <div className="absolute top-[4%] right-[-40px] w-36 md:w-60 opacity-40 pointer-events-none select-none hidden md:block" style={{ animation: 'floatSP2 8s ease-in-out infinite' }}>
         <img src="/clouds/cloud2.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
-      <div className="relative z-10" style={{
-        maxWidth: 960, margin: '0 auto', padding: '0 20px',
-        paddingTop: 'clamp(100px, 16vw, 160px)',
-        paddingBottom: 'clamp(60px, 10vw, 120px)',
-      }}>
+      <div className="relative z-10" style={{ maxWidth: 960, margin: '0 auto', padding: '0 20px', paddingTop: 'clamp(100px, 16vw, 160px)', paddingBottom: 'clamp(60px, 10vw, 120px)' }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 'clamp(32px, 5vw, 52px)', animation: 'revealSP 0.75s cubic-bezier(.22,1,.36,1) both' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 14 }}>
             <div style={{ height: 1, width: 28, background: 'rgba(42,61,94,0.3)' }} />
             <span style={{ textTransform: 'uppercase', letterSpacing: '0.22em', fontSize: '0.62rem', fontWeight: 700, color: '#2a3d5e' }}>
-              Publicar memorial
+              {t('selectPlan.eyebrow')}
             </span>
             <div style={{ height: 1, width: 28, background: 'rgba(42,61,94,0.3)' }} />
           </div>
           <h1 data-testid="page-title" style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(1.9rem, 6vw, 3.4rem)', fontWeight: 700, color: '#1a2744', lineHeight: 1.1, marginBottom: 16 }}>
-            Escolha seu Plano
+            {t('selectPlan.title')}
           </h1>
-          <p style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.9rem, 2.5vw, 1.05rem)', color: '#3a5070', lineHeight: 1.7, maxWidth: 480, margin: '0 auto 0' }}>
-            Selecione o plano ideal para eternizar as memórias
+          <p style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.9rem, 2.5vw, 1.05rem)', color: '#3a5070', lineHeight: 1.7, maxWidth: 480, margin: '0 auto' }}>
+            {t('selectPlan.description')}
           </p>
         </div>
 
@@ -265,14 +227,14 @@ const SelectPlan = () => {
           {!codeValid ? (
             <>
               <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#2a3d5e', marginBottom: 10, textAlign: 'center' }}>
-                Tem um código de affiliate?
+                {t('selectPlan.affiliateLabel')}
               </p>
               <div className="code-input-wrap">
-                <input className="code-input" placeholder="Ex: JOAO2024" value={codeInput}
+                <input className="code-input" placeholder={t('selectPlan.affiliatePlaceholder')} value={codeInput}
                   onChange={e => { setCodeInput(e.target.value.toUpperCase()); setCodeError(''); }}
                   onKeyDown={e => e.key === 'Enter' && validateCode()} maxLength={20} data-testid="supporter-code-input" />
                 <button className="code-btn" onClick={() => validateCode()} disabled={!codeInput.trim() || codeValidating} data-testid="apply-code-btn">
-                  {codeValidating ? <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> : 'Aplicar'}
+                  {codeValidating ? <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> : t('selectPlan.applyBtn')}
                 </button>
               </div>
               {codeError && <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.78rem', color: '#e53e3e', marginTop: 8, textAlign: 'center' }}>{codeError}</p>}
@@ -283,10 +245,10 @@ const SelectPlan = () => {
                 <CheckCircle2 size={18} style={{ color: '#15803d', flexShrink: 0 }} />
                 <div>
                   <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.8rem', fontWeight: 700, color: '#15803d' }}>
-                    Código <span style={{ letterSpacing: '0.08em' }}>{supporterCode}</span> aplicado
+                    {t('selectPlan.codeApplied', { code: supporterCode })}
                   </p>
                   <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.72rem', color: '#3a5070', marginTop: 2 }}>
-                    {discountInfo.discount_percentage}% de desconto no plano escolhido
+                    {t('selectPlan.codeDiscount', { pct: discountInfo.discount_percentage })}
                   </p>
                 </div>
               </div>
@@ -316,7 +278,9 @@ const SelectPlan = () => {
               }}>
                 {plan.highlighted && (
                   <div style={{ background: 'linear-gradient(90deg, #5aa8e0 0%, #2a3d5e 100%)', padding: '10px 24px', textAlign: 'center' }}>
-                    <span style={{ textTransform: 'uppercase', letterSpacing: '0.25em', fontSize: '0.6rem', fontWeight: 700, color: 'white' }}>Recomendado</span>
+                    <span style={{ textTransform: 'uppercase', letterSpacing: '0.25em', fontSize: '0.6rem', fontWeight: 700, color: 'white' }}>
+                      {t('selectPlan.recommended')}
+                    </span>
                   </div>
                 )}
 
@@ -337,7 +301,7 @@ const SelectPlan = () => {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.75rem', color: 'rgba(58,80,112,0.55)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                        Pagamento único
+                        {t('selectPlan.oneTimePayment')}
                       </span>
                       {hasDiscount && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 999, padding: '2px 10px', fontFamily: '"Georgia", serif', fontSize: '0.7rem', fontWeight: 700, color: '#15803d' }}>
@@ -360,18 +324,22 @@ const SelectPlan = () => {
                     ))}
                   </div>
 
-                  {/* Botão */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 20 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
                     {plan.highlighted ? (
                       <button className="sp-btn-primary" onClick={() => handleSelectPlan(plan)} disabled={loading} data-testid={`button-select-${plan.id}`}>
-                        {loading ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Processando...</> : 'Selecionar Plano'}
+                        {loading
+                          ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> {t('selectPlan.processing')}</>
+                          : t('selectPlan.selectBtn')
+                        }
                       </button>
                     ) : (
                       <button className="sp-btn-outline" onClick={() => handleSelectPlan(plan)} disabled={loading} data-testid={`button-select-${plan.id}`}>
-                        {loading ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Processando...</> : 'Selecionar Plano'}
+                        {loading
+                          ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> {t('selectPlan.processing')}</>
+                          : t('selectPlan.selectBtn')
+                        }
                       </button>
                     )}
-
                     <SecurityBadge variant="minimal" style={{ marginTop: 20 }} />
                   </div>
                 </div>
@@ -381,7 +349,6 @@ const SelectPlan = () => {
         </div>
 
         <SecurityBadge variant="bar" />
-
       </div>
     </div>
   );

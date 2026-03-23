@@ -1,11 +1,11 @@
-/*import { useTranslation } from 'react-i18next';*/
+import { useTranslation } from 'react-i18next';
 import { Link} from 'react-router-dom';
 import SecurityBadge from '@/components/shared/SecurityBadge';
 import { Button } from '@/components/ui/button';
 
 
 const HeroSection = () => {
-  {/*const { t } = useTranslation();*/}
+  const { t } = useTranslation();
 
   return (
     <section
@@ -97,17 +97,21 @@ const HeroSection = () => {
         <div className="hero-content relative z-10 w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 px-4 md:px-8">
             <div className="hero-text flex-1 text-center md:text-left">
                 <h1
-                    className="anim-fade-up-1 font-bold tracking-tight leading-tight mb-4 md:mb-6"
-                    data-testid="hero-title"
-                    style={{ fontSize: 'clamp(1.7rem, 6vw, 3.2rem)', color: '#1a2744', fontFamily: '"Georgia", serif', lineHeight: 1.15 }}
+                    style={{ 
+                        fontSize: 'clamp(1.7rem, 6vw, 3.2rem)', 
+                        color: '#1a2744', 
+                        fontFamily: '"Georgia", serif', 
+                        lineHeight: 1.15,
+                        whiteSpace: 'pre-line'  
+                    }}
                 >
-                    Transforme lembranças<br />em homenagens.
+                    {t('hero.title')}
                 </h1>
                 <p
                     className="anim-fade-up-2 font-light mb-8 md:mb-10 max-w-xl mx-auto md:mx-0"
                     style={{ fontSize: 'clamp(0.88rem, 3.5vw, 1.05rem)', color: '#2a3d5e', lineHeight: 1.7 }}
                 >
-                    Mantenha as histórias de quem você ama vivas, acessível a qualquer momento, de qualquer lugar.
+                    {t('hero.description')}    
                 </p>
 
                 {/* ── Hero CTAs ── */}
@@ -121,13 +125,13 @@ const HeroSection = () => {
                             data-testid="hero-cta-button"
                             style={{ fontSize: 'clamp(0.82rem, 3.5vw, 1rem)', background: '#1a2744', color: 'white', letterSpacing: '0.05em' }}
                             >
-                            Criar memorial gratuito
+                                {t('hero.cta')}
                             </Button>
                         </Link>
 
                         {/* Botão secundário */}
                         <Link to="/why-preserve-memories" className="hero-btn-secondary" data-testid="hero-secondary-button">
-                            Por que preservar memórias?
+                            {t('hero.ctaSecondary')}
                         </Link>
                     </div>
 
