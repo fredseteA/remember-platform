@@ -6,6 +6,7 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { Heart, ArrowRight, Plus, CheckCircle2, Sparkles } from 'lucide-react';
 import MemorialLayout from '../../components/memorial/MemorialLayout';
 import { API } from '@/config';
+import { useTranslation } from 'react-i18next';
 
 function PreviewSkeleton() {
   return (
@@ -57,7 +58,7 @@ function PreviewNotFound() {
       }}>
         <Heart size={32} style={{ color: '#5aa8e0' }} />
       </div>
-      <p style={{ color: '#3a5070', fontSize: '1rem' }}>Memorial não encontrado</p>
+      <p style={{ color: '#3a5070', fontSize: '1rem' }}>{t('memorial.notFound')} </p>
     </div>
   );
 }
@@ -69,6 +70,7 @@ const PreviewMemorial = () => {
   const [memorial, setMemorial]           = useState(null);
   const [loading, setLoading]             = useState(true);
   const [bannerVisible, setBannerVisible] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetch = async () => {
@@ -101,7 +103,6 @@ const PreviewMemorial = () => {
       className="overflow-x-hidden"
       data-testid="preview-memorial-page"
       style={{
-        /* ── Mesmo padrão exato do SelectPlan ── */
         background: 'linear-gradient(180deg, #c8e8f5 0%, #ddf0f7 35%, #eef8fb 70%, #eef8fb 100%)',
         fontFamily: '"Georgia", serif',
         minHeight: '100vh',
@@ -109,8 +110,6 @@ const PreviewMemorial = () => {
       }}
     >
       <style>{`
-        /* Força o MemorialLayout a ser transparente no modo preview,
-           para o gradiente da página aparecer por baixo */
         [data-testid="preview-memorial-page"] .memorial-layout-root,
         [data-testid="preview-memorial-page"] .memorial-page-wrapper,
         [data-testid="preview-memorial-page"] > .overflow-x-hidden {
@@ -201,7 +200,7 @@ const PreviewMemorial = () => {
       {/* Conteúdo — mesmo padrão do SelectPlan: relative z-10, padding top/bottom */}
       <div className="relative z-10" style={{
         paddingTop: 'clamp(80px, 13vw, 110px)',
-        paddingBottom: 'clamp(110px, 14vw, 130px)', /* espaço para a action bar */
+        paddingBottom: 'clamp(110px, 14vw, 130px)', 
       }}>
         <MemorialLayout memorial={memorial} isPreview={true} />
       </div>
@@ -229,12 +228,12 @@ const PreviewMemorial = () => {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                 <h3 style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.82rem, 3vw, 0.92rem)', fontWeight: 700, color: '#1a2744', margin: 0, whiteSpace: 'nowrap' }}>
-                  Memorial criado com sucesso!
+                  {t('preview.successTitle')}
                 </h3>
                 <Sparkles size={13} style={{ color: '#f59e0b', flexShrink: 0 }} />
               </div>
               <p style={{ fontFamily: '"Georgia", serif', fontSize: 'clamp(0.7rem, 2.5vw, 0.78rem)', color: '#3a5070', margin: 0, lineHeight: 1.4 }}>
-                Veja abaixo como ficou sua homenagem. Escolha um plano para publicar.
+                {t('preview.successDesc')}
               </p>
             </div>
             {/* Barra de progresso */}
@@ -258,11 +257,11 @@ const PreviewMemorial = () => {
             fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.18em',
             textTransform: 'uppercase', color: 'rgba(42,61,94,0.4)', marginBottom: 10,
           }}>
-            Modo de visualização — Rascunho
+            {t('preview.draftMode')}
           </p>
           <div className="pv-btns" style={{ maxWidth: 560, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'stretch' }}>
             <button className="pv-btn-plan" onClick={() => navigate(`/select-plan/${id}`)} data-testid="button-choose-plan">
-              <span>Escolher Plano</span>
+              <span>{t('preview.choosePlan')}</span>
               <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <ArrowRight size={14} />
               </div>
@@ -271,11 +270,11 @@ const PreviewMemorial = () => {
               <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(26,39,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Plus size={13} />
               </div>
-              <span>Criar outro</span>
+              <span>{t('preview.createOther')}</span>
             </button>
           </div>
           <p style={{ textAlign: 'center', fontFamily: '"Georgia", serif', fontSize: '0.62rem', color: 'rgba(42,61,94,0.38)', marginTop: 8, letterSpacing: '0.04em' }}>
-            Criar é gratuito · Pague somente ao publicar
+            {t('preview.footer')}
           </p>
         </div>
       </div>

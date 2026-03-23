@@ -1,10 +1,8 @@
 import { Lock, ShieldCheck, CreditCard } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-/**
- * SecurityBadge
- * @param {'card' | 'minimal' | 'bar'} variant
- */
-const SecurityBadge = ({ variant = 'card' }) => {
+const SecurityBadge = ({ variant = 'card', dark = false }) => {
+  const { t } = useTranslation();
 
   if (variant === 'card') {
     return (
@@ -40,7 +38,6 @@ const SecurityBadge = ({ variant = 'card' }) => {
             marginTop: 6,
           }}
         >
-          {/* Lock icon */}
           <div style={{
             width: 26, height: 26, borderRadius: 8,
             background: 'rgba(21,128,61,0.1)',
@@ -58,23 +55,21 @@ const SecurityBadge = ({ variant = 'card' }) => {
             letterSpacing: '0.01em',
             lineHeight: 1.4,
           }}>
-            Você será redirecionado para o pagamento seguro via
+            {t('security.redirectMessage')}
           </span>
 
           <div className="sb-card-divider" />
 
-          {/* Logo MP */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <img
               src="/mercadopago-logo.webp"
               alt="Mercado Pago"
-              style={{ height: 17, width: 'auto', opacity: 0.85, display: 'block' }}
+              style={{ height: 17, width: 'auto', opacity: 0.85, display: 'block', borderRadius: 3 }}
               onError={(e) => {
                 e.target.style.display = 'none';
                 e.target.nextSibling.style.display = 'flex';
               }}
             />
-            {/* Fallback text badge */}
             <div style={{
               display: 'none', alignItems: 'center', gap: 4,
               padding: '3px 8px', borderRadius: 6,
@@ -113,32 +108,33 @@ const SecurityBadge = ({ variant = 'card' }) => {
             gap: 7,
             padding: '6px 14px',
             borderRadius: 999,
-            background: 'rgba(255,255,255,0.45)',
+            background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.45)',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.7)',
+            border: dark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.7)',
             boxShadow: '0 1px 8px rgba(26,39,68,0.06)',
           }}
         >
-          <Lock size={10} style={{ color: 'rgba(21,128,61,0.7)', flexShrink: 0 }} />
+          <Lock size={10} style={{ color: dark ? 'rgba(123,189,232,0.9)' : 'rgba(21,128,61,0.7)', flexShrink: 0 }} />
 
           <span style={{
             fontFamily: '"Georgia", serif',
             fontSize: '0.67rem',
-            color: 'rgba(42,61,94,0.65)',
+            color: dark ? 'rgba(255,255,255,0.7)' : 'rgba(42,61,94,0.65)',
             letterSpacing: '0.03em',
             whiteSpace: 'nowrap',
           }}>
-            Pagamento seguro via
+            {t('security.paymentSafe')}
           </span>
 
-          {/* Separador ponto */}
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(90,168,224,0.5)', flexShrink: 0 }} />
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: dark ? 'rgba(123,189,232,0.5)' : 'rgba(90,168,224,0.5)', flexShrink: 0 }} />
 
           <img
             src="/mercadopago-logo.webp"
             alt="Mercado Pago"
-            style={{ height: 13, width: 'auto', opacity: 0.7, display: 'block', flexShrink: 0 }}
+            style={{
+              height: 13, width: 'auto', display: 'block', flexShrink: 0, borderRadius: 3,
+            }}
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'inline';
@@ -149,7 +145,7 @@ const SecurityBadge = ({ variant = 'card' }) => {
             fontFamily: '"Georgia", serif',
             fontSize: '0.67rem',
             fontWeight: 700,
-            color: 'rgba(42,61,94,0.65)',
+            color: dark ? 'rgba(255,255,255,0.7)' : 'rgba(42,61,94,0.65)',
             letterSpacing: '0.04em',
           }}>
             Mercado Pago
@@ -200,18 +196,14 @@ const SecurityBadge = ({ variant = 'card' }) => {
             margin: '28px auto 0',
           }}
         >
-          {/* Linha decorativa superior */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 1, background: 'linear-gradient(to right, transparent, rgba(90,168,224,0.4))', animation: 'sb-bar-line 0.8s cubic-bezier(.22,1,.36,1) 0.5s both', transformOrigin: 'right' }} />
             <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(42,61,94,0.45)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-              Compra 100% segura
+              {t('security.secure')}
             </span>
             <div style={{ width: 32, height: 1, background: 'linear-gradient(to left, transparent, rgba(90,168,224,0.4))', animation: 'sb-bar-line 0.8s cubic-bezier(.22,1,.36,1) 0.5s both', transformOrigin: 'left' }} />
           </div>
 
-          {/* Pills */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -219,116 +211,41 @@ const SecurityBadge = ({ variant = 'card' }) => {
             flexWrap: 'wrap',
             gap: 8,
           }}>
-
-            {/* Pill — Ambiente seguro */}
-            <div
-              className="sb-pill"
-              style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                padding: '8px 14px',
-                borderRadius: 999,
-                background: 'rgba(255,255,255,0.55)',
-                backdropFilter: 'blur(14px)',
-                WebkitBackdropFilter: 'blur(14px)',
-                border: '1px solid rgba(255,255,255,0.82)',
-                boxShadow: '0 2px 10px rgba(26,39,68,0.07), inset 0 1px 0 rgba(255,255,255,0.9)',
-                cursor: 'default',
-              }}
-            >
-              <div style={{
-                width: 20, height: 20, borderRadius: '50%',
-                background: 'rgba(21,128,61,0.12)',
-                border: '1px solid rgba(21,128,61,0.18)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
+            <div className="sb-pill" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', border: '1px solid rgba(255,255,255,0.82)', boxShadow: '0 2px 10px rgba(26,39,68,0.07), inset 0 1px 0 rgba(255,255,255,0.9)', cursor: 'default' }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(21,128,61,0.12)', border: '1px solid rgba(21,128,61,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <ShieldCheck size={11} style={{ color: '#15803d' }} />
               </div>
-              <span style={{
-                fontFamily: '"Georgia", serif', fontSize: '0.72rem',
-                fontWeight: 600, color: '#2a3d5e',
-                letterSpacing: '0.02em', whiteSpace: 'nowrap',
-              }}>Ambiente seguro</span>
+              <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.72rem', fontWeight: 600, color: '#2a3d5e', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{t('security.secureEnv')}</span>
             </div>
 
             <div className="sb-bar-sep" />
 
-            {/* Pill — SSL */}
-            <div
-              className="sb-pill"
-              style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                padding: '8px 14px',
-                borderRadius: 999,
-                background: 'rgba(255,255,255,0.55)',
-                backdropFilter: 'blur(14px)',
-                WebkitBackdropFilter: 'blur(14px)',
-                border: '1px solid rgba(255,255,255,0.82)',
-                boxShadow: '0 2px 10px rgba(26,39,68,0.07), inset 0 1px 0 rgba(255,255,255,0.9)',
-                cursor: 'default',
-              }}
-            >
-              <div style={{
-                width: 20, height: 20, borderRadius: '50%',
-                background: 'rgba(58,80,112,0.08)',
-                border: '1px solid rgba(58,80,112,0.13)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
+            <div className="sb-pill" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', border: '1px solid rgba(255,255,255,0.82)', boxShadow: '0 2px 10px rgba(26,39,68,0.07), inset 0 1px 0 rgba(255,255,255,0.9)', cursor: 'default' }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(58,80,112,0.08)', border: '1px solid rgba(58,80,112,0.13)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Lock size={10} style={{ color: '#3a5070' }} />
               </div>
-              <span style={{
-                fontFamily: '"Georgia", serif', fontSize: '0.72rem',
-                fontWeight: 600, color: '#2a3d5e',
-                letterSpacing: '0.02em', whiteSpace: 'nowrap',
-              }}>SSL 256-bit</span>
+              <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.72rem', fontWeight: 600, color: '#2a3d5e', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{t('security.ssl')}</span>
             </div>
 
             <div className="sb-bar-sep" />
 
-            {/* Pill — Mercado Pago */}
-            <div
-              className="sb-pill"
-              style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                padding: '8px 14px',
-                borderRadius: 999,
-                background: 'rgba(255,255,255,0.55)',
-                backdropFilter: 'blur(14px)',
-                WebkitBackdropFilter: 'blur(14px)',
-                border: '1px solid rgba(255,255,255,0.82)',
-                boxShadow: '0 2px 10px rgba(26,39,68,0.07), inset 0 1px 0 rgba(255,255,255,0.9)',
-                cursor: 'default',
-              }}
-            >
-              <div style={{
-                width: 20, height: 20, borderRadius: '50%',
-                background: 'rgba(90,168,224,0.12)',
-                border: '1px solid rgba(90,168,224,0.18)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
+            <div className="sb-pill" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', border: '1px solid rgba(255,255,255,0.82)', boxShadow: '0 2px 10px rgba(26,39,68,0.07), inset 0 1px 0 rgba(255,255,255,0.9)', cursor: 'default' }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(90,168,224,0.12)', border: '1px solid rgba(90,168,224,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <CreditCard size={10} style={{ color: '#3a7fb5' }} />
               </div>
-              <span style={{
-                fontFamily: '"Georgia", serif', fontSize: '0.72rem',
-                fontWeight: 600, color: '#2a3d5e',
-                letterSpacing: '0.02em', whiteSpace: 'nowrap',
-              }}>Pago com</span>
+              <span style={{ fontFamily: '"Georgia", serif', fontSize: '0.72rem', fontWeight: 600, color: '#2a3d5e', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{t('security.paymentVia')}</span>
               <div style={{ width: 1, height: 12, background: 'rgba(90,168,224,0.3)', flexShrink: 0 }} />
               <img
                 src="/mercadopago-logo.webp"
                 alt="Mercado Pago"
-                style={{ height: 14, width: 'auto', opacity: 0.8, display: 'block', flexShrink: 0 }}
+                style={{ height: 14, width: 'auto', opacity: 0.8, display: 'block', flexShrink: 0, borderRadius: 3 }}
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'inline';
                 }}
               />
-              <span style={{
-                display: 'none',
-                fontFamily: '"Georgia", serif', fontSize: '0.72rem',
-                fontWeight: 700, color: '#2a3d5e',
-              }}>Mercado Pago</span>
+              <span style={{ display: 'none', fontFamily: '"Georgia", serif', fontSize: '0.72rem', fontWeight: 700, color: '#2a3d5e' }}>Mercado Pago</span>
             </div>
-
           </div>
         </div>
       </>

@@ -27,123 +27,68 @@ const footerStyles = `
     0%,100% { transform: translateY(0) translateX(0); }
     55%     { transform: translateY(-9px) translateX(-6px); }
   }
-
-  /* ── Nav link com underline deslizante ── */
   .footer-link {
-    color: #4a6080;
-    font-family: "Georgia", serif;
-    font-size: 0.83rem;
-    text-decoration: none;
-    position: relative;
-    display: inline-block;
-    line-height: 1.5;
-    transition: color 0.18s ease;
+    color: #4a6080; font-family: "Georgia", serif; font-size: 0.83rem;
+    text-decoration: none; position: relative; display: inline-block;
+    line-height: 1.5; transition: color 0.18s ease;
   }
   .footer-link::after {
-    content: '';
-    position: absolute;
-    bottom: -1px; left: 0; right: 0;
-    height: 1px; border-radius: 1px;
-    background: #1a2744;
-    transform: scaleX(0);
-    transform-origin: left;
+    content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+    height: 1px; border-radius: 1px; background: #1a2744;
+    transform: scaleX(0); transform-origin: left;
     transition: transform 0.22s cubic-bezier(.22,1,.36,1);
   }
   .footer-link:hover { color: #1a2744; }
   .footer-link:hover::after { transform: scaleX(1); }
-
-  /* ── Links legais do rodapé ── */
   .footer-link-sm {
-    color: rgba(58,80,112,0.55);
-    font-family: "Georgia", serif;
-    font-size: 0.71rem;
-    text-decoration: none;
-    position: relative;
-    display: inline-block;
-    transition: color 0.18s ease;
+    color: rgba(58,80,112,0.55); font-family: "Georgia", serif; font-size: 0.71rem;
+    text-decoration: none; position: relative; display: inline-block; transition: color 0.18s ease;
   }
   .footer-link-sm::after {
-    content: '';
-    position: absolute;
-    bottom: -1px; left: 0; right: 0;
-    height: 1px; border-radius: 1px;
-    background: #3a5070;
-    transform: scaleX(0);
-    transform-origin: left;
+    content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+    height: 1px; border-radius: 1px; background: #3a5070;
+    transform: scaleX(0); transform-origin: left;
     transition: transform 0.22s cubic-bezier(.22,1,.36,1);
   }
   .footer-link-sm:hover { color: #1a2744; }
   .footer-link-sm:hover::after { transform: scaleX(1); }
-
-  /* ── Botões sociais ── */
   .footer-social-btn {
     display: flex; align-items: center; justify-content: center;
     width: 36px; height: 36px; border-radius: 10px;
-    background: rgba(255,255,255,0.45);
-    border: 1px solid rgba(255,255,255,0.72);
+    background: rgba(255,255,255,0.45); border: 1px solid rgba(255,255,255,0.72);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 1px 6px rgba(26,39,68,0.07);
-    color: #2a3d5e; text-decoration: none; flex-shrink: 0;
+    box-shadow: 0 1px 6px rgba(26,39,68,0.07); color: #2a3d5e;
+    text-decoration: none; flex-shrink: 0;
     transition: background 0.22s ease, transform 0.22s cubic-bezier(.22,1,.36,1),
       box-shadow 0.22s ease, color 0.22s ease, border-color 0.22s ease;
   }
-  .footer-social-btn:hover {
-    transform: translateY(-2px) scale(1.08);
-    box-shadow: 0 6px 16px rgba(26,39,68,0.13);
-  }
+  .footer-social-btn:hover { transform: translateY(-2px) scale(1.08); box-shadow: 0 6px 16px rgba(26,39,68,0.13); }
   .footer-social-btn.whatsapp:hover  { background: #25D366; color: white; border-color: #25D366; }
   .footer-social-btn.instagram:hover {
     background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
     color: white; border-color: transparent;
   }
-
-  /* ── Coluna heading ── */
   .footer-col-heading {
-    font-family: "Georgia", serif;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: #1a2744;
-    margin-bottom: 18px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(26,39,68,0.1);
+    font-family: "Georgia", serif; font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase; color: #1a2744;
+    margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid rgba(26,39,68,0.1);
   }
-
-  /* ── Divider ── */
-  .footer-divider {
-    border: none;
-    border-top: 1px solid rgba(26,39,68,0.1);
-    margin: 0;
-  }
-
-  /* ── Garantia badge ── */
+  .footer-divider { border: none; border-top: 1px solid rgba(26,39,68,0.1); margin: 0; }
   .footer-guarantee-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 12px; border-radius: 10px;
-    background: rgba(255,255,255,0.35);
-    border: 1px solid rgba(255,255,255,0.65);
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.35); border: 1px solid rgba(255,255,255,0.65);
     transition: background 0.2s ease, box-shadow 0.2s ease;
   }
-  .footer-guarantee-item:hover {
-    background: rgba(255,255,255,0.55);
-    box-shadow: 0 3px 12px rgba(26,39,68,0.07);
-  }
-
-  /* ── Suporte link row ── */
+  .footer-guarantee-item:hover { background: rgba(255,255,255,0.55); box-shadow: 0 3px 12px rgba(26,39,68,0.07); }
   .footer-contact-row {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 8px 0;
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 0;
     border-bottom: 1px solid rgba(26,39,68,0.06);
   }
   .footer-contact-row:last-child { border-bottom: none; }
   .footer-contact-icon {
-    width: 28px; height: 28px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(90,168,224,0.12);
-    flex-shrink: 0; margin-top: 1px;
+    width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; background: rgba(90,168,224,0.12); flex-shrink: 0; margin-top: 1px;
   }
-
   @media (max-width: 767px) {
     .footer-cloud-l, .footer-cloud-r { display: none !important; }
   }
@@ -161,26 +106,26 @@ const Footer = ({ startColor = '#eef8fb' }) => {
   ];
 
   const institutionalLinks = [
-    { to: '/about',                  label: 'Sobre a Remember QRCode' },
-    { to: '/responsibility-policy',  label: 'Política de Responsabilidade' },
-    { to: '/privacy-policy',         label: 'Política de Privacidade' },
-    { to: '/return-policy',          label: 'Troca, Devolução e Reembolso' },
-    { to: '/terms-and-conditions',   label: 'Termos e Condições' },
-    { to: '/delivery-policy',        label: 'Política de Entrega' },
+    { to: '/about',                 label: t('footer.about') },
+    { to: '/responsibility-policy', label: t('footer.responsibility') },
+    { to: '/privacy-policy',        label: t('footer.privacy') },
+    { to: '/return-policy',         label: t('footer.returns') },
+    { to: '/terms-and-conditions',  label: t('footer.terms') },
+    { to: '/delivery-policy',       label: t('footer.delivery') },
   ];
 
   const guarantees = [
-    { label: 'Compra Segura',       icon: <Shield  size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} /> },
-    { label: 'Entrega Rastreável',  icon: <Truck   size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} /> },
-    { label: 'Suporte Dedicado',    icon: <Headphones size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} /> },
+    { label: t('footer.guarantee1'), icon: <Shield    size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} /> },
+    { label: t('footer.guarantee2'), icon: <Truck     size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} /> },
+    { label: t('footer.guarantee3'), icon: <Headphones size={13} strokeWidth={2} style={{ color: '#5aa8e0' }} /> },
   ];
 
   const companyLinks = [
-    { to: '/about',                                  label: 'Sobre nós' },
-    { to: '/privacy-policy',                          label: 'Privacidade' },
-    { to: '/terms-and-conditions',                   label: 'Termos e Condições' },
-    { to: '/delivery-policy',                         label: 'Política de Entrega' },
-    { to: '/return-policy', label: 'Cancelamento e Reembolso' },
+    { to: '/about',                label: t('footer.aboutShort') },
+    { to: '/privacy-policy',       label: t('footer.privacyShort') },
+    { to: '/terms-and-conditions', label: t('footer.terms') },
+    { to: '/delivery-policy',      label: t('footer.delivery') },
+    { to: '/return-policy',        label: t('footer.cancellation') },
   ];
 
   return (
@@ -188,15 +133,11 @@ const Footer = ({ startColor = '#eef8fb' }) => {
       data-testid="main-footer"
       style={{
         background: `linear-gradient(180deg, ${startColor} 0%, #ddf0f7 30%, #c8e8f5 60%, #a8d8f0 100%)`,
-        marginTop: 0,
-        borderTop: 'none',
-        position: 'relative',
-        overflow: 'hidden',
+        marginTop: 0, borderTop: 'none', position: 'relative', overflow: 'hidden',
       }}
     >
       <style>{footerStyles}</style>
 
-      {/* Nuvens decorativas */}
       <div className="footer-cloud-l absolute top-[-10px] left-[-50px] w-44 md:w-60 opacity-60 pointer-events-none select-none hidden md:block"
         style={{ animation: 'floatFoot1 10s ease-in-out infinite' }}>
         <img src="/clouds/cloud3.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
@@ -206,59 +147,31 @@ const Footer = ({ startColor = '#eef8fb' }) => {
         <img src="/clouds/cloud2.png" alt="" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
       </div>
 
-      {/* ── Linha superior separadora ── */}
       <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0,
-        height: '1px',
+        position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
         background: 'linear-gradient(90deg, transparent 0%, rgba(26,39,68,0.12) 30%, rgba(26,39,68,0.18) 50%, rgba(26,39,68,0.12) 70%, transparent 100%)',
       }} />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-14 pt-16 md:pt-24 pb-8">
 
-        {/* ══ Grid principal — 5 colunas ══ */}
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(1, 1fr)',
-            gap: '40px 32px',
-            marginBottom: '56px',
-          }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '40px 32px', marginBottom: '56px' }}
           className="footer-main-grid"
         >
           <style>{`
-            @media (min-width: 640px) {
-              .footer-main-grid { grid-template-columns: repeat(2, 1fr) !important; }
-            }
-            @media (min-width: 1024px) {
-              .footer-main-grid { grid-template-columns: 1.8fr 1fr 1.2fr 1.1fr 1fr !important; gap: 40px 48px !important; }
-            }
+            @media (min-width: 640px) { .footer-main-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+            @media (min-width: 1024px) { .footer-main-grid { grid-template-columns: 1.8fr 1fr 1.2fr 1.1fr 1fr !important; gap: 40px 48px !important; } }
           `}</style>
 
-          {/* ── Col 1: Marca ── */}
+          {/* Col 1: Marca */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-            <img
-              src="/logo-transparent.svg"
-              alt="Remember QRCode"
-              style={{ height: 52, width: 'auto', marginBottom: 14, objectFit: 'contain', objectPosition: 'left' }}
-            />
-            <p style={{
-              color: '#4a6080',
-              fontSize: '0.84rem',
-              lineHeight: 1.72,
-              fontFamily: '"Georgia", serif',
-              maxWidth: 210,
-              marginBottom: 24,
-            }}>
-              Memoriais digitais para preservar histórias e homenagear vidas.
+            <img src="/logo-transparent.svg" alt="Remember QRCode"
+              style={{ height: 52, width: 'auto', marginBottom: 14, objectFit: 'contain', objectPosition: 'left' }} />
+            <p style={{ color: '#4a6080', fontSize: '0.84rem', lineHeight: 1.72, fontFamily: '"Georgia", serif', maxWidth: 210, marginBottom: 24 }}>
+              {t('footer.tagline')}
             </p>
-
-            {/* Redes sociais */}
-            <p style={{
-              fontFamily: '"Georgia", serif', fontSize: '0.62rem', fontWeight: 700,
-              letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: '#1a2744', opacity: 0.5, marginBottom: 10,
-            }}>
-              Siga-nos
+            <p style={{ fontFamily: '"Georgia", serif', fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#1a2744', opacity: 0.5, marginBottom: 10 }}>
+              {t('footer.followUs')}
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
               <a href={INSTAGRAM_HREF} target="_blank" rel="noopener noreferrer"
@@ -272,33 +185,29 @@ const Footer = ({ startColor = '#eef8fb' }) => {
             </div>
           </div>
 
-          {/* ── Col 2: Produto ── */}
+          {/* Col 2: Produto */}
           <div>
-            <p className="footer-col-heading">Produto</p>
+            <p className="footer-col-heading">{t('footer.colProduct')}</p>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 11 }}>
               {quickLinks.map(({ to, label }) => (
-                <li key={to}>
-                  <Link to={to} className="footer-link">{label}</Link>
-                </li>
+                <li key={to}><Link to={to} className="footer-link">{label}</Link></li>
               ))}
             </ul>
           </div>
 
-          {/* ── Col 3: Empresa ── */}
+          {/* Col 3: Empresa */}
           <div>
-            <p className="footer-col-heading">Empresa</p>
+            <p className="footer-col-heading">{t('footer.colCompany')}</p>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 11 }}>
               {companyLinks.map(({ to, label }) => (
-                <li key={to}>
-                  <Link to={to} className="footer-link">{label}</Link>
-                </li>
+                <li key={to}><Link to={to} className="footer-link">{label}</Link></li>
               ))}
             </ul>
           </div>
 
-          {/* ── Col 4: Suporte ── */}
+          {/* Col 4: Suporte */}
           <div>
-            <p className="footer-col-heading">Suporte</p>
+            <p className="footer-col-heading">{t('footer.colSupport')}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               <div className="footer-contact-row">
                 <div className="footer-contact-icon">
@@ -306,10 +215,9 @@ const Footer = ({ startColor = '#eef8fb' }) => {
                 </div>
                 <div>
                   <p style={{ fontSize: '0.67rem', color: 'rgba(26,39,68,0.4)', fontFamily: '"Georgia", serif', marginBottom: 2, letterSpacing: '0.05em' }}>
-                    E-mail
+                    {t('footer.emailLabel')}
                   </p>
-                  <a href={'mailto:' + EMAIL} className="footer-link"
-                    style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>
+                  <a href={'mailto:' + EMAIL} className="footer-link" style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>
                     {EMAIL}
                   </a>
                 </div>
@@ -320,75 +228,44 @@ const Footer = ({ startColor = '#eef8fb' }) => {
                 </div>
                 <div>
                   <p style={{ fontSize: '0.67rem', color: 'rgba(26,39,68,0.4)', fontFamily: '"Georgia", serif', marginBottom: 2, letterSpacing: '0.05em' }}>
-                    Chat
+                    {t('footer.chatLabel')}
                   </p>
                   <a href={PHONE_HREF} target="_blank" rel="noopener noreferrer"
                     className="footer-link" style={{ fontSize: '0.8rem' }}>
-                    Falar no WhatsApp
+                    {t('footer.chatLink')}
                   </a>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ── Col 5: Garantias ── */}
+          {/* Col 5: Garantias */}
           <div>
-            <p className="footer-col-heading">Garantias</p>
+            <p className="footer-col-heading">{t('footer.colGuarantees')}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {guarantees.map(({ label, icon }) => (
                 <div key={label} className="footer-guarantee-item">
                   {icon}
-                  <span style={{
-                    color: '#3a5070',
-                    fontSize: '0.8rem',
-                    fontFamily: '"Georgia", serif',
-                    fontWeight: 600,
-                    lineHeight: 1.3,
-                  }}>
+                  <span style={{ color: '#3a5070', fontSize: '0.8rem', fontFamily: '"Georgia", serif', fontWeight: 600, lineHeight: 1.3 }}>
                     {label}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-
         </div>
 
-        {/* ══ Rodapé final ══ */}
         <hr className="footer-divider" />
 
-        <div style={{
-          paddingTop: '28px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '16px',
-          textAlign: 'center',
-        }}>
-          {/* Copyright + logo mini */}
+        <div style={{ paddingTop: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img
-              src="/logo-transparent.svg"
-              alt="Remember QRCode"
-              style={{ height: 22, width: 'auto', opacity: 0.4 }}
-            />
-            <p style={{
-              color: 'rgba(58,80,112,0.6)',
-              fontSize: '0.75rem',
-              fontFamily: '"Georgia", serif',
-            }}>
-              {'© ' + currentYear + ' Remember QRCode · Todos os direitos reservados.'}
+            <img src="/logo-transparent.svg" alt="Remember QRCode" style={{ height: 22, width: 'auto', opacity: 0.4 }} />
+            <p style={{ color: 'rgba(58,80,112,0.6)', fontSize: '0.75rem', fontFamily: '"Georgia", serif' }}>
+              {t('footer.copyright', { year: currentYear })}
             </p>
           </div>
 
-          {/* Links legais separados por ponto */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '4px 0',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 0', justifyContent: 'center', alignItems: 'center' }}>
             {institutionalLinks.map(({ to, label }, i) => (
               <span key={to} style={{ display: 'flex', alignItems: 'center' }}>
                 <Link to={to} className="footer-link-sm" style={{ padding: '0 10px' }}>{label}</Link>
