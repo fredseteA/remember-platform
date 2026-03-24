@@ -171,7 +171,7 @@ const resources = {
         benefit3Title: 'Uma lembrança eterna para a família',
         benefit3Desc: 'Um ponto de encontro físico para homenagear e lembrar quem partiu.',
         cta: 'Começar minha homenagem',
-        ctaFooter: '✨ Criar é gratuito · Você só paga ao publicar',
+        ctaFooter: 'Criar é gratuito · Salve como rascunho e complete no seu tempo · Você só paga ao publicar',
         imgSoon: 'Foto do produto real em breve',
         imgInsert: 'Inserir foto aqui',
       },
@@ -528,7 +528,7 @@ const resources = {
             number: '01',
             title: 'Crie o Memorial',
             description: 'Preencha as informações da pessoa homenageada com carinho: dados pessoais, uma frase especial, biografia, galeria de fotos e até um áudio de homenagem. Tudo de forma simples e guiada, para que você possa expressar todo o amor que sente.',
-            highlight: 'Criar é gratuito!',
+            highlight: 'Salve como rascunho e volte quando quiser',
             cta: 'Começar agora',
           },
           {
@@ -1234,7 +1234,7 @@ const resources = {
         benefit3Title: 'An eternal keepsake for the family',
         benefit3Desc: 'A physical gathering point to honor and remember those who passed.',
         cta: 'Start my tribute',
-        ctaFooter: '✨ Creating is free · You only pay when publishing',
+        ctaFooter: ' Creating is free · Save as draft and complete at your own pace · You only pay when publishing',
         imgSoon: 'Real product photo coming soon',
         imgInsert: 'Insert photo here',
       },
@@ -1452,7 +1452,7 @@ const resources = {
         ratings: { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very good!', 5: 'Excellent!' },
       },
 
-      qrModal: {
+     qrModal: {
         titlePrint: 'QR Code for Printing',
         titleDefault: 'Memorial QR Code',
         formatPng: 'PNG (high resolution)',
@@ -1583,7 +1583,7 @@ const resources = {
             number: '01',
             title: 'Create the Memorial',
             description: 'Fill in the information about the honored person with care: personal details, a special phrase, biography, photo gallery and even a tribute audio. All in a simple and guided way, so you can express all the love you feel.',
-            highlight: 'Creating is free!',
+            highlight: 'Save as draft and come back whenever you want',
             cta: 'Start now',
           },
           {
