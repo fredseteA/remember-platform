@@ -22,14 +22,14 @@ function MomentsCarousel({ items }) {
   const autoTimer = useRef(null);
 
   const imageMap = {
-    infancia: '/card-image/moments-section/infancia.png',
-    amor: '/card-image/moments-section/amor.png',
-    conquistas: '/card-image/moments-section/conquistas.png',
-    familia: '/card-image/moments-section/familia.png',
-    aventuras: '/card-image/moments-section/aventuras.png',
-    fe: '/card-image/moments-section/fe.png',
-    amizades: '/card-image/moments-section/amizades.png',
-    legado: '/card-image/moments-section/legado.png',
+    infancia: '/card-image/moments-section/infancia.webp',
+    amor: '/card-image/moments-section/amor.webp',
+    conquistas: '/card-image/moments-section/conquistas.webp',
+    familia: '/card-image/moments-section/familia.webp',
+    aventuras: '/card-image/moments-section/aventuras.webp',
+    fe: '/card-image/moments-section/fe.webp',
+    amizades: '/card-image/moments-section/amizades.webp',
+    legado: '/card-image/moments-section/legado.webp',
   };
 
   const getOffset = useCallback((idx) => {
@@ -43,13 +43,11 @@ function MomentsCarousel({ items }) {
     setActive(idx);
   }, []);
 
-  // Quando chega no clone do fim/início, teleporta silenciosamente para o meio
   useEffect(() => {
     if (active < total) {
-      // chegou nos clones do início → teleporta para o final do bloco do meio
       const timer = setTimeout(() => {
         goTo(active + total, false);
-      }, 480); // após a transição terminar
+      }, 480); 
       return () => clearTimeout(timer);
     }
     if (active >= total * 2) {
@@ -60,7 +58,6 @@ function MomentsCarousel({ items }) {
     }
   }, [active, total, goTo]);
 
-  // Auto-play
   const scheduleAuto = useCallback(() => {
     clearTimeout(autoTimer.current);
     autoTimer.current = setTimeout(() => {
@@ -73,7 +70,6 @@ function MomentsCarousel({ items }) {
     return () => clearTimeout(autoTimer.current);
   }, [scheduleAuto]);
 
-  // Drag handlers
   const onMouseDown = (e) => {
     dragStartX.current = e.clientX ?? e.touches?.[0]?.clientX;
     isDragging.current = false;

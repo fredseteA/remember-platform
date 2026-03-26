@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -87,20 +87,27 @@ function PanelContent({ step, onScrollToPlans, t }) {
 }
 
 const HowItWorksSection = () => {
-  const [activeStep, setActiveStep]       = useState(0);
+ const [activeStep, setActiveStep]       = useState(0);
   const [prevStep, setPrevStep]           = useState(null);
   const [isVisible, setIsVisible]         = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const sectionRef                        = useRef(null);
   const timerRef                          = useRef(null);
+  const transitionTimerRef                = useRef(null);
   const { t }                             = useTranslation();
-  
-  const STEPS = t('howItWorks.steps', { returnObjects: true }).map((s, i) => ({
-    ...s,
-    ctaLink: ['/create-memorial', '/explore', '/#plans'][i],
-    testId: `step-${i + 1}`,
-    image: `/step${i + 1}.png`,
-  }));
+
+  const STEPS = useMemo(() =>
+    t('howItWorks.steps', { returnObjects: true }).map((s, i) => ({
+      ...s,
+      ctaLink: ['/create-memorial', '/explore', '/#plans'][i],
+      testId: `step-${i + 1}`,
+      image: `/step${i + 1}.webp`,
+    }))
+  , [t]);
+
+  useEffect(() => {
+    STEPS.forEach(s => { const img = new Image(); img.src = s.image; });
+  }, [STEPS]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -111,49 +118,58 @@ const HowItWorksSection = () => {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    STEPS.forEach(s => { const img = new Image(); img.src = s.image; });
+  const triggerTransition = useCallback((from, to) => {
+    clearTimeout(transitionTimerRef.current);
+    setPrevStep(from);
+    setActiveStep(to);
+    setTransitioning(true);
+    transitionTimerRef.current = setTimeout(() => {
+      setPrevStep(null);
+      setTransitioning(false);
+    }, 420);
   }, []);
 
   const goToStep = useCallback((idx) => {
-    if (idx === activeStep || transitioning) return;
-    setTransitioning(true);
-    setPrevStep(activeStep);
-    setActiveStep(idx);
-    setTimeout(() => { setPrevStep(null); setTransitioning(false); }, 420);
-  }, [activeStep, transitioning]);
+    setActiveStep(current => {
+      if (idx === current || transitioning) return current;
+      triggerTransition(current, idx);
+      return current; 
+    });
+  }, [transitioning, triggerTransition]);
 
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setActiveStep(prev => {
         const next = (prev + 1) % STEPS.length;
-        setPrevStep(prev);
-        setTransitioning(true);
-        setTimeout(() => { setPrevStep(null); setTransitioning(false); }, 420);
-        return next;
+        triggerTransition(prev, next);
+        return prev; 
       });
     }, 4000);
-  }, []);
+  }, [STEPS.length, triggerTransition]);
 
   useEffect(() => {
     startTimer();
-    return () => clearInterval(timerRef.current);
+    return () => {
+      clearInterval(timerRef.current);
+      clearTimeout(transitionTimerRef.current);
+    };
   }, [startTimer]);
 
-  const handleTabClick = (idx) => {
+  const handleTabClick = useCallback((idx) => {
     clearInterval(timerRef.current);
     goToStep(idx);
     setTimeout(() => startTimer(), 450);
-  };
+  }, [goToStep, startTimer]);
 
-  const current = STEPS[activeStep];
+  useEffect(() => () => clearTimeout(transitionTimerRef.current), []);
+
+  const current  = STEPS[activeStep];
   const previous = prevStep !== null ? STEPS[prevStep] : null;
 
-  const scrollToPlans = () => {
-    const el = document.getElementById('plans');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  const scrollToPlans = useCallback(() => {
+    document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   return (
     <section
@@ -292,9 +308,6 @@ const HowItWorksSection = () => {
           .howit-tabs        { gap: 0 !important; justify-content: space-between !important; }
           .howit-tab-btn     { min-width: 0 !important; flex: 1; padding-bottom: 10px !important; }
 
-          /* Imagem escondida — só card de texto no mobile */
-          .howit-img-wrap    { display: none !important; }
-
           /* Subtitle escondida no mobile */
           .howit-subtitle    { display: none !important; }
 
@@ -303,14 +316,43 @@ const HowItWorksSection = () => {
           .howit-panel       {
             position: relative !important;
             top: auto !important; left: auto !important; right: auto !important;
+            /* Layout 50/50 lado a lado no mobile */
+            flex-wrap: nowrap !important;
+            align-items: stretch !important;
+            gap: 10px !important;
           }
           .howit-panel.is-leaving { display: none !important; }
 
-          /* Card ocupa largura total, sem maxWidth */
-          .howit-pill        { max-width: 100% !important; flex: 1 1 100% !important; }
+          /* Card ocupa metade, sem maxWidth fixo */
+          .howit-pill {
+            max-width: none !important;
+            flex: 1 1 0 !important;
+            min-width: 0 !important;
+            /* Padding menor no mobile para caber tudo */
+            padding: 14px 12px !important;
+          }
+
+          /* Imagem ocupa metade — VISÍVEL no mobile */
+          .howit-img-wrap {
+            display: flex !important;
+            flex: 1 1 0 !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            /* Altura proporcional no mobile */
+            height: auto !important;
+            min-height: 180px !important;
+            aspect-ratio: 3/4;
+            border-radius: 14px !important;
+          }
 
           /* Footer pill menor */
           .howit-footer-pill { font-size: 0.72rem !important; padding: 8px 14px !important; }
+        }
+
+        /* Extra-small phones */
+        @media (max-width: 400px) {
+          .howit-pill { padding: 10px 8px !important; }
+          .howit-img-wrap { min-height: 150px !important; }
         }
       `}</style>
 
