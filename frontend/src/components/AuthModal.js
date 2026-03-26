@@ -13,8 +13,20 @@ const AuthModal = ({ open, onClose }) => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const passwordRules = [
+    { id: 'length',  label: 'Mínimo 8 caracteres',         test: (p) => p.length >= 8 },
+    { id: 'upper',   label: 'Uma letra maiúscula',          test: (p) => /[A-Z]/.test(p) },
+    { id: 'number',  label: 'Um número',                    test: (p) => /[0-9]/.test(p) },
+    { id: 'special', label: 'Um caractere especial (!@#$)', test: (p) => /[^A-Za-z0-9]/.test(p) },
+  ];
+
+  const passwordValid = isSignUp
+    ? passwordRules.every(r => r.test(password))
+    : true;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSignUp && !passwordValid) return;
     setLoading(true);
     try {
       if (isSignUp) {
@@ -71,6 +83,10 @@ const AuthModal = ({ open, onClose }) => {
           @keyframes floatA2 {
             0%,100% { transform: translateY(0) translateX(0); }
             55%     { transform: translateY(-6px) translateX(-4px); }
+          }
+          @keyframes ruleReveal {
+            from { opacity: 0; transform: translateX(-6px); }
+            to   { opacity: 1; transform: translateX(0); }
           }
           .auth-input {
             width: 100%;
@@ -134,6 +150,37 @@ const AuthModal = ({ open, onClose }) => {
             transform: translateY(-1px);
           }
           .auth-btn-google:disabled { opacity: 0.6; cursor: not-allowed; }
+
+          /* Regras de senha */
+          .pwd-rules {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.45);
+            border: 1px solid rgba(26,39,68,0.08);
+          }
+          .pwd-rule {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: "Georgia", serif;
+            font-size: 0.75rem;
+            transition: color 0.25s ease;
+            animation: ruleReveal 0.3s ease both;
+          }
+          .pwd-rule.ok  { color: #2e9e6b; }
+          .pwd-rule.nok { color: rgba(58,80,112,0.5); }
+          .pwd-rule-icon {
+            font-size: 0.75rem;
+            width: 14px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+          }
+          .pwd-rule.ok .pwd-rule-icon { transform: scale(1.1); }
         `}</style>
 
         {/* Nuvem esquerda decorativa */}
@@ -234,12 +281,31 @@ const AuthModal = ({ open, onClose }) => {
                 required
                 data-testid="auth-password-input"
               />
+
+              {/* Lista de requisitos — só aparece no cadastro enquanto digita */}
+              {isSignUp && password.length > 0 && (
+                <div className="pwd-rules">
+                  {passwordRules.map((rule, i) => {
+                    const ok = rule.test(password);
+                    return (
+                      <div
+                        key={rule.id}
+                        className={`pwd-rule ${ok ? 'ok' : 'nok'}`}
+                        style={{ animationDelay: `${i * 40}ms` }}
+                      >
+                        <span className="pwd-rule-icon">{ok ? '✓' : '✗'}</span>
+                        {rule.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <button
               type="submit"
               className="auth-btn-primary"
-              disabled={loading}
+              disabled={loading || !passwordValid}
               data-testid="auth-submit-button"
               style={{ marginTop: 4 }}
             >
@@ -270,7 +336,6 @@ const AuthModal = ({ open, onClose }) => {
             disabled={loading}
             data-testid="google-signin-button"
           >
-            {/* Google icon */}
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
               <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
@@ -289,7 +354,7 @@ const AuthModal = ({ open, onClose }) => {
             {isSignUp ? t('auth.alreadyHaveAccount') : t('auth.dontHaveAccount')}
             <button
               type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => { setIsSignUp(!isSignUp); setPassword(''); }}
               data-testid="auth-toggle-button"
               style={{
                 marginLeft: 6,
