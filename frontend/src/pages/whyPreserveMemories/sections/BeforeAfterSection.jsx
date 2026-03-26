@@ -5,20 +5,20 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 const BEFORE_IMAGES = {
-  main: '/card-image/before-after/before-main.jpg',
-  s1:   '/card-image/before-after/before-s1.jpg',
-  s2:   '/card-image/before-after/before-s2.jpg',
-  s3:   '/card-image/before-after/before-s3.jpg',
-  s4:   '/card-image/before-after/before-s4.jpg',
-  s5:   '/card-image/before-after/before-s5.jpg',
+  main: '/card-image/before-after/before-main.webp',
+  s1:   '/card-image/before-after/before-s1.webp',
+  s2:   '/card-image/before-after/before-s2.webp',
+  s3:   '/card-image/before-after/before-s3.webp',
+  s4:   '/card-image/before-after/before-s4.webp',
+  s5:   '/card-image/before-after/before-s5.webp',
 };
 const AFTER_IMAGES = {
-  main: '/card-image/before-after/after-main.jpg',
-  s1:   '/card-image/before-after/after-s1.jpg',
-  s2:   '/card-image/before-after/after-s2.jpg',
-  s3:   '/card-image/before-after/after-s3.jpg',
-  s4:   '/card-image/before-after/after-s4.jpg',
-  s5:   '/card-image/before-after/after-s5.jpg',
+  main: '/card-image/before-after/after-main.webp',
+  s1:   '/card-image/before-after/after-s1.webp',
+  s2:   '/card-image/before-after/after-s2.webp',
+  s3:   '/card-image/before-after/after-s3.webp',
+  s4:   '/card-image/before-after/after-s4.webp',
+  s5:   '/card-image/before-after/after-s5.webp',
 };
 
 /* ─── Orbitais
