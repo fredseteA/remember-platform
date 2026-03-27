@@ -3,10 +3,10 @@ import { initReactI18next } from 'react-i18next';
 
 export const FLAGS = {
   pt: (
-    <img src="/br-icon.jpeg" alt="Português" width="28" height="20" style={{ borderRadius: '4px' }} />
+    <img src="/flags/br-icon.jpeg" alt="Português" width="28" height="20" style={{ borderRadius: '4px' }} />
   ),
   en: (
-    <img src="/eua-icon.jpeg" alt="English" width="28" height="20" style={{ borderRadius: '4px' }} />
+    <img src="/flags/eua-icon.jpeg" alt="English" width="28" height="20" style={{ borderRadius: '4px' }} />
   ),
 };
 
