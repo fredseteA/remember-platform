@@ -76,16 +76,7 @@ const AppLayout = ({ children }) => {
   }
 
   return (
-    <div
-      className="App min-h-screen flex flex-col"
-      style={{
-        backgroundImage: `url(${skyBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
+    <div className="App app-bg min-h-screen flex flex-col">
       {!isMemorialPage && <Header className="ls-reveal" />}
       <main className="flex-1">
         {children}
