@@ -29,6 +29,21 @@ body[data-scroll-locked] {
   margin-right: 0 !important;
 }
 
+.app-bg {
+  position: relative;
+}
+
+.app-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/src/assets/sky-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
