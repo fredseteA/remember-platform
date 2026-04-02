@@ -80,10 +80,9 @@ const AppLayout = ({ children }) => {
       className="App min-h-screen flex flex-col"
       style={{
         backgroundImage: `url(${skyBg})`,
-        backgroundSize: '100% auto',   // ← largura 100%, altura proporcional
+        backgroundSize: '100% auto',
         backgroundPosition: 'top center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'scroll',
+        backgroundRepeat: 'repeat-y',
       }}
     >
       {!isMemorialPage && <Header className="ls-reveal" />}
